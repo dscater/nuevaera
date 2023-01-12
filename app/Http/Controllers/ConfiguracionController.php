@@ -54,23 +54,34 @@ class ConfiguracionController extends Controller
             $validacion['logo'] = 'image|mimes:jpeg,jpg,png|max:4096';
         }
         $request->validate($validacion, $mensajes);
+
         $configuracion = Configuracion::first();
         if ($configuracion) {
-            $configuracion->update(array_map('mb_strtoupper', $request->except('logo')));
-            if ($request->hasFile('logo')) {
-                $antiguo = $configuracion->logo;
-                \File::delete(public_path() . '/imgs/' . $antiguo);
-                $file = $request->logo;
-                $nombre = time() . '_logo.' . $file->getClientOriginalExtension();
-                $file->move(public_path() . '/imgs/', $nombre);
-                $configuracion->logo = $nombre;
-                $configuracion->save();
+            DB::beginTransaction();
+            try {
+                $configuracion->update(array_map('mb_strtoupper', $request->except('logo')));
+                if ($request->hasFile('logo')) {
+                    $antiguo = $configuracion->logo;
+                    \File::delete(public_path() . '/imgs/' . $antiguo);
+                    $file = $request->logo;
+                    $nombre = time() . '_logo.' . $file->getClientOriginalExtension();
+                    $file->move(public_path() . '/imgs/', $nombre);
+                    $configuracion->logo = $nombre;
+                    $configuracion->save();
+                }
+                DB::commit();
+                return response()->JSON([
+                    'sw' => true,
+                    'msj' => 'Los datos se actualizarón de forma correcta',
+                    'configuracion' => $configuracion
+                ], 200);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return response()->JSON([
+                    'sw' => false,
+                    'msj' => $e->getMessage(),
+                ], 500);
             }
-            return response()->JSON([
-                'sw' => true,
-                'msj' => 'Los datos se actualizarón de forma correcta',
-                'configuracion' => $configuracion
-            ], 200);
         }
         return response()->JSON([
             'sw' => false,

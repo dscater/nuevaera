@@ -19,7 +19,7 @@ export default new Router({
             component: require('./Auth.vue').default
         },
 
-        // USUARIOS
+        // Usuarios
         {
             path: '/usuarios/perfil/:id',
             name: 'usuarios.perfil',
@@ -32,14 +32,21 @@ export default new Router({
             component: require('./components/modulos/usuarios/index.vue').default
         },
 
-        // planes
+        // sucursales
         {
-            path: '/plans',
-            name: 'plans.index',
-            component: require('./components/modulos/plans/index.vue').default,
+            path: '/sucursals',
+            name: 'sucursals.index',
+            component: require('./components/modulos/sucursals/index.vue').default,
         },
 
-        // CONFIGURACIÓN
+        // cajas
+        {
+            path: '/cajas',
+            name: 'cajas.index',
+            component: require('./components/modulos/cajas/index.vue').default,
+        },
+
+        // Configuración
         {
             path: '/configuracion',
             name: 'configuracion',
@@ -47,7 +54,7 @@ export default new Router({
             props: true
         },
 
-        // REPORTES
+        // Reportes
         {
             path: '/reportes/usuarios',
             name: 'reportes.usuarios',

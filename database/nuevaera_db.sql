@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost:3306
--- Tiempo de generación: 11-01-2023 a las 15:30:50
+-- Tiempo de generación: 12-01-2023 a las 16:27:26
 -- Versión del servidor: 5.7.33
 -- Versión de PHP: 7.4.19
 
@@ -51,6 +51,15 @@ CREATE TABLE `cajas` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `cajas`
+--
+
+INSERT INTO `cajas` (`id`, `codigo`, `nombre`, `sucursal_id`, `descripcion`, `fecha_registro`, `created_at`, `updated_at`) VALUES
+(1, 'C11', 'CAJA 1', 1, 'CAJA 1 - SUCURSAL 1', '2023-01-12', '2023-01-12 15:39:05', '2023-01-12 15:39:53'),
+(2, 'C21', 'CAJA 2', 2, 'CAJA 1 - SUCURSAL 2', '2023-01-12', '2023-01-12 15:39:48', '2023-01-12 15:39:48'),
+(3, 'C12', 'CAJA 2', 1, 'CAJA 2 - SUCURSAL 1', '2023-01-12', '2023-01-12 15:40:56', '2023-01-12 15:40:56');
 
 -- --------------------------------------------------------
 
@@ -371,6 +380,15 @@ CREATE TABLE `sucursals` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Volcado de datos para la tabla `sucursals`
+--
+
+INSERT INTO `sucursals` (`id`, `codigo`, `nombre`, `dir`, `fono`, `responsable`, `fecha_registro`, `created_at`, `updated_at`) VALUES
+(1, 'S001', 'SUCURSAL 1', 'LOS OLIVOS', '22222; 777777', 'JUAN PERES', '2023-01-12', '2023-01-12 15:14:13', '2023-01-12 15:14:13'),
+(2, 'S002', 'SUCURSAL 2', 'LOS OLIVOS', '7777777; 666666', 'FERNANDO PAREDES', '2023-01-12', '2023-01-12 15:16:21', '2023-01-12 15:17:40'),
+(3, 'S003', 'SUCURSAL 3', 'LOS OLIVOS', '3333', 'MARIA PAREDES', '2023-01-12', '2023-01-12 15:17:23', '2023-01-12 15:17:23');
+
 -- --------------------------------------------------------
 
 --
@@ -400,6 +418,13 @@ CREATE TABLE `sucursal_usuarios` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `sucursal_usuarios`
+--
+
+INSERT INTO `sucursal_usuarios` (`id`, `user_id`, `sucursal_id`, `caja_id`, `created_at`, `updated_at`) VALUES
+(1, 3, 1, 3, '2023-01-12 16:12:35', '2023-01-12 16:26:55');
 
 -- --------------------------------------------------------
 
@@ -469,6 +494,7 @@ CREATE TABLE `users` (
   `tipo` enum('ADMINISTRADOR','SUPERVISOR','CAJA') COLLATE utf8mb4_unicode_ci NOT NULL,
   `foto` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
   `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `acceso` int(11) NOT NULL,
   `fecha_registro` date NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
@@ -478,8 +504,10 @@ CREATE TABLE `users` (
 -- Volcado de datos para la tabla `users`
 --
 
-INSERT INTO `users` (`id`, `usuario`, `nombre`, `paterno`, `materno`, `ci`, `ci_exp`, `dir`, `correo`, `fono`, `tipo`, `foto`, `password`, `fecha_registro`, `created_at`, `updated_at`) VALUES
-(1, 'admin', 'admin', 'admin', NULL, '', '', '', NULL, '', 'ADMINISTRADOR', NULL, '$2y$10$RrCZZySOwPej2gMFWsrjMe6dLzfaL5Q88h4J75I1FesEBRNPwq1x.', '2023-01-11', NULL, NULL);
+INSERT INTO `users` (`id`, `usuario`, `nombre`, `paterno`, `materno`, `ci`, `ci_exp`, `dir`, `correo`, `fono`, `tipo`, `foto`, `password`, `acceso`, `fecha_registro`, `created_at`, `updated_at`) VALUES
+(1, 'admin', 'admin', 'admin', NULL, '', '', '', NULL, '', 'ADMINISTRADOR', NULL, '$2y$10$RrCZZySOwPej2gMFWsrjMe6dLzfaL5Q88h4J75I1FesEBRNPwq1x.', 1, '2023-01-11', NULL, NULL),
+(2, 'JPERES', 'JUAN', 'PERES', 'PERES', '2222', 'LP', 'LOS OLIVOS', '', '77777; 66666', 'SUPERVISOR', 'default.png', '$2y$10$cAN6ZRMeN.srpdKQAjou2e96/34TzhbJcpBjsfTfMU2evwNXSIa9G', 1, '2023-01-12', '2023-01-12 16:08:02', '2023-01-12 16:27:10'),
+(3, 'MGONZALES', 'MARIA', 'GONZALES', '', '3333', 'CB', 'LOS OLIVOS', '', '666666', 'CAJA', 'default.png', '$2y$10$xnFmi0gR0B.pPkCRJSeaQ.FIG82P/Jr6x5IGZqBteP5q0nKoa5C2q', 1, '2023-01-12', '2023-01-12 16:12:35', '2023-01-12 16:12:35');
 
 --
 -- Índices para tablas volcadas
@@ -665,7 +693,7 @@ ALTER TABLE `almacens`
 -- AUTO_INCREMENT de la tabla `cajas`
 --
 ALTER TABLE `cajas`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `clientes`
@@ -761,7 +789,7 @@ ALTER TABLE `salida_productos`
 -- AUTO_INCREMENT de la tabla `sucursals`
 --
 ALTER TABLE `sucursals`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `sucursal_stocks`
@@ -773,7 +801,7 @@ ALTER TABLE `sucursal_stocks`
 -- AUTO_INCREMENT de la tabla `sucursal_usuarios`
 --
 ALTER TABLE `sucursal_usuarios`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `tipo_ingresos`
@@ -797,7 +825,7 @@ ALTER TABLE `transferencia_productos`
 -- AUTO_INCREMENT de la tabla `users`
 --
 ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- Restricciones para tablas volcadas

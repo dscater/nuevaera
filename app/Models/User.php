@@ -20,7 +20,7 @@ class User extends Authenticatable
     protected $fillable = [
         'usuario', 'nombre', 'paterno', 'materno', 'ci', 'ci_exp',
         'dir', 'correo', 'fono', 'cel', 'tipo', 'password',
-        'foto', 'fecha_registro',
+        'foto', 'fecha_registro', 'acceso'
     ];
 
 
@@ -59,5 +59,10 @@ class User extends Authenticatable
             return asset('imgs/users/' . $this->foto);
         }
         return asset('imgs/users/default.png');
+    }
+
+    public function sucursal()
+    {
+        return $this->hasOne(SucursalUsuario::class, 'user_id');
     }
 }

@@ -11,7 +11,7 @@ class LoginController extends Controller
     {
         $usuario = $request->usuario;
         $password = $request->password;
-        $res = Auth::attempt(['usuario' => $usuario, 'password' => $password]);
+        $res = Auth::attempt(['usuario' => $usuario, 'password' => $password, 'acceso' => 1]);
         if ($res) {
             return response()->JSON([
                 'user' => Auth::user(),

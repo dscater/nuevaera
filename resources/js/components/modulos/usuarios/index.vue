@@ -84,6 +84,22 @@
                                                 empty-filtered-text="Sin resultados"
                                                 :filter="filter"
                                             >
+                                                <template #cell(acceso)="row">
+                                                    <span
+                                                        class="badge badge-success"
+                                                        v-if="
+                                                            row.item.acceso == 1
+                                                        "
+                                                    >
+                                                        HABILITADO
+                                                    </span>
+                                                    <span
+                                                        v-else
+                                                        class="badge badge-danger"
+                                                    >
+                                                        DESHABILITADO
+                                                    </span>
+                                                </template>
                                                 <template #cell(foto)="row">
                                                     <b-avatar
                                                         :src="
@@ -102,6 +118,103 @@
                                                                 .fecha_registro
                                                         )
                                                     }}
+                                                </template>
+                                                <template #cell(mas)="row">
+                                                    <b-button
+                                                        variant="primary"
+                                                        size="sm"
+                                                        @click="
+                                                            row.toggleDetails
+                                                        "
+                                                    >
+                                                        {{
+                                                            row.detailsShowing
+                                                                ? "Ocultar"
+                                                                : "Mostrar"
+                                                        }}
+                                                        Detalles
+                                                    </b-button>
+                                                </template>
+
+                                                <template #row-details="row">
+                                                    <b-card>
+                                                        <b-row class="mb-2">
+                                                            <b-col
+                                                                sm="3"
+                                                                class="text-sm-right"
+                                                                ><b
+                                                                    >Dirección:</b
+                                                                ></b-col
+                                                            >
+                                                            <b-col>{{
+                                                                row.item.dir
+                                                            }}</b-col>
+                                                        </b-row>
+                                                        <b-row class="mb-2">
+                                                            <b-col
+                                                                sm="3"
+                                                                class="text-sm-right"
+                                                                ><b
+                                                                    >Correo:</b
+                                                                ></b-col
+                                                            >
+                                                            <b-col>{{
+                                                                row.item.correo
+                                                            }}</b-col>
+                                                        </b-row>
+                                                        <b-row class="mb-2">
+                                                            <b-col
+                                                                sm="3"
+                                                                class="text-sm-right"
+                                                                ><b
+                                                                    >Teléfono/Celular:</b
+                                                                ></b-col
+                                                            >
+                                                            <b-col>{{
+                                                                row.item.fono
+                                                            }}</b-col>
+                                                        </b-row>
+                                                        <b-row
+                                                            class="mb-2"
+                                                            v-if="
+                                                                row.item.tipo ==
+                                                                'CAJA'
+                                                            "
+                                                        >
+                                                            <b-col
+                                                                sm="3"
+                                                                class="text-sm-right"
+                                                                ><b
+                                                                    >Sucursal |
+                                                                    Caja:</b
+                                                                ></b-col
+                                                            >
+                                                            <b-col
+                                                                >{{
+                                                                    row.item
+                                                                        .sucursal
+                                                                        .sucursal
+                                                                        .nombre
+                                                                }}
+                                                                |
+                                                                {{
+                                                                    row.item
+                                                                        .sucursal
+                                                                        .caja
+                                                                        .nombre
+                                                                }}</b-col
+                                                            >
+                                                        </b-row>
+
+                                                        <b-button
+                                                            size="sm"
+                                                            variant="primary"
+                                                            @click="
+                                                                row.toggleDetails
+                                                            "
+                                                            >Ocultar</b-button
+                                                        >
+                                                    </b-card>
                                                 </template>
 
                                                 <template #cell(accion)="row">
@@ -212,33 +325,15 @@ export default {
                 },
                 { key: "full_name", label: "Nombre", sortable: true },
                 { key: "full_ci", label: "C.I.", sortable: true },
-                {
-                    key: "dir",
-                    label: "Dirección",
-                    sortable: true,
-                },
-                {
-                    key: "correo",
-                    label: "Correo",
-                    sortable: true,
-                },
-                {
-                    key: "cel",
-                    label: "Celular",
-                    sortable: true,
-                },
-                {
-                    key: "fono",
-                    label: "Teléfono",
-                    sortable: true,
-                },
                 { key: "tipo", label: "Tipo Usuario", sortable: true },
                 { key: "foto", label: "Foto" },
+                { key: "acceso", label: "Acceso" },
                 {
                     key: "fecha_registro",
                     label: "Fecha de registro",
                     sortable: true,
                 },
+                { key: "mas", label: "Ver mas" },
                 { key: "accion", label: "Acción" },
             ],
             loading: true,
@@ -257,12 +352,12 @@ export default {
                 ci_exp: "",
                 dir: "",
                 correo: "",
-                fono: "",
-                cel: "",
-                cargo: "",
-                unidad_id: "",
+                fono: [],
                 tipo: "",
+                sucursal_id: "",
+                caja_id: "",
                 foto: null,
+                acceso: 0,
             },
             currentPage: 1,
             perPage: 5,
@@ -293,11 +388,15 @@ export default {
             this.oUsuario.ci_exp = item.ci_exp ? item.ci_exp : "";
             this.oUsuario.dir = item.dir ? item.dir : "";
             this.oUsuario.correo = item.correo ? item.correo : "";
-            this.oUsuario.fono = item.fono ? item.fono : "";
-            this.oUsuario.cel = item.cel ? item.cel : "";
+            this.oUsuario.fono = item.fono ? item.fono.split("; ") : "";
             this.oUsuario.cargo = item.cargo ? item.cargo : "";
             this.oUsuario.unidad_id = item.unidad_id ? item.unidad_id : "";
             this.oUsuario.tipo = item.tipo ? item.tipo : "";
+            this.oUsuario.acceso = item.acceso ? "" + item.acceso : "0";
+            if (item.tipo == "CAJA") {
+                this.oUsuario.sucursal_id = item.sucursal.sucursal_id;
+                this.oUsuario.caja_id = item.sucursal.caja_id;
+            }
             this.modal_accion = "edit";
             this.muestra_modal = true;
         },
@@ -369,12 +468,14 @@ export default {
             this.oUsuario.ci_exp = "";
             this.oUsuario.dir = "";
             this.oUsuario.correo = "";
-            this.oUsuario.fono = "";
-            this.oUsuario.cel = "";
+            this.oUsuario.fono = [];
             this.oUsuario.cargo = "";
             this.oUsuario.unidad_id = "";
             this.oUsuario.tipo = "";
+            this.oUsuario.sucursal_id = "";
+            this.oUsuario.caja_id = "";
             this.oUsuario.foto = null;
+            this.oUsuario.acceso = 0;
         },
         formatoFecha(date) {
             return this.$moment(String(date)).format("DD/MM/YYYY");

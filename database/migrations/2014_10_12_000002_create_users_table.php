@@ -27,6 +27,7 @@ class CreateUsersTable extends Migration
             $table->enum("tipo", ["ADMINISTRADOR", "SUPERVISOR", "CAJA"]);
             $table->string("foto", 255)->nullable();
             $table->string('password');
+            $table->integer('acceso');
             $table->date("fecha_registro");
             $table->timestamps();
         });

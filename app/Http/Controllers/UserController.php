@@ -14,6 +14,7 @@ use App\Models\Tcont;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
@@ -24,9 +25,9 @@ class UserController extends Controller
         'ci' => 'required|numeric|digits_between:4, 20|unique:users,ci',
         'ci_exp' => 'required',
         'dir' => 'required|min:4',
-        'cel' => 'required|min:4',
-        'fono' => 'required|min:4',
+        'fono' => 'required|min:1',
         'tipo' => 'required',
+        'acceso' => 'required',
     ];
 
     public $mensajes = [
@@ -55,6 +56,16 @@ class UserController extends Controller
             'usuarios.edit',
             'usuarios.destroy',
 
+            'sucursals.index',
+            'sucursals.create',
+            'sucursals.edit',
+            'sucursals.destroy',
+
+            'cajas.index',
+            'cajas.create',
+            'cajas.edit',
+            'cajas.destroy',
+
             'configuracion.index',
             'configuracion.edit',
 
@@ -67,7 +78,7 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
-        $usuarios = User::where('id', '!=', 1)->get();
+        $usuarios = User::with("sucursal.sucursal")->with("sucursal.caja")->where('id', '!=', 1)->get();
         return response()->JSON(['usuarios' => $usuarios, 'total' => count($usuarios)], 200);
     }
 
@@ -89,24 +100,43 @@ class UserController extends Controller
         } while (User::where('usuario', $nombre_usuario)->get()->first());
         $request['password'] = 'NoNulo';
         $request['fecha_registro'] = date('Y-m-d');
-        // CREAR EL USER
-        $nuevo_usuario = User::create(array_map('mb_strtoupper', $request->except('foto')));
-        $nuevo_usuario->password = Hash::make($request->ci);
-        $nuevo_usuario->save();
-        $nuevo_usuario->foto = 'default.png';
-        if ($request->hasFile('foto')) {
-            $file = $request->foto;
-            $nom_foto = time() . '_' . $nuevo_usuario->usuario . '.' . $file->getClientOriginalExtension();
-            $nuevo_usuario->foto = $nom_foto;
-            $file->move(public_path() . '/imgs/users/', $nom_foto);
+
+        DB::beginTransaction();
+        try {
+            // crear el Usuario
+            $nuevo_usuario = User::create(array_map('mb_strtoupper', $request->except('foto')));
+            $nuevo_usuario->password = Hash::make($request->ci);
+            $nuevo_usuario->save();
+            $nuevo_usuario->foto = 'default.png';
+            if ($request->hasFile('foto')) {
+                $file = $request->foto;
+                $nom_foto = time() . '_' . $nuevo_usuario->usuario . '.' . $file->getClientOriginalExtension();
+                $nuevo_usuario->foto = $nom_foto;
+                $file->move(public_path() . '/imgs/users/', $nom_foto);
+            }
+            $nuevo_usuario->correo = mb_strtolower($nuevo_usuario->correo);
+            $nuevo_usuario->save();
+
+            if ($nuevo_usuario->tipo == 'CAJA') {
+                $nuevo_usuario->sucursal()->create([
+                    "sucursal_id" => $request->sucursal_id,
+                    "caja_id" => $request->caja_id,
+                ]);
+            }
+
+            DB::commit();
+            return response()->JSON([
+                'sw' => true,
+                'usuario' => $nuevo_usuario,
+                'msj' => 'El registro se realizó de forma correcta',
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->JSON([
+                'sw' => false,
+                'msj' => $e->getMessage(),
+            ], 500);
         }
-        $nuevo_usuario->correo = mb_strtolower($nuevo_usuario->correo);
-        $nuevo_usuario->save();
-        return response()->JSON([
-            'sw' => true,
-            'usuario' => $nuevo_usuario,
-            'msj' => 'El registro se realizó de forma correcta',
-        ], 200);
     }
 
     public function update(Request $request, User $usuario)
@@ -118,29 +148,56 @@ class UserController extends Controller
         }
 
         $request->validate($this->validacion, $this->mensajes);
-
-        $usuario->update(array_map('mb_strtoupper', $request->except('foto')));
-        if ($usuario->correo == "") {
-            $usuario->correo = NULL;
-        }
-
-        if ($request->hasFile('foto')) {
-            $antiguo = $usuario->foto;
-            if ($antiguo != 'default.png') {
-                \File::delete(public_path() . '/imgs/users/' . $antiguo);
+        DB::beginTransaction();
+        try {
+            $usuario->update(array_map('mb_strtoupper', $request->except('foto')));
+            if ($usuario->correo == "") {
+                $usuario->correo = NULL;
             }
-            $file = $request->foto;
-            $nom_foto = time() . '_' . $usuario->usuario . '.' . $file->getClientOriginalExtension();
-            $usuario->foto = $nom_foto;
-            $file->move(public_path() . '/imgs/users/', $nom_foto);
+
+            if ($request->hasFile('foto')) {
+                $antiguo = $usuario->foto;
+                if ($antiguo != 'default.png') {
+                    \File::delete(public_path() . '/imgs/users/' . $antiguo);
+                }
+                $file = $request->foto;
+                $nom_foto = time() . '_' . $usuario->usuario . '.' . $file->getClientOriginalExtension();
+                $usuario->foto = $nom_foto;
+                $file->move(public_path() . '/imgs/users/', $nom_foto);
+            }
+            $usuario->correo = mb_strtolower($usuario->correo);
+            $usuario->save();
+
+            if ($usuario->tipo == 'CAJA') {
+                if ($usuario->sucursal) {
+                    $usuario->sucursal->update([
+                        "sucursal_id" => $request->sucursal_id,
+                        "caja_id" => $request->caja_id,
+                    ]);
+                } else {
+                    $usuario->sucursal()->create([
+                        "sucursal_id" => $request->sucursal_id,
+                        "caja_id" => $request->caja_id,
+                    ]);
+                }
+            } else {
+                if ($usuario->sucursal)
+                    $usuario->sucursal->delete();
+            }
+
+            DB::commit();
+            return response()->JSON([
+                'sw' => true,
+                'usuario' => $usuario,
+                'msj' => 'El registro se actualizó de forma correcta'
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->JSON([
+                'sw' => false,
+                'msj' => $e->getMessage(),
+            ], 500);
         }
-        $usuario->correo = mb_strtolower($usuario->correo);
-        $usuario->save();
-        return response()->JSON([
-            'sw' => true,
-            'usuario' => $usuario,
-            'msj' => 'El registro se actualizó de forma correcta'
-        ], 200);
     }
 
     public function show(User $usuario)
@@ -163,46 +220,77 @@ class UserController extends Controller
             'password_confirmation' => 'required|min:4'
         ]);
 
-        $usuario->password = Hash::make($request->password);
-        $usuario->save();
 
-        return response()->JSON([
-            'sw' => true,
-            'msj' => 'La contraseña se actualizó correctamente'
-        ], 200);
+        DB::beginTransaction();
+        try {
+            $usuario->password = Hash::make($request->password);
+            $usuario->save();
+            DB::commit();
+            return response()->JSON([
+                'sw' => true,
+                'msj' => 'La contraseña se actualizó correctamente'
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->JSON([
+                'sw' => false,
+                'msj' => $e->getMessage(),
+            ], 500);
+        }
     }
 
     public function actualizaFoto(User $usuario, Request $request)
     {
-        if ($request->hasFile('foto')) {
-            $antiguo = $usuario->foto;
-            if ($antiguo != 'default.png') {
-                \File::delete(public_path() . '/imgs/users/' . $antiguo);
+        DB::beginTransaction();
+        try {
+
+            if ($request->hasFile('foto')) {
+                $antiguo = $usuario->foto;
+                if ($antiguo != 'default.png') {
+                    \File::delete(public_path() . '/imgs/users/' . $antiguo);
+                }
+                $file = $request->foto;
+                $nom_foto = time() . '_' . $usuario->usuario . '.' . $file->getClientOriginalExtension();
+                $usuario->foto = $nom_foto;
+                $file->move(public_path() . '/imgs/users/', $nom_foto);
             }
-            $file = $request->foto;
-            $nom_foto = time() . '_' . $usuario->usuario . '.' . $file->getClientOriginalExtension();
-            $usuario->foto = $nom_foto;
-            $file->move(public_path() . '/imgs/users/', $nom_foto);
+            $usuario->save();
+            DB::commit();
+            return response()->JSON([
+                'sw' => true,
+                'usuario' => $usuario,
+                'msj' => 'Foto actualizada con éxito'
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->JSON([
+                'sw' => false,
+                'msj' => $e->getMessage(),
+            ], 500);
         }
-        $usuario->save();
-        return response()->JSON([
-            'sw' => true,
-            'usuario' => $usuario,
-            'msj' => 'Foto actualizada con éxito'
-        ], 200);
     }
 
     public function destroy(User $usuario)
     {
-        $antiguo = $usuario->foto;
-        if ($antiguo != 'default.png') {
-            \File::delete(public_path() . '/imgs/users/' . $antiguo);
+        DB::beginTransaction();
+        try {
+            $antiguo = $usuario->foto;
+            if ($antiguo != 'default.png') {
+                \File::delete(public_path() . '/imgs/users/' . $antiguo);
+            }
+            $usuario->delete();
+            DB::commit();
+            return response()->JSON([
+                'sw' => true,
+                'msj' => 'El registro se eliminó correctamente'
+            ], 200);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->JSON([
+                'sw' => false,
+                'msj' => $e->getMessage(),
+            ], 500);
         }
-        $usuario->delete();
-        return response()->JSON([
-            'sw' => true,
-            'msj' => 'El registro se eliminó correctamente'
-        ], 200);
     }
 
     public function getPermisos(User $usuario)
@@ -300,16 +388,6 @@ class UserController extends Controller
     public function userActual()
     {
         return response()->JSON(Auth::user());
-    }
-
-    public function getEstudiantes()
-    {
-        return response()->JSON(User::where('tipo', 'ESTUDIANTE')->get());
-    }
-
-    public function getDocentes()
-    {
-        return response()->JSON(User::where('tipo', 'DOCENTE')->get());
     }
 
     public function getUsuario(User $usuario)

@@ -178,39 +178,21 @@
                                     :class="{
                                         'text-danger': errors.fono,
                                     }"
-                                    >Teléfono*</label
+                                    >Teléfono/Celular*</label
                                 >
-                                <el-input
-                                    placeholder="Teléfono"
+                                <b-form-tags
+                                    input-id="tags-basic"
+                                    placeholder="Teléfono/Celular"
                                     :class="{ 'is-invalid': errors.fono }"
                                     v-model="usuario.fono"
-                                    clearable
-                                >
-                                </el-input>
+                                    addButtonText="Añadir"
+                                    separator=" ,;"
+                                    remove-on-delete
+                                ></b-form-tags>
                                 <span
                                     class="error invalid-feedback"
                                     v-if="errors.fono"
                                     v-text="errors.fono[0]"
-                                ></span>
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label
-                                    :class="{
-                                        'text-danger': errors.cel,
-                                    }"
-                                    >Celular*</label
-                                >
-                                <el-input
-                                    placeholder="Celular"
-                                    :class="{ 'is-invalid': errors.cel }"
-                                    v-model="usuario.cel"
-                                    clearable
-                                >
-                                </el-input>
-                                <span
-                                    class="error invalid-feedback"
-                                    v-if="errors.cel"
-                                    v-text="errors.cel[0]"
                                 ></span>
                             </div>
                             <div class="form-group col-md-6">
@@ -229,7 +211,7 @@
                                     clearable
                                 >
                                     <el-option
-                                        v-for="(item, index) in listRoles"
+                                        v-for="(item, index) in listTipos"
                                         :key="index"
                                         :value="item"
                                         :label="item"
@@ -240,6 +222,75 @@
                                     class="error invalid-feedback"
                                     v-if="errors.tipo"
                                     v-text="errors.tipo[0]"
+                                ></span>
+                            </div>
+                            <div
+                                class="form-group col-md-6"
+                                v-if="usuario.tipo == 'CAJA'"
+                            >
+                                <label
+                                    :class="{
+                                        'text-danger': errors.sucursal_id,
+                                    }"
+                                    >Sucursal*</label
+                                >
+                                <el-select
+                                    class="w-100 d-block"
+                                    :class="{
+                                        'is-invalid': errors.sucursal_id,
+                                    }"
+                                    v-model="usuario.sucursal_id"
+                                    clearable
+                                    @change="
+                                        listCajas = [];
+                                        usuario.caja_id = '';
+                                        getSucursalCajas();
+                                    "
+                                >
+                                    <el-option
+                                        v-for="(item, index) in listSucursals"
+                                        :key="index"
+                                        :value="item.id"
+                                        :label="item.nombre"
+                                    >
+                                    </el-option>
+                                </el-select>
+                                <span
+                                    class="error invalid-feedback"
+                                    v-if="errors.sucursal_id"
+                                    v-text="errors.sucursal_id[0]"
+                                ></span>
+                            </div>
+                            <div
+                                class="form-group col-md-6"
+                                v-if="usuario.tipo == 'CAJA'"
+                            >
+                                <label
+                                    :class="{
+                                        'text-danger': errors.caja_id,
+                                    }"
+                                    >Caja*</label
+                                >
+                                <el-select
+                                    class="w-100 d-block"
+                                    :class="{
+                                        'is-invalid': errors.caja_id,
+                                    }"
+                                    v-model="usuario.caja_id"
+                                    clearable
+                                >
+                                    <el-option
+                                        v-for="(item, index) in listCajas"
+                                        :key="index"
+                                        :value="item.id"
+                                        :label="item.nombre"
+                                    >
+                                    </el-option>
+                                </el-select>
+                                <span
+                                    class="error invalid-feedback"
+                                    v-if="errors.caja_id"
+                                    v-text="errors.caja_id[0]"
                                 ></span>
                             </div>
                             <div class="form-group col-md-6">
@@ -262,6 +313,33 @@
                                     class="error invalid-feedback"
                                     v-if="errors.foto"
                                     v-text="errors.foto[0]"
+                                ></span>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label
+                                    :class="{
+                                        'text-danger': errors.acceso,
+                                    }"
+                                    >Acceso*</label
+                                >
+                                <el-switch
+                                    :class="{
+                                        'is-invalid': errors.acceso,
+                                    }"
+                                    style="display: block"
+                                    v-model="usuario.acceso"
+                                    active-color="#13ce66"
+                                    inactive-color="#ff4949"
+                                    active-text="HABILITADO"
+                                    inactive-text="DESHABILITADO"
+                                    active-value="1"
+                                    inactive-value="0"
+                                >
+                                </el-switch>
+                                <span
+                                    class="error invalid-feedback"
+                                    v-if="errors.acceso"
+                                    v-text="errors.acceso[0]"
                                 ></span>
                             </div>
                         </div>
@@ -311,10 +389,12 @@ export default {
                 ci_exp: "",
                 dir: "",
                 correo: "",
-                fono: "",
-                cel: "",
+                fono: [],
                 tipo: "",
+                sucursal_id: "",
+                caja_id: "",
                 foto: null,
+                acceso: 0,
             },
         },
     },
@@ -323,6 +403,7 @@ export default {
             this.errors = [];
             if (newVal) {
                 this.$refs.input_file.value = null;
+                this.getSucursalCajas();
                 this.bModal = true;
             } else {
                 this.bModal = false;
@@ -361,20 +442,30 @@ export default {
                 { value: "PD", label: "Pando" },
                 { value: "BN", label: "Beni" },
             ],
-            listRoles: ["ADMINISTRADOR", "AUXILIAR"],
-            listUnidades: [],
+            listTipos: ["ADMINISTRADOR", "SUPERVISOR", "CAJA"],
+            listSucursals: [],
+            listCajas: [],
             errors: [],
         };
     },
     mounted() {
         this.bModal = this.muestra_modal;
-        this.getUnidades();
+        this.getSucursals();
     },
     methods: {
-        getUnidades() {
-            axios.get("/admin/unidads").then((response) => {
-                this.listUnidades = response.data.unidads;
+        getSucursals() {
+            axios.get("/admin/sucursals").then((response) => {
+                this.listSucursals = response.data.sucursals;
             });
+        },
+        getSucursalCajas() {
+            axios
+                .get("/admin/sucursals/getCajas", {
+                    params: { id: this.usuario.sucursal_id },
+                })
+                .then((response) => {
+                    this.listCajas = response.data;
+                });
         },
         setRegistroModal() {
             this.enviando = true;
@@ -414,11 +505,7 @@ export default {
                 );
                 formdata.append(
                     "fono",
-                    this.usuario.fono ? this.usuario.fono : ""
-                );
-                formdata.append(
-                    "cel",
-                    this.usuario.cel ? this.usuario.cel : ""
+                    this.usuario.fono ? this.usuario.fono.join("; ") : ""
                 );
                 formdata.append(
                     "cargo",
@@ -433,8 +520,22 @@ export default {
                     this.usuario.tipo ? this.usuario.tipo : ""
                 );
                 formdata.append(
+                    "sucursal_id",
+                    this.usuario.sucursal_id ? this.usuario.sucursal_id : ""
+                );
+                formdata.append(
+                    "caja_id",
+                    this.usuario.caja_id ? this.usuario.caja_id : ""
+                );
+
+                formdata.append(
                     "foto",
                     this.usuario.foto ? this.usuario.foto : ""
+                );
+
+                formdata.append(
+                    "acceso",
+                    this.usuario.acceso ? this.usuario.acceso : ""
                 );
                 if (this.accion == "edit") {
                     url = "/admin/usuarios/" + this.usuario.id;
@@ -470,6 +571,21 @@ export default {
                             if (error.response.status === 422) {
                                 this.errors = error.response.data.errors;
                             }
+                            if (
+                                error.response.status === 420 ||
+                                error.response.status === 419 ||
+                                error.response.status === 401
+                            ) {
+                                window.location = "/";
+                            }
+                            if (error.response.status === 500) {
+                                Swal.fire({
+                                    icon: "error",
+                                    title: res.data.msj,
+                                    showConfirmButton: false,
+                                    timer: 2000,
+                                });
+                            }
                         }
                     });
             } catch (e) {
@@ -494,12 +610,14 @@ export default {
             this.usuario.ci_exp = "";
             this.usuario.dir = "";
             this.usuario.correo = "";
-            this.usuario.fono = "";
-            this.usuario.cel = "";
+            this.usuario.fono = [];
             this.usuario.cargo = "";
             this.usuario.unidad_id = "";
             this.usuario.tipo = "";
+            this.usuario.sucursal_id = "";
+            this.usuario.caja_id = "";
             this.usuario.foto = null;
+            this.usuario.acceso = 0;
             this.$refs.input_file.value = null;
         },
     },

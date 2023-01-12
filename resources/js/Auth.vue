@@ -5,12 +5,12 @@
             <div class="card border border-primary">
                 <div class="card-header text-center">
                     <img :src="logo" alt="Logo" />
-                    <router-link :to="{ name: 'login' }" class="h1 text-primary"
+                    <router-link :to="{ name: 'login' }" class="h1 text-white"
                         ><b v-text="empresa"></b
                     ></router-link>
                 </div>
                 <div class="card-body">
-                    <p class="login-box-msg text-primary font-weight-bold">
+                    <p class="login-box-msg text-white font-weight-bold">
                         Ingresa tu usuario y contraseña para inicar sesión
                     </p>
 
@@ -137,13 +137,15 @@ export default {
 </script>
 
 <style>
-.login-page {
-    background: #111111;
+.login-page{
+    background-color:none;
+    background-image:url("/imgs/login.webp");
 }
 
 .login-page .card {
     border-radius: 0px;
-    box-shadow: 0px 0px 1px 1px var(--principal)!important;
+    box-shadow: 0px 0px 1px 1px var(--principal);
+    background: var(--transparente);
 }
 .login-page .card-header {
     border-bottom: solid 1px var(--principal);
