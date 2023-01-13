@@ -2,7 +2,10 @@
 
 use App\Http\Controllers\CajaController;
 use App\Http\Controllers\ConfiguracionController;
+use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\ProductoController;
+use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\SucursalController;
 use App\Http\Controllers\UserController;
@@ -39,6 +42,21 @@ Route::middleware(['auth'])->group(function () {
 
         // Cajas
         Route::resource('cajas', CajaController::class)->only([
+            'index', 'store', 'update', 'destroy', 'show'
+        ]);
+
+        // Proveedores
+        Route::resource('proveedors', ProveedorController::class)->only([
+            'index', 'store', 'update', 'destroy', 'show'
+        ]);
+
+        // Grupos
+        Route::resource('grupos', GrupoController::class)->only([
+            'index', 'store', 'update', 'destroy', 'show'
+        ]);
+
+        // Productos
+        Route::resource('productos', ProductoController::class)->only([
             'index', 'store', 'update', 'destroy', 'show'
         ]);
 

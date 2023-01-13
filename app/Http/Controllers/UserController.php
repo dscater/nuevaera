@@ -66,6 +66,21 @@ class UserController extends Controller
             'cajas.edit',
             'cajas.destroy',
 
+            'proveedors.index',
+            'proveedors.create',
+            'proveedors.edit',
+            'proveedors.destroy',
+
+            'productos.index',
+            'productos.create',
+            'productos.edit',
+            'productos.destroy',
+
+            'grupos.index',
+            'grupos.create',
+            'grupos.edit',
+            'grupos.destroy',
+
             'configuracion.index',
             'configuracion.edit',
 

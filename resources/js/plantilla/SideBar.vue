@@ -91,6 +91,9 @@
                             permisos.includes('users.index') ||
                             permisos.includes('sucursals.index') ||
                             permisos.includes('cajas.index') ||
+                            permisos.includes('proveedors.index') ||
+                            permisos.includes('productos.index') ||
+                            permisos.includes('grupos.index') ||
                             permisos.includes('configuracion.index')
                         "
                     >
@@ -122,6 +125,48 @@
                         >
                             <i class="nav-icon fas fa-list"></i>
                             <p>Cajas</p>
+                        </router-link>
+                    </li>
+                    <li
+                        class="nav-item"
+                        v-if="permisos.includes('proveedors.index')"
+                    >
+                        <router-link
+                            exact
+                            :to="{ name: 'proveedors.index' }"
+                            class="nav-link"
+                            v-loading.fullscreen.lock="fullscreenLoading"
+                        >
+                            <i class="nav-icon fas fa-list"></i>
+                            <p>Proveedores</p>
+                        </router-link>
+                    </li>
+                    <li
+                        class="nav-item"
+                        v-if="permisos.includes('productos.index')"
+                    >
+                        <router-link
+                            exact
+                            :to="{ name: 'productos.index' }"
+                            class="nav-link"
+                            v-loading.fullscreen.lock="fullscreenLoading"
+                        >
+                            <i class="nav-icon fas fa-list"></i>
+                            <p>Productos</p>
+                        </router-link>
+                    </li>
+                    <li
+                        class="nav-item"
+                        v-if="permisos.includes('grupos.index')"
+                    >
+                        <router-link
+                            exact
+                            :to="{ name: 'grupos.index' }"
+                            class="nav-link"
+                            v-loading.fullscreen.lock="fullscreenLoading"
+                        >
+                            <i class="nav-icon fas fa-list"></i>
+                            <p>Grupos</p>
                         </router-link>
                     </li>
                     <li

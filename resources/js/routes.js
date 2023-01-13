@@ -46,6 +46,27 @@ export default new Router({
             component: require('./components/modulos/cajas/index.vue').default,
         },
 
+        // proveedores
+        {
+            path: '/proveedors',
+            name: 'proveedors.index',
+            component: require('./components/modulos/proveedors/index.vue').default,
+        },
+
+        // productos
+        {
+            path: '/productos',
+            name: 'productos.index',
+            component: require('./components/modulos/productos/index.vue').default,
+        },
+
+        // grupos
+        {
+            path: '/grupos',
+            name: 'grupos.index',
+            component: require('./components/modulos/grupos/index.vue').default,
+        },
+
         // Configuración
         {
             path: '/configuracion',

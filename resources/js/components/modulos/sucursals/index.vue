@@ -284,7 +284,7 @@ export default {
                 title: "¿Quierés eliminar este registro?",
                 html: `<strong>${descripcion}</strong>`,
                 showCancelButton: true,
-                confirmButtonColor: "#149971",
+                confirmButtonColor: "#5398d8",
                 confirmButtonText: "Si, eliminar",
                 cancelButtonText: "No, cancelar",
                 denyButtonText: `No, cancelar`,
