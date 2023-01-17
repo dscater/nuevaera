@@ -19,4 +19,9 @@ class Producto extends Model
     {
         return $this->belongsTo(Grupo::class, 'grupo_id');
     }
+
+    public function almacen()
+    {
+        return $this->hasOne(Almacen::class, 'producto_id');
+    }
 }

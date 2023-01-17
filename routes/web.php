@@ -3,11 +3,15 @@
 use App\Http\Controllers\CajaController;
 use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\GrupoController;
+use App\Http\Controllers\IngresoProductoController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\SalidaProductoController;
 use App\Http\Controllers\SucursalController;
+use App\Http\Controllers\TipoIngresoController;
+use App\Http\Controllers\TipoSalidaController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -56,7 +60,28 @@ Route::middleware(['auth'])->group(function () {
         ]);
 
         // Productos
+        Route::get("productos/buscar_producto", [ProductoController::class, 'buscar_producto']);
         Route::resource('productos', ProductoController::class)->only([
+            'index', 'store', 'update', 'destroy', 'show'
+        ]);
+
+        // Tipo Ingresos
+        Route::resource('tipo_ingresos', TipoIngresoController::class)->only([
+            'index', 'store', 'update', 'destroy', 'show'
+        ]);
+
+        // Ingreso productos
+        Route::resource('ingreso_productos', IngresoProductoController::class)->only([
+            'index', 'store', 'update', 'destroy', 'show'
+        ]);
+
+        // Tipo Salidas
+        Route::resource('tipo_salidas', TipoSalidaController::class)->only([
+            'index', 'store', 'update', 'destroy', 'show'
+        ]);
+
+        // Salida productos
+        Route::resource('salida_productos', SalidaProductoController::class)->only([
             'index', 'store', 'update', 'destroy', 'show'
         ]);
 

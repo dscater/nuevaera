@@ -81,9 +81,33 @@
                     </li>
                     <li
                         class="nav-header bg-navy"
-                        v-if="permisos.includes('cobros.index')"
+                        v-if="permisos.includes('ingreso_productos.index')"
                     >
                         OPERACIONES
+                    </li>
+                    <li
+                        class="nav-item"
+                        v-if="permisos.includes('ingreso_productos.index')"
+                    >
+                        <router-link
+                            :to="{ name: 'ingreso_productos.index' }"
+                            class="nav-link"
+                        >
+                            <i class="nav-icon fas fa-list"></i>
+                            <p>Ingreso de Productos</p>
+                        </router-link>
+                    </li>
+                    <li
+                        class="nav-item"
+                        v-if="permisos.includes('salida_productos.index')"
+                    >
+                        <router-link
+                            :to="{ name: 'salida_productos.index' }"
+                            class="nav-link"
+                        >
+                            <i class="nav-icon fas fa-list"></i>
+                            <p>Salida de Productos</p>
+                        </router-link>
                     </li>
                     <li
                         class="nav-header bg-navy"
@@ -214,6 +238,30 @@
                         </router-link>
                     </li>
                     <li class="nav-header bg-navy">OTRAS OPCIONES</li>
+                    <li
+                        class="nav-item"
+                        v-if="permisos.includes('tipo_ingresos.index')"
+                    >
+                        <router-link
+                            :to="{ name: 'tipo_ingresos.index' }"
+                            class="nav-link"
+                        >
+                            <i class="nav-icon fas fa-list"></i>
+                            <p>Tipo de Ingresos</p>
+                        </router-link>
+                    </li>
+                    <li
+                        class="nav-item"
+                        v-if="permisos.includes('tipo_salidas.index')"
+                    >
+                        <router-link
+                            :to="{ name: 'tipo_salidas.index' }"
+                            class="nav-link"
+                        >
+                            <i class="nav-icon fas fa-list"></i>
+                            <p>Tipo de Salidas</p>
+                        </router-link>
+                    </li>
                     <li class="nav-item">
                         <router-link
                             exact

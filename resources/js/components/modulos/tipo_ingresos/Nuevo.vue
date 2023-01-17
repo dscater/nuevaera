@@ -33,7 +33,7 @@
                                 <el-input
                                     placeholder="Nombre"
                                     :class="{ 'is-invalid': errors.nombre }"
-                                    v-model="grupo.nombre"
+                                    v-model="tipo_ingreso.nombre"
                                     clearable
                                 >
                                 </el-input>
@@ -57,7 +57,7 @@
                                     :class="{
                                         'is-invalid': errors.descripcion,
                                     }"
-                                    v-model="grupo.descripcion"
+                                    v-model="tipo_ingreso.descripcion"
                                     clearable
                                 >
                                 </el-input>
@@ -103,7 +103,7 @@ export default {
             type: String,
             default: "nuevo",
         },
-        grupo: {
+        tipo_ingreso: {
             type: Object,
             default: {
                 id: 0,
@@ -161,7 +161,7 @@ export default {
             this.enviando = true;
             try {
                 this.textoBtn = "Enviando...";
-                let url = "/admin/grupos";
+                let url = "/admin/tipo_ingresos";
                 let config = {
                     headers: {
                         "Content-Type": "multipart/form-data",
@@ -170,15 +170,17 @@ export default {
                 let formdata = new FormData();
                 formdata.append(
                     "nombre",
-                    this.grupo.nombre ? this.grupo.nombre : ""
+                    this.tipo_ingreso.nombre ? this.tipo_ingreso.nombre : ""
                 );
                 formdata.append(
                     "descripcion",
-                    this.grupo.descripcion ? this.grupo.descripcion : ""
+                    this.tipo_ingreso.descripcion
+                        ? this.tipo_ingreso.descripcion
+                        : ""
                 );
 
                 if (this.accion == "edit") {
-                    url = "/admin/grupos/" + this.grupo.id;
+                    url = "/admin/tipo_ingresos/" + this.tipo_ingreso.id;
                     formdata.append("_method", "PUT");
                 }
                 axios
@@ -192,7 +194,7 @@ export default {
                                 showConfirmButton: false,
                                 timer: 1500,
                             });
-                            this.limpiaGrupo();
+                            this.limpiaTipoIngreso();
                             this.$emit("envioModal");
                             this.errors = [];
                             if (this.accion == "edit") {
@@ -249,10 +251,10 @@ export default {
             this.bModal = false;
             this.$emit("close");
         },
-        limpiaGrupo() {
+        limpiaTipoIngreso() {
             this.errors = [];
-            this.grupo.nombre = "";
-            this.grupo.descripcion = "";
+            this.tipo_ingreso.nombre = "";
+            this.tipo_ingreso.descripcion = "";
         },
     },
 };

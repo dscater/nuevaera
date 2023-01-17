@@ -71,15 +71,35 @@ class UserController extends Controller
             'proveedors.edit',
             'proveedors.destroy',
 
+            'grupos.index',
+            'grupos.create',
+            'grupos.edit',
+            'grupos.destroy',
+
             'productos.index',
             'productos.create',
             'productos.edit',
             'productos.destroy',
 
-            'grupos.index',
-            'grupos.create',
-            'grupos.edit',
-            'grupos.destroy',
+            'tipo_ingresos.index',
+            'tipo_ingresos.create',
+            'tipo_ingresos.edit',
+            'tipo_ingresos.destroy',
+
+            'ingreso_productos.index',
+            'ingreso_productos.create',
+            'ingreso_productos.edit',
+            'ingreso_productos.destroy',
+
+            'tipo_salidas.index',
+            'tipo_salidas.create',
+            'tipo_salidas.edit',
+            'tipo_salidas.destroy',
+
+            'salida_productos.index',
+            'salida_productos.create',
+            'salida_productos.edit',
+            'salida_productos.destroy',
 
             'configuracion.index',
             'configuracion.edit',
@@ -149,7 +169,7 @@ class UserController extends Controller
             DB::rollBack();
             return response()->JSON([
                 'sw' => false,
-                'msj' => $e->getMessage(),
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -210,7 +230,7 @@ class UserController extends Controller
             DB::rollBack();
             return response()->JSON([
                 'sw' => false,
-                'msj' => $e->getMessage(),
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -249,7 +269,7 @@ class UserController extends Controller
             DB::rollBack();
             return response()->JSON([
                 'sw' => false,
-                'msj' => $e->getMessage(),
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -280,7 +300,7 @@ class UserController extends Controller
             DB::rollBack();
             return response()->JSON([
                 'sw' => false,
-                'msj' => $e->getMessage(),
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -303,7 +323,7 @@ class UserController extends Controller
             DB::rollBack();
             return response()->JSON([
                 'sw' => false,
-                'msj' => $e->getMessage(),
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

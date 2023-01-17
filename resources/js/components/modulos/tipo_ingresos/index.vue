@@ -4,7 +4,7 @@
             <div class="container-fluid">
                 <div class="row mb-2">
                     <div class="col-sm-6">
-                        <h1>Productos</h1>
+                        <h1>Tipo de Ingresos</h1>
                     </div>
                 </div>
             </div>
@@ -20,13 +20,13 @@
                                         <button
                                             v-if="
                                                 permisos.includes(
-                                                    'productos.create'
+                                                    'tipo_ingresos.create'
                                                 )
                                             "
                                             class="btn btn-outline-primary bg-primary btn-flat btn-block"
                                             @click="
                                                 abreModal('nuevo');
-                                                limpiaProducto();
+                                                limpiaTipoIngreso();
                                             "
                                         >
                                             <i class="fa fa-plus"></i>
@@ -122,7 +122,7 @@
                                                             class="btn-flat btn-block"
                                                             title="Eliminar registro"
                                                             @click="
-                                                                eliminaProducto(
+                                                                eliminaTipoIngreso(
                                                                     row.item.id,
                                                                     row.item
                                                                         .nombre
@@ -176,9 +176,9 @@
         <Nuevo
             :muestra_modal="muestra_modal"
             :accion="modal_accion"
-            :producto="oProducto"
+            :tipo_ingreso="oTipoIngreso"
             @close="muestra_modal = false"
-            @envioModal="getProductos"
+            @envioModal="getTipoIngresos"
         ></Nuevo>
     </div>
 </template>
@@ -196,23 +196,8 @@ export default {
             listRegistros: [],
             showOverlay: false,
             fields: [
-                {
-                    key: "codigo",
-                    label: "Código",
-                    sortable: true,
-                },
                 { key: "nombre", label: "Nombre", sortable: true },
-                { key: "medida", label: "Medida", sortable: true },
-                { key: "grupo.nombre", label: "Grupo", sortable: true },
-                { key: "precio", label: "Precio de venta", sortable: true },
-                { key: "precio_mayor", label: "Previo de venta por mayor", sortable: true },
-                { key: "stock_min", label: "Stock mínimo", sortable: true },
-                { key: "descontar_stock", label: "Descontar de stock", sortable: true },
-                {
-                    key: "fecha_registro",
-                    label: "Fecha de registro",
-                    sortable: true,
-                },
+                { key: "descripcion", label: "Descripción", sortable: true },
                 { key: "accion", label: "Acción" },
             ],
             loading: true,
@@ -222,16 +207,10 @@ export default {
             }),
             muestra_modal: false,
             modal_accion: "nuevo",
-            oProducto: {
+            oTipoIngreso: {
                 id: 0,
-                codigo: "",
                 nombre: "",
-                medida: "",
-                grupo_id: "",
-                precio: "",
-                precio_mayor: "",
-                stock_min: "",
-                descontar_stock: "SI",
+                descripcion: "",
             },
             currentPage: 1,
             perPage: 5,
@@ -249,34 +228,24 @@ export default {
     },
     mounted() {
         this.loadingWindow.close();
-        this.getProductos();
+        this.getTipoIngresos();
     },
     methods: {
         // Seleccionar Opciones de Tabla
         editarRegistro(item) {
-            this.oProducto.id = item.id;
-            this.oProducto.codigo = item.codigo ? item.codigo : "";
-            this.oProducto.nombre = item.nombre ? item.nombre : "";
-            this.oProducto.medida = item.medida ? item.medida : "";
-            this.oProducto.grupo_id = item.grupo_id ? item.grupo_id : "";
-            this.oProducto.precio = item.precio ? item.precio : "";
-            this.oProducto.precio_mayor = item.precio_mayor
-                ? item.precio_mayor
-                : "";
-            this.oProducto.stock_min = item.stock_min ? item.stock_min : "";
-            this.oProducto.descontar_stock = item.descontar_stock
-                ? item.descontar_stock
-                : "SI";
+            this.oTipoIngreso.id = item.id;
+            this.oTipoIngreso.nombre = item.nombre ? item.nombre : "";
+            this.oTipoIngreso.descripcion = item.descripcion ? item.descripcion : "";
 
             this.modal_accion = "edit";
             this.muestra_modal = true;
         },
 
-        // Listar Productos
-        getProductos() {
+        // Listar TipoIngresos
+        getTipoIngresos() {
             this.showOverlay = true;
             this.muestra_modal = false;
-            let url = "/admin/productos";
+            let url = "/admin/tipo_ingresos";
             if (this.pagina != 0) {
                 url += "?page=" + this.pagina;
             }
@@ -286,11 +255,11 @@ export default {
                 })
                 .then((res) => {
                     this.showOverlay = false;
-                    this.listRegistros = res.data.productos;
+                    this.listRegistros = res.data.tipo_ingresos;
                     this.totalRows = res.data.total;
                 });
         },
-        eliminaProducto(id, descripcion) {
+        eliminaTipoIngreso(id, descripcion) {
             Swal.fire({
                 title: "¿Quierés eliminar este registro?",
                 html: `<strong>${descripcion}</strong>`,
@@ -303,11 +272,11 @@ export default {
                 /* Read more about isConfirmed, isDenied below */
                 if (result.isConfirmed) {
                     axios
-                        .post("/admin/productos/" + id, {
+                        .post("/admin/tipo_ingresos/" + id, {
                             _method: "DELETE",
                         })
                         .then((res) => {
-                            this.getProductos();
+                            this.getTipoIngresos();
                             this.filter = "";
                             Swal.fire({
                                 icon: "success",
@@ -319,11 +288,11 @@ export default {
                 }
             });
         },
-        abreModal(tipo_accion = "nuevo", producto = null) {
+        abreModal(tipo_accion = "nuevo", tipo_ingreso = null) {
             this.muestra_modal = true;
             this.modal_accion = tipo_accion;
-            if (producto) {
-                this.oProducto = producto;
+            if (tipo_ingreso) {
+                this.oTipoIngreso = tipo_ingreso;
             }
         },
         onFiltered(filteredItems) {
@@ -331,15 +300,9 @@ export default {
             this.totalRows = filteredItems.length;
             this.currentPage = 1;
         },
-        limpiaProducto() {
-            this.oProducto.codigo = "";
-            this.oProducto.nombre = "";
-            this.oProducto.medida = "";
-            this.oProducto.grupo_id = "";
-            this.oProducto.precio = "";
-            this.oProducto.precio_mayor = "";
-            this.oProducto.stock_min = "";
-            this.oProducto.descontar_stock = "SI";
+        limpiaTipoIngreso() {
+            this.oTipoIngreso.nombre = "";
+            this.oTipoIngreso.descripcion = "";
         },
         formatoFecha(date) {
             return this.$moment(String(date)).format("DD/MM/YYYY");

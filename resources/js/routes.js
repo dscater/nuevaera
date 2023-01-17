@@ -67,6 +67,34 @@ export default new Router({
             component: require('./components/modulos/grupos/index.vue').default,
         },
 
+        // tipo ingresos
+        {
+            path: '/tipo_ingresos',
+            name: 'tipo_ingresos.index',
+            component: require('./components/modulos/tipo_ingresos/index.vue').default,
+        },
+
+        // ingreso productos
+        {
+            path: '/ingreso_productos',
+            name: 'ingreso_productos.index',
+            component: require('./components/modulos/ingreso_productos/index.vue').default,
+        },
+
+        // tipo salidas
+        {
+            path: '/tipo_salidas',
+            name: 'tipo_salidas.index',
+            component: require('./components/modulos/tipo_salidas/index.vue').default,
+        },
+
+        // salida productos
+        {
+            path: '/salida_productos',
+            name: 'salida_productos.index',
+            component: require('./components/modulos/salida_productos/index.vue').default,
+        },
+
         // Configuración
         {
             path: '/configuracion',

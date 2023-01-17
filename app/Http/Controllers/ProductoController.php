@@ -27,6 +27,15 @@ class ProductoController extends Controller
         return response()->JSON(['productos' => $productos, 'total' => count($productos)], 200);
     }
 
+    public function buscar_producto(Request $request)
+    {
+        $value = $request->value;
+        $productos = Producto::select("productos.*")->with("grupo")
+            ->where("grupo")
+            ->get();
+        return response()->JSON($productos);
+    }
+
     public function store(Request $request)
     {
         $request->validate($this->validacion, $this->mensajes);
@@ -35,19 +44,24 @@ class ProductoController extends Controller
         try {
             // crear Producto
             $request["fecha_registro"] = date("Y-m-d");
-            $nueva_producto = Producto::create(array_map('mb_strtoupper', $request->all()));
+            $nuevo_producto = Producto::create(array_map('mb_strtoupper', $request->all()));
+
+            // registrar en almacen
+            $nuevo_producto->almacen()->create([
+                "stock_actual" => 0,
+            ]);
 
             DB::commit();
             return response()->JSON([
                 'sw' => true,
-                'producto' => $nueva_producto,
+                'producto' => $nuevo_producto,
                 'msj' => 'El registro se realizó de forma correcta',
             ], 200);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->JSON([
                 'sw' => false,
-                'msj' => $e->getMessage(),
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -69,7 +83,7 @@ class ProductoController extends Controller
             DB::rollBack();
             return response()->JSON([
                 'sw' => false,
-                'msj' => $e->getMessage(),
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -96,7 +110,7 @@ class ProductoController extends Controller
             DB::rollBack();
             return response()->JSON([
                 'sw' => false,
-                'msj' => $e->getMessage(),
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

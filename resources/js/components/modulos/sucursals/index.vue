@@ -125,7 +125,7 @@
                                                                 eliminaSucursal(
                                                                     row.item.id,
                                                                     row.item
-                                                                        .full_name
+                                                                        .nombre
                                                                 )
                                                             "
                                                         >

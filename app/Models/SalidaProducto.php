@@ -8,4 +8,19 @@ use Illuminate\Database\Eloquent\Model;
 class SalidaProducto extends Model
 {
     use HasFactory;
+
+    protected $fillable = [
+        "producto_id", "cantidad", "tipo_salida_id", "descripcion",
+        "fecha_registro",
+    ];
+
+    public function producto()
+    {
+        return $this->belongsTo(Producto::class, 'producto_id');
+    }
+
+    public function tipo_salida()
+    {
+        return $this->belongsTo(TipoSalida::class, 'tipo_salida_id');
+    }
 }

@@ -4,7 +4,7 @@
             <div class="container-fluid">
                 <div class="row mb-2">
                     <div class="col-sm-6">
-                        <h1>Productos</h1>
+                        <h1>Ingreso de Productos</h1>
                     </div>
                 </div>
             </div>
@@ -20,13 +20,13 @@
                                         <button
                                             v-if="
                                                 permisos.includes(
-                                                    'productos.create'
+                                                    'ingreso_productos.create'
                                                 )
                                             "
                                             class="btn btn-outline-primary bg-primary btn-flat btn-block"
                                             @click="
                                                 abreModal('nuevo');
-                                                limpiaProducto();
+                                                limpiaIngresoProducto();
                                             "
                                         >
                                             <i class="fa fa-plus"></i>
@@ -85,6 +85,13 @@
                                                 :filter="filter"
                                             >
                                                 <template
+                                                    #cell(sucursal_id)="row"
+                                                >
+                                                    {{
+                                                        row.item.sucursal.nombre
+                                                    }}
+                                                </template>
+                                                <template
                                                     #cell(fecha_registro)="row"
                                                 >
                                                     {{
@@ -122,10 +129,18 @@
                                                             class="btn-flat btn-block"
                                                             title="Eliminar registro"
                                                             @click="
-                                                                eliminaProducto(
+                                                                eliminaIngresoProducto(
                                                                     row.item.id,
                                                                     row.item
-                                                                        .nombre
+                                                                        .producto
+                                                                        .nombre +
+                                                                        ' | ' +
+                                                                        row.item
+                                                                            .cantidad +
+                                                                        ' | ' +
+                                                                        row.item
+                                                                            .proveedor
+                                                                            .nombre
                                                                 )
                                                             "
                                                         >
@@ -176,9 +191,9 @@
         <Nuevo
             :muestra_modal="muestra_modal"
             :accion="modal_accion"
-            :producto="oProducto"
+            :ingreso_producto="oIngresoProducto"
             @close="muestra_modal = false"
-            @envioModal="getProductos"
+            @envioModal="getIngresoProductos"
         ></Nuevo>
     </div>
 </template>
@@ -196,18 +211,16 @@ export default {
             listRegistros: [],
             showOverlay: false,
             fields: [
+                { key: "producto.nombre", label: "Producto", sortable: true },
+                { key: "proveedor.nombre", label: "Proveedor", sortable: true },
+                { key: "precio_compra", label: "Precio", sortable: true },
+                { key: "cantidad", label: "Cantidad", sortable: true },
                 {
-                    key: "codigo",
-                    label: "Código",
+                    key: "tipo_ingreso.nombre",
+                    label: "Tipo de Ingreso",
                     sortable: true,
                 },
-                { key: "nombre", label: "Nombre", sortable: true },
-                { key: "medida", label: "Medida", sortable: true },
-                { key: "grupo.nombre", label: "Grupo", sortable: true },
-                { key: "precio", label: "Precio de venta", sortable: true },
-                { key: "precio_mayor", label: "Previo de venta por mayor", sortable: true },
-                { key: "stock_min", label: "Stock mínimo", sortable: true },
-                { key: "descontar_stock", label: "Descontar de stock", sortable: true },
+                { key: "descripcion", label: "Descripción", sortable: true },
                 {
                     key: "fecha_registro",
                     label: "Fecha de registro",
@@ -222,16 +235,14 @@ export default {
             }),
             muestra_modal: false,
             modal_accion: "nuevo",
-            oProducto: {
+            oIngresoProducto: {
                 id: 0,
-                codigo: "",
-                nombre: "",
-                medida: "",
-                grupo_id: "",
-                precio: "",
-                precio_mayor: "",
-                stock_min: "",
-                descontar_stock: "SI",
+                producto_id: "",
+                proveedor_id: "",
+                precio_compra: "",
+                cantidad: "",
+                tipo_ingreso_id: "",
+                descripcion: "",
             },
             currentPage: 1,
             perPage: 5,
@@ -249,34 +260,38 @@ export default {
     },
     mounted() {
         this.loadingWindow.close();
-        this.getProductos();
+        this.getIngresoProductos();
     },
     methods: {
         // Seleccionar Opciones de Tabla
         editarRegistro(item) {
-            this.oProducto.id = item.id;
-            this.oProducto.codigo = item.codigo ? item.codigo : "";
-            this.oProducto.nombre = item.nombre ? item.nombre : "";
-            this.oProducto.medida = item.medida ? item.medida : "";
-            this.oProducto.grupo_id = item.grupo_id ? item.grupo_id : "";
-            this.oProducto.precio = item.precio ? item.precio : "";
-            this.oProducto.precio_mayor = item.precio_mayor
-                ? item.precio_mayor
+            this.oIngresoProducto.id = item.id;
+            this.oIngresoProducto.producto_id = item.producto_id
+                ? item.producto_id
                 : "";
-            this.oProducto.stock_min = item.stock_min ? item.stock_min : "";
-            this.oProducto.descontar_stock = item.descontar_stock
-                ? item.descontar_stock
-                : "SI";
+            this.oIngresoProducto.proveedor_id = item.proveedor_id
+                ? item.proveedor_id
+                : "";
+            this.oIngresoProducto.precio_compra = item.precio_compra
+                ? item.precio_compra
+                : "";
+            this.oIngresoProducto.cantidad = item.cantidad ? item.cantidad : "";
+            this.oIngresoProducto.tipo_ingreso_id = item.tipo_ingreso_id
+                ? item.tipo_ingreso_id
+                : "";
+            this.oIngresoProducto.descripcion = item.descripcion
+                ? item.descripcion
+                : "";
 
             this.modal_accion = "edit";
             this.muestra_modal = true;
         },
 
-        // Listar Productos
-        getProductos() {
+        // Listar IngresoProductos
+        getIngresoProductos() {
             this.showOverlay = true;
             this.muestra_modal = false;
-            let url = "/admin/productos";
+            let url = "/admin/ingreso_productos";
             if (this.pagina != 0) {
                 url += "?page=" + this.pagina;
             }
@@ -286,11 +301,11 @@ export default {
                 })
                 .then((res) => {
                     this.showOverlay = false;
-                    this.listRegistros = res.data.productos;
+                    this.listRegistros = res.data.ingreso_productos;
                     this.totalRows = res.data.total;
                 });
         },
-        eliminaProducto(id, descripcion) {
+        eliminaIngresoProducto(id, descripcion) {
             Swal.fire({
                 title: "¿Quierés eliminar este registro?",
                 html: `<strong>${descripcion}</strong>`,
@@ -303,11 +318,11 @@ export default {
                 /* Read more about isConfirmed, isDenied below */
                 if (result.isConfirmed) {
                     axios
-                        .post("/admin/productos/" + id, {
+                        .post("/admin/ingreso_productos/" + id, {
                             _method: "DELETE",
                         })
                         .then((res) => {
-                            this.getProductos();
+                            this.getIngresoProductos();
                             this.filter = "";
                             Swal.fire({
                                 icon: "success",
@@ -319,11 +334,11 @@ export default {
                 }
             });
         },
-        abreModal(tipo_accion = "nuevo", producto = null) {
+        abreModal(tipo_accion = "nuevo", ingreso_producto = null) {
             this.muestra_modal = true;
             this.modal_accion = tipo_accion;
-            if (producto) {
-                this.oProducto = producto;
+            if (ingreso_producto) {
+                this.oIngresoProducto = ingreso_producto;
             }
         },
         onFiltered(filteredItems) {
@@ -331,15 +346,13 @@ export default {
             this.totalRows = filteredItems.length;
             this.currentPage = 1;
         },
-        limpiaProducto() {
-            this.oProducto.codigo = "";
-            this.oProducto.nombre = "";
-            this.oProducto.medida = "";
-            this.oProducto.grupo_id = "";
-            this.oProducto.precio = "";
-            this.oProducto.precio_mayor = "";
-            this.oProducto.stock_min = "";
-            this.oProducto.descontar_stock = "SI";
+        limpiaIngresoProducto() {
+            this.oIngresoProducto.producto_id = "";
+            this.oIngresoProducto.proveedor_id = "";
+            this.oIngresoProducto.precio_compra = "";
+            this.oIngresoProducto.cantidad = "";
+            this.oIngresoProducto.tipo_ingreso_id = "";
+            this.oIngresoProducto.descripcion = "";
         },
         formatoFecha(date) {
             return this.$moment(String(date)).format("DD/MM/YYYY");

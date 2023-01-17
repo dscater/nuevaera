@@ -26,21 +26,88 @@
                             <div class="form-group col-md-6">
                                 <label
                                     :class="{
-                                        'text-danger': errors.nombre,
+                                        'text-danger': errors.producto_id,
                                     }"
-                                    >Nombre*</label
+                                    >Seleleccionar Producto*</label
+                                >
+
+                                <el-select
+                                    class="w-100"
+                                    :class="{
+                                        'is-invalid': errors.producto_id,
+                                    }"
+                                    v-model="salida_producto.producto_id"
+                                    filterable
+                                    remote
+                                    reserve-keyword
+                                    placeholder="Buscar producto"
+                                    :remote-method="buscarProducto"
+                                    :loading="loading_buscador"
+                                >
+                                    <el-option
+                                        v-for="item in aux_lista_productos"
+                                        :key="item.id"
+                                        :label="item.nombre"
+                                        :value="item.id"
+                                    >
+                                    </el-option>
+                                </el-select>
+                                <span
+                                    class="error invalid-feedback"
+                                    v-if="errors.producto_id"
+                                    v-text="errors.producto_id[0]"
+                                ></span>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label
+                                    :class="{
+                                        'text-danger': errors.cantidad,
+                                    }"
+                                    >Cantidad*</label
                                 >
                                 <el-input
-                                    placeholder="Nombre"
-                                    :class="{ 'is-invalid': errors.nombre }"
-                                    v-model="grupo.nombre"
+                                    type="number"
+                                    min="0.01"
+                                    placeholder="Cantidad"
+                                    :class="{ 'is-invalid': errors.cantidad }"
+                                    v-model="salida_producto.cantidad"
                                     clearable
                                 >
                                 </el-input>
                                 <span
                                     class="error invalid-feedback"
-                                    v-if="errors.nombre"
-                                    v-text="errors.nombre[0]"
+                                    v-if="errors.cantidad"
+                                    v-text="errors.cantidad[0]"
+                                ></span>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label
+                                    :class="{
+                                        'text-danger': errors.tipo_salida_id,
+                                    }"
+                                    >Seleccionar Tipo de salida*</label
+                                >
+                                <el-select
+                                    placeholder="Tipo de salida"
+                                    class="w-100"
+                                    :class="{
+                                        'is-invalid': errors.tipo_salida_id,
+                                    }"
+                                    v-model="salida_producto.tipo_salida_id"
+                                    filterable
+                                >
+                                    <el-option
+                                        v-for="item in listTipoSalidas"
+                                        :key="item.id"
+                                        :label="item.nombre"
+                                        :value="item.id"
+                                    >
+                                    </el-option>
+                                </el-select>
+                                <span
+                                    class="error invalid-feedback"
+                                    v-if="errors.tipo_salida_id"
+                                    v-text="errors.tipo_salida_id[0]"
                                 ></span>
                             </div>
                             <div class="form-group col-md-6">
@@ -57,7 +124,7 @@
                                     :class="{
                                         'is-invalid': errors.descripcion,
                                     }"
-                                    v-model="grupo.descripcion"
+                                    v-model="salida_producto.descripcion"
                                     clearable
                                 >
                                 </el-input>
@@ -103,11 +170,13 @@ export default {
             type: String,
             default: "nuevo",
         },
-        grupo: {
+        salida_producto: {
             type: Object,
             default: {
                 id: 0,
-                nombre: "",
+                producto_id: "",
+                cantidad: "",
+                tipo_salida_id: "",
                 descripcion: "",
             },
         },
@@ -144,24 +213,39 @@ export default {
             bModal: this.muestra_modal,
             enviando: false,
             errors: [],
-            listSucursals: [],
+            listProductos: [],
+            aux_lista_productos: [],
+            listTipoSalidas: [],
+            loading_buscador: false,
         };
     },
     mounted() {
         this.bModal = this.muestra_modal;
-        this.getSucursals();
+        this.getProductos();
+        this.getTipoSalidas();
     },
     methods: {
-        getSucursals() {
-            axios.get("/admin/sucursals").then((response) => {
-                this.listSucursals = response.data.sucursals;
+        getProductos() {
+            axios.get("/admin/productos").then((response) => {
+                this.listProductos = response.data.productos;
+                this.aux_lista_productos = this.listProductos;
+            });
+        },
+        getProveedors() {
+            axios.get("/admin/proveedors").then((response) => {
+                this.listProveedors = response.data.proveedors;
+            });
+        },
+        getTipoSalidas() {
+            axios.get("/admin/tipo_salidas").then((response) => {
+                this.listTipoSalidas = response.data.tipo_salidas;
             });
         },
         setRegistroModal() {
             this.enviando = true;
             try {
                 this.textoBtn = "Enviando...";
-                let url = "/admin/grupos";
+                let url = "/admin/salida_productos";
                 let config = {
                     headers: {
                         "Content-Type": "multipart/form-data",
@@ -169,16 +253,32 @@ export default {
                 };
                 let formdata = new FormData();
                 formdata.append(
-                    "nombre",
-                    this.grupo.nombre ? this.grupo.nombre : ""
+                    "producto_id",
+                    this.salida_producto.producto_id
+                        ? this.salida_producto.producto_id
+                        : ""
+                );
+                formdata.append(
+                    "cantidad",
+                    this.salida_producto.cantidad
+                        ? this.salida_producto.cantidad
+                        : ""
+                );
+                formdata.append(
+                    "tipo_salida_id",
+                    this.salida_producto.tipo_salida_id
+                        ? this.salida_producto.tipo_salida_id
+                        : ""
                 );
                 formdata.append(
                     "descripcion",
-                    this.grupo.descripcion ? this.grupo.descripcion : ""
+                    this.salida_producto.descripcion
+                        ? this.salida_producto.descripcion
+                        : ""
                 );
-
                 if (this.accion == "edit") {
-                    url = "/admin/grupos/" + this.grupo.id;
+                    url =
+                        "/admin/salida_productos/" + this.salida_producto.id;
                     formdata.append("_method", "PUT");
                 }
                 axios
@@ -192,7 +292,7 @@ export default {
                                 showConfirmButton: false,
                                 timer: 1500,
                             });
-                            this.limpiaGrupo();
+                            this.limpiaSalidaProducto();
                             this.$emit("envioModal");
                             this.errors = [];
                             if (this.accion == "edit") {
@@ -249,10 +349,40 @@ export default {
             this.bModal = false;
             this.$emit("close");
         },
-        limpiaGrupo() {
+        limpiaSalidaProducto() {
             this.errors = [];
-            this.grupo.nombre = "";
-            this.grupo.descripcion = "";
+            this.salida_producto.producto_id = "";
+            this.salida_producto.cantidad = "";
+            this.salida_producto.tipo_salida_id = "";
+            this.salida_producto.descripcion = "";
+        },
+        buscarProducto(query) {
+            if (query !== "") {
+                this.loading_buscador = true;
+                setTimeout(() => {
+                    this.loading_buscador = false;
+                    this.aux_lista_productos = this.listProductos.filter(
+                        (item) => {
+                            return (
+                                item.codigo
+                                    .toLowerCase()
+                                    .includes(query.toLowerCase()) ||
+                                item.nombre
+                                    .toLowerCase()
+                                    .includes(query.toLowerCase()) ||
+                                item.medida
+                                    .toLowerCase()
+                                    .includes(query.toLowerCase()) ||
+                                item.grupo.nombre
+                                    .toLowerCase()
+                                    .includes(query.toLowerCase())
+                            );
+                        }
+                    );
+                }, 200);
+            } else {
+                this.aux_lista_productos = [];
+            }
         },
     },
 };

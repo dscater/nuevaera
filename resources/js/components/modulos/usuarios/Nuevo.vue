@@ -581,7 +581,8 @@ export default {
                             if (error.response.status === 500) {
                                 Swal.fire({
                                     icon: "error",
-                                    title: res.data.msj,
+                                    title: "Error",
+                                    html: error.response.data.message,
                                     showConfirmButton: false,
                                     timer: 2000,
                                 });

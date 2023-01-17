@@ -271,7 +271,8 @@ export default {
                         } else {
                             Swal.fire({
                                 icon: "info",
-                                title: res.data.msj,
+                                title: "Atención",
+                                html: res.data.msj,
                                 showConfirmButton: false,
                                 timer: 2000,
                             });
@@ -298,7 +299,8 @@ export default {
                             if (error.response.status === 500) {
                                 Swal.fire({
                                     icon: "error",
-                                    title: res.data.msj,
+                                    title: "Error",
+                                    html: error.response.data.message,
                                     showConfirmButton: false,
                                     timer: 2000,
                                 });

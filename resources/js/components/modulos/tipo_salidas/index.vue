@@ -4,7 +4,7 @@
             <div class="container-fluid">
                 <div class="row mb-2">
                     <div class="col-sm-6">
-                        <h1>Productos</h1>
+                        <h1>Tipo de Salidas</h1>
                     </div>
                 </div>
             </div>
@@ -20,13 +20,13 @@
                                         <button
                                             v-if="
                                                 permisos.includes(
-                                                    'productos.create'
+                                                    'tipo_salidas.create'
                                                 )
                                             "
                                             class="btn btn-outline-primary bg-primary btn-flat btn-block"
                                             @click="
                                                 abreModal('nuevo');
-                                                limpiaProducto();
+                                                limpiaTipoSalida();
                                             "
                                         >
                                             <i class="fa fa-plus"></i>
@@ -122,7 +122,7 @@
                                                             class="btn-flat btn-block"
                                                             title="Eliminar registro"
                                                             @click="
-                                                                eliminaProducto(
+                                                                eliminaTipoSalida(
                                                                     row.item.id,
                                                                     row.item
                                                                         .nombre
@@ -176,9 +176,9 @@
         <Nuevo
             :muestra_modal="muestra_modal"
             :accion="modal_accion"
-            :producto="oProducto"
+            :tipo_salida="oTipoSalida"
             @close="muestra_modal = false"
-            @envioModal="getProductos"
+            @envioModal="getTipoSalidas"
         ></Nuevo>
     </div>
 </template>
@@ -196,23 +196,8 @@ export default {
             listRegistros: [],
             showOverlay: false,
             fields: [
-                {
-                    key: "codigo",
-                    label: "Código",
-                    sortable: true,
-                },
                 { key: "nombre", label: "Nombre", sortable: true },
-                { key: "medida", label: "Medida", sortable: true },
-                { key: "grupo.nombre", label: "Grupo", sortable: true },
-                { key: "precio", label: "Precio de venta", sortable: true },
-                { key: "precio_mayor", label: "Previo de venta por mayor", sortable: true },
-                { key: "stock_min", label: "Stock mínimo", sortable: true },
-                { key: "descontar_stock", label: "Descontar de stock", sortable: true },
-                {
-                    key: "fecha_registro",
-                    label: "Fecha de registro",
-                    sortable: true,
-                },
+                { key: "descripcion", label: "Descripción", sortable: true },
                 { key: "accion", label: "Acción" },
             ],
             loading: true,
@@ -222,16 +207,10 @@ export default {
             }),
             muestra_modal: false,
             modal_accion: "nuevo",
-            oProducto: {
+            oTipoSalida: {
                 id: 0,
-                codigo: "",
                 nombre: "",
-                medida: "",
-                grupo_id: "",
-                precio: "",
-                precio_mayor: "",
-                stock_min: "",
-                descontar_stock: "SI",
+                descripcion: "",
             },
             currentPage: 1,
             perPage: 5,
@@ -249,34 +228,24 @@ export default {
     },
     mounted() {
         this.loadingWindow.close();
-        this.getProductos();
+        this.getTipoSalidas();
     },
     methods: {
         // Seleccionar Opciones de Tabla
         editarRegistro(item) {
-            this.oProducto.id = item.id;
-            this.oProducto.codigo = item.codigo ? item.codigo : "";
-            this.oProducto.nombre = item.nombre ? item.nombre : "";
-            this.oProducto.medida = item.medida ? item.medida : "";
-            this.oProducto.grupo_id = item.grupo_id ? item.grupo_id : "";
-            this.oProducto.precio = item.precio ? item.precio : "";
-            this.oProducto.precio_mayor = item.precio_mayor
-                ? item.precio_mayor
-                : "";
-            this.oProducto.stock_min = item.stock_min ? item.stock_min : "";
-            this.oProducto.descontar_stock = item.descontar_stock
-                ? item.descontar_stock
-                : "SI";
+            this.oTipoSalida.id = item.id;
+            this.oTipoSalida.nombre = item.nombre ? item.nombre : "";
+            this.oTipoSalida.descripcion = item.descripcion ? item.descripcion : "";
 
             this.modal_accion = "edit";
             this.muestra_modal = true;
         },
 
-        // Listar Productos
-        getProductos() {
+        // Listar TipoSalidas
+        getTipoSalidas() {
             this.showOverlay = true;
             this.muestra_modal = false;
-            let url = "/admin/productos";
+            let url = "/admin/tipo_salidas";
             if (this.pagina != 0) {
                 url += "?page=" + this.pagina;
             }
@@ -286,11 +255,11 @@ export default {
                 })
                 .then((res) => {
                     this.showOverlay = false;
-                    this.listRegistros = res.data.productos;
+                    this.listRegistros = res.data.tipo_salidas;
                     this.totalRows = res.data.total;
                 });
         },
-        eliminaProducto(id, descripcion) {
+        eliminaTipoSalida(id, descripcion) {
             Swal.fire({
                 title: "¿Quierés eliminar este registro?",
                 html: `<strong>${descripcion}</strong>`,
@@ -303,11 +272,11 @@ export default {
                 /* Read more about isConfirmed, isDenied below */
                 if (result.isConfirmed) {
                     axios
-                        .post("/admin/productos/" + id, {
+                        .post("/admin/tipo_salidas/" + id, {
                             _method: "DELETE",
                         })
                         .then((res) => {
-                            this.getProductos();
+                            this.getTipoSalidas();
                             this.filter = "";
                             Swal.fire({
                                 icon: "success",
@@ -319,11 +288,11 @@ export default {
                 }
             });
         },
-        abreModal(tipo_accion = "nuevo", producto = null) {
+        abreModal(tipo_accion = "nuevo", tipo_salida = null) {
             this.muestra_modal = true;
             this.modal_accion = tipo_accion;
-            if (producto) {
-                this.oProducto = producto;
+            if (tipo_salida) {
+                this.oTipoSalida = tipo_salida;
             }
         },
         onFiltered(filteredItems) {
@@ -331,15 +300,9 @@ export default {
             this.totalRows = filteredItems.length;
             this.currentPage = 1;
         },
-        limpiaProducto() {
-            this.oProducto.codigo = "";
-            this.oProducto.nombre = "";
-            this.oProducto.medida = "";
-            this.oProducto.grupo_id = "";
-            this.oProducto.precio = "";
-            this.oProducto.precio_mayor = "";
-            this.oProducto.stock_min = "";
-            this.oProducto.descontar_stock = "SI";
+        limpiaTipoSalida() {
+            this.oTipoSalida.nombre = "";
+            this.oTipoSalida.descripcion = "";
         },
         formatoFecha(date) {
             return this.$moment(String(date)).format("DD/MM/YYYY");

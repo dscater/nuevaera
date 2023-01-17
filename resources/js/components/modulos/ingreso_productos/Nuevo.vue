@@ -26,81 +26,26 @@
                             <div class="form-group col-md-6">
                                 <label
                                     :class="{
-                                        'text-danger': errors.codigo,
+                                        'text-danger': errors.producto_id,
                                     }"
-                                    >Código*</label
+                                    >Seleleccionar Producto*</label
                                 >
-                                <el-input
-                                    placeholder="Código"
-                                    :class="{ 'is-invalid': errors.codigo }"
-                                    v-model="producto.codigo"
-                                    clearable
-                                >
-                                </el-input>
-                                <span
-                                    class="error invalid-feedback"
-                                    v-if="errors.codigo"
-                                    v-text="errors.codigo[0]"
-                                ></span>
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label
-                                    :class="{
-                                        'text-danger': errors.nombre,
-                                    }"
-                                    >Nombre*</label
-                                >
-                                <el-input
-                                    placeholder="Nombre"
-                                    :class="{ 'is-invalid': errors.nombre }"
-                                    v-model="producto.nombre"
-                                    clearable
-                                >
-                                </el-input>
-                                <span
-                                    class="error invalid-feedback"
-                                    v-if="errors.nombre"
-                                    v-text="errors.nombre[0]"
-                                ></span>
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label
-                                    :class="{
-                                        'text-danger': errors.medida,
-                                    }"
-                                    >Medida*</label
-                                >
-                                <el-input
-                                    placeholder="Nombre"
-                                    :class="{ 'is-invalid': errors.medida }"
-                                    v-model="producto.medida"
-                                    clearable
-                                >
-                                </el-input>
-                                <span
-                                    class="error invalid-feedback"
-                                    v-if="errors.medida"
-                                    v-text="errors.medida[0]"
-                                ></span>
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label
-                                    :class="{
-                                        'text-danger': errors.grupo_id,
-                                    }"
-                                    >Seleccionar Grupo*</label
-                                >
+
                                 <el-select
-                                    placeholder="Seleccionar Grupo"
                                     class="w-100"
                                     :class="{
-                                        'is-invalid': errors.grupo_id,
+                                        'is-invalid': errors.producto_id,
                                     }"
-                                    v-model="producto.grupo_id"
+                                    v-model="ingreso_producto.producto_id"
                                     filterable
+                                    remote
+                                    reserve-keyword
+                                    placeholder="Buscar producto"
+                                    :remote-method="buscarProducto"
+                                    :loading="loading_buscador"
                                 >
                                     <el-option
-                                        v-for="item in listGrupos"
+                                        v-for="item in aux_lista_productos"
                                         :key="item.id"
                                         :label="item.nombre"
                                         :value="item.id"
@@ -109,106 +54,138 @@
                                 </el-select>
                                 <span
                                     class="error invalid-feedback"
-                                    v-if="errors.grupo_id"
-                                    v-text="errors.grupo_id[0]"
+                                    v-if="errors.producto_id"
+                                    v-text="errors.producto_id[0]"
                                 ></span>
                             </div>
                             <div class="form-group col-md-6">
                                 <label
                                     :class="{
-                                        'text-danger': errors.precio,
+                                        'text-danger': errors.proveedor_id,
                                     }"
-                                    >Precio de venta*</label
-                                >
-                                <el-input
-                                    type="number"
-                                    step="0.01"
-                                    placeholder="Previo de venta"
-                                    :class="{ 'is-invalid': errors.precio }"
-                                    v-model="producto.precio"
-                                    clearable
-                                >
-                                </el-input>
-                                <span
-                                    class="error invalid-feedback"
-                                    v-if="errors.precio"
-                                    v-text="errors.precio[0]"
-                                ></span>
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label
-                                    :class="{
-                                        'text-danger': errors.precio_mayor,
-                                    }"
-                                    >Precio de venta por Mayor*</label
-                                >
-                                <el-input
-                                    type="number"
-                                    step="0.01"
-                                    placeholder="Previo de venta por Mayor"
-                                    :class="{
-                                        'is-invalid': errors.precio_mayor,
-                                    }"
-                                    v-model="producto.precio_mayor"
-                                    clearable
-                                >
-                                </el-input>
-                                <span
-                                    class="error invalid-feedback"
-                                    v-if="errors.precio_mayor"
-                                    v-text="errors.precio_mayor[0]"
-                                ></span>
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label
-                                    :class="{
-                                        'text-danger': errors.stock_min,
-                                    }"
-                                    >Stock mínimo*</label
-                                >
-                                <el-input
-                                    type="number"
-                                    step="0.01"
-                                    placeholder="Stock mínimo"
-                                    :class="{
-                                        'is-invalid': errors.stock_min,
-                                    }"
-                                    v-model="producto.stock_min"
-                                    clearable
-                                >
-                                </el-input>
-                                <span
-                                    class="error invalid-feedback"
-                                    v-if="errors.stock_min"
-                                    v-text="errors.stock_min[0]"
-                                ></span>
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label
-                                    :class="{
-                                        'text-danger': errors.descontar_stock,
-                                    }"
-                                    >Descontar de Stock</label
+                                    >Seleccionar Proveedor*</label
                                 >
                                 <el-select
-                                    placeholder="Descontar de Stock"
+                                    placeholder="Proveedor"
                                     class="w-100"
                                     :class="{
-                                        'is-invalid': errors.descontar_stock,
+                                        'is-invalid': errors.proveedor_id,
                                     }"
-                                    v-model="producto.descontar_stock"
+                                    v-model="ingreso_producto.proveedor_id"
+                                    filterable
                                 >
                                     <el-option
-                                        v-for="(item, index) in ['SI', 'NO']"
-                                        :key="index"
-                                        :label="item"
-                                        :value="item"
-                                    ></el-option>
+                                        v-for="item in listProveedors"
+                                        :key="item.id"
+                                        :label="item.nombre"
+                                        :value="item.id"
+                                    >
+                                    </el-option>
                                 </el-select>
                                 <span
                                     class="error invalid-feedback"
-                                    v-if="errors.descontar_stock"
-                                    v-text="errors.descontar_stock[0]"
+                                    v-if="errors.proveedor_id"
+                                    v-text="errors.proveedor_id[0]"
+                                ></span>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label
+                                    :class="{
+                                        'text-danger': errors.precio_compra,
+                                    }"
+                                    >Precio de compra*</label
+                                >
+                                <el-input
+                                    type="number"
+                                    min="0.01"
+                                    placeholder="Precio de compra"
+                                    :class="{
+                                        'is-invalid': errors.precio_compra,
+                                    }"
+                                    v-model="ingreso_producto.precio_compra"
+                                    clearable
+                                >
+                                </el-input>
+                                <span
+                                    class="error invalid-feedback"
+                                    v-if="errors.precio_compra"
+                                    v-text="errors.precio_compra[0]"
+                                ></span>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label
+                                    :class="{
+                                        'text-danger': errors.cantidad,
+                                    }"
+                                    >Cantidad*</label
+                                >
+                                <el-input
+                                    type="number"
+                                    min="0.01"
+                                    placeholder="Cantidad"
+                                    :class="{ 'is-invalid': errors.cantidad }"
+                                    v-model="ingreso_producto.cantidad"
+                                    clearable
+                                >
+                                </el-input>
+                                <span
+                                    class="error invalid-feedback"
+                                    v-if="errors.cantidad"
+                                    v-text="errors.cantidad[0]"
+                                ></span>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label
+                                    :class="{
+                                        'text-danger': errors.tipo_ingreso_id,
+                                    }"
+                                    >Seleccionar Tipo de ingreso*</label
+                                >
+                                <el-select
+                                    placeholder="Tipo de ingreso"
+                                    class="w-100"
+                                    :class="{
+                                        'is-invalid': errors.tipo_ingreso_id,
+                                    }"
+                                    v-model="ingreso_producto.tipo_ingreso_id"
+                                    filterable
+                                >
+                                    <el-option
+                                        v-for="item in listTipoIngresos"
+                                        :key="item.id"
+                                        :label="item.nombre"
+                                        :value="item.id"
+                                    >
+                                    </el-option>
+                                </el-select>
+                                <span
+                                    class="error invalid-feedback"
+                                    v-if="errors.tipo_ingreso_id"
+                                    v-text="errors.tipo_ingreso_id[0]"
+                                ></span>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label
+                                    :class="{
+                                        'text-danger': errors.descripcion,
+                                    }"
+                                    >Descripción</label
+                                >
+                                <el-input
+                                    type="textarea"
+                                    autosize
+                                    placeholder="Descripción"
+                                    :class="{
+                                        'is-invalid': errors.descripcion,
+                                    }"
+                                    v-model="ingreso_producto.descripcion"
+                                    clearable
+                                >
+                                </el-input>
+                                <span
+                                    class="error invalid-feedback"
+                                    v-if="errors.descripcion"
+                                    v-text="errors.descripcion[0]"
                                 ></span>
                             </div>
                         </div>
@@ -247,18 +224,16 @@ export default {
             type: String,
             default: "nuevo",
         },
-        producto: {
+        ingreso_producto: {
             type: Object,
             default: {
                 id: 0,
-                codigo: "",
-                nombre: "",
-                medida: "",
-                grupo_id: "",
-                precio: "",
-                precio_mayor: "",
-                stock_min: "",
-                descontar_stock: "SI",
+                producto_id: "",
+                proveedor_id: "",
+                precio_compra: "",
+                cantidad: "",
+                tipo_ingreso_id: "",
+                descripcion: "",
             },
         },
     },
@@ -294,24 +269,41 @@ export default {
             bModal: this.muestra_modal,
             enviando: false,
             errors: [],
-            listGrupos: [],
+            listProductos: [],
+            aux_lista_productos: [],
+            listProveedors: [],
+            listTipoIngresos: [],
+            loading_buscador: false,
         };
     },
     mounted() {
         this.bModal = this.muestra_modal;
-        this.getGrupos();
+        this.getProductos();
+        this.getProveedors();
+        this.getTipoIngresos();
     },
     methods: {
-        getGrupos() {
-            axios.get("/admin/grupos").then((response) => {
-                this.listGrupos = response.data.grupos;
+        getProductos() {
+            axios.get("/admin/productos").then((response) => {
+                this.listProductos = response.data.productos;
+                this.aux_lista_productos = this.listProductos;
+            });
+        },
+        getProveedors() {
+            axios.get("/admin/proveedors").then((response) => {
+                this.listProveedors = response.data.proveedors;
+            });
+        },
+        getTipoIngresos() {
+            axios.get("/admin/tipo_ingresos").then((response) => {
+                this.listTipoIngresos = response.data.tipo_ingresos;
             });
         },
         setRegistroModal() {
             this.enviando = true;
             try {
                 this.textoBtn = "Enviando...";
-                let url = "/admin/productos";
+                let url = "/admin/ingreso_productos";
                 let config = {
                     headers: {
                         "Content-Type": "multipart/form-data",
@@ -319,41 +311,44 @@ export default {
                 };
                 let formdata = new FormData();
                 formdata.append(
-                    "codigo",
-                    this.producto.codigo ? this.producto.codigo : ""
+                    "producto_id",
+                    this.ingreso_producto.producto_id
+                        ? this.ingreso_producto.producto_id
+                        : ""
                 );
                 formdata.append(
-                    "nombre",
-                    this.producto.nombre ? this.producto.nombre : ""
+                    "proveedor_id",
+                    this.ingreso_producto.proveedor_id
+                        ? this.ingreso_producto.proveedor_id
+                        : ""
                 );
                 formdata.append(
-                    "medida",
-                    this.producto.medida ? this.producto.medida : ""
+                    "precio_compra",
+                    this.ingreso_producto.precio_compra
+                        ? this.ingreso_producto.precio_compra
+                        : ""
                 );
                 formdata.append(
-                    "grupo_id",
-                    this.producto.grupo_id ? this.producto.grupo_id : ""
+                    "cantidad",
+                    this.ingreso_producto.cantidad
+                        ? this.ingreso_producto.cantidad
+                        : ""
                 );
                 formdata.append(
-                    "precio",
-                    this.producto.precio ? this.producto.precio : ""
+                    "tipo_ingreso_id",
+                    this.ingreso_producto.tipo_ingreso_id
+                        ? this.ingreso_producto.tipo_ingreso_id
+                        : ""
                 );
                 formdata.append(
-                    "precio_mayor",
-                    this.producto.precio_mayor ? this.producto.precio_mayor : ""
-                );
-                formdata.append(
-                    "stock_min",
-                    this.producto.stock_min ? this.producto.stock_min : ""
-                );
-                formdata.append(
-                    "descontar_stock",
-                    this.producto.descontar_stock
-                        ? this.producto.descontar_stock
+                    "descripcion",
+                    this.ingreso_producto.descripcion
+                        ? this.ingreso_producto.descripcion
                         : ""
                 );
                 if (this.accion == "edit") {
-                    url = "/admin/productos/" + this.producto.id;
+                    url =
+                        "/admin/ingreso_productos/" + this.ingreso_producto.id;
                     formdata.append("_method", "PUT");
                 }
                 axios
@@ -367,7 +362,7 @@ export default {
                                 showConfirmButton: false,
                                 timer: 1500,
                             });
-                            this.limpiaProducto();
+                            this.limpiaIngresoProducto();
                             this.$emit("envioModal");
                             this.errors = [];
                             if (this.accion == "edit") {
@@ -424,16 +419,50 @@ export default {
             this.bModal = false;
             this.$emit("close");
         },
-        limpiaProducto() {
+        limpiaIngresoProducto() {
             this.errors = [];
-            this.producto.codigo = "";
-            this.producto.nombre = "";
-            this.producto.medida = "";
-            this.producto.grupo_id = "";
-            this.producto.precio = "";
-            this.producto.precio_mayor = "";
-            this.producto.stock_min = "";
-            this.producto.descontar_stock = "SI";
+            this.ingreso_producto.producto_id = "";
+            this.ingreso_producto.proveedor_id = "";
+            this.ingreso_producto.precio_compra = "";
+            this.ingreso_producto.cantidad = "";
+            this.ingreso_producto.tipo_ingreso_id = "";
+            this.ingreso_producto.descripcion = "";
+        },
+        buscarProducto(query) {
+            if (query !== "") {
+                this.loading_buscador = true;
+                // axios
+                //     .get("/admin/productos/buscar_producto", {
+                //         params: { value: query },
+                //     })
+                //     .then((response) => {
+                //     this.loading_buscador = false;
+                //     this.listProductos
+                //     });
+                setTimeout(() => {
+                    this.loading_buscador = false;
+                    this.aux_lista_productos = this.listProductos.filter(
+                        (item) => {
+                            return (
+                                item.codigo
+                                    .toLowerCase()
+                                    .includes(query.toLowerCase()) ||
+                                item.nombre
+                                    .toLowerCase()
+                                    .includes(query.toLowerCase()) ||
+                                item.medida
+                                    .toLowerCase()
+                                    .includes(query.toLowerCase()) ||
+                                item.grupo.nombre
+                                    .toLowerCase()
+                                    .includes(query.toLowerCase())
+                            );
+                        }
+                    );
+                }, 200);
+            } else {
+                this.aux_lista_productos = [];
+            }
         },
     },
 };

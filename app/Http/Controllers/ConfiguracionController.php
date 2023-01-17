@@ -80,7 +80,7 @@ class ConfiguracionController extends Controller
                 DB::rollBack();
                 return response()->JSON([
                     'sw' => false,
-                    'msj' => $e->getMessage(),
+                    'message' => $e->getMessage(),
                 ], 500);
             }
         }
