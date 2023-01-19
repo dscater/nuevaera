@@ -4,7 +4,282 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
+use PDF;
+use App\library\numero_a_letras\src\NumeroALetras;
+use App\Models\DetalleOrden;
+use App\Models\KardexProducto;
+use App\Models\OrdenVenta;
+use App\Models\Producto;
+use App\Models\SucursalStock;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
 class OrdenVentaController extends Controller
 {
-    //
+    public $validacion = [
+        "sucursal_id" => "required",
+        "cliente_id" => "required",
+        "venta_mayor" => "required",
+    ];
+
+    public function index()
+    {
+        $orden_ventas = OrdenVenta::with("sucursal")->with("cliente")->get();
+        if (Auth::user()->tipo != 'ADMINISTRADOR') {
+            $orden_ventas = OrdenVenta::with("sucursal")->with("cliente")->where("sucursal_id", Auth::user()->sucursal_id)->get();
+        }
+
+        return response()->JSON(["orden_ventas" => $orden_ventas, "total" => count($orden_ventas)]);
+    }
+
+    public function orden_ventas_sucursal(Request $request)
+    {
+        $orden_ventas = OrdenVenta::with("sucursal")->where("sucursal_id", $request->id)->get();
+        return response()->JSON($orden_ventas);
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate($this->validacion);
+
+        DB::beginTransaction();
+        try {
+            $request["fecha_registro"] = date("Y-m-d");
+            $orden_venta = OrdenVenta::create(array_map("mb_strtoupper", $request->except("detalle_ordens")));
+
+            $detalle_ordens = $request->detalle_ordens;
+            foreach ($detalle_ordens as $value) {
+                $dv = $orden_venta->detalle_ordens()->create([
+                    "producto_id" => $value["producto_id"],
+                    "sucursal_stock_id" => $value["sucursal_stock_id"],
+                    "cantidad" => $value["cantidad"],
+                    "precio" => $value["precio"],
+                    "subtotal" => $value["subtotal"],
+                ]);
+                // registrar kardex
+                KardexProducto::registroEgreso("SUCURSAL", $orden_venta->sucursal_id, "VENTA", $dv->id, $dv->producto, $dv->cantidad, $dv->precio, "VENTA DE PRODUCTO");
+            }
+            DB::commit();
+            return response()->JSON(["sw" => true, "orden_venta" => $orden_venta, "id" => $orden_venta->id, "msj" => "El registro se almacenó correctamente"]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->JSON([
+                'sw' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function show(OrdenVenta $orden_venta)
+    {
+        return response()->JSON($orden_venta->load("sucursal")->load("detalle_ordens.producto"));
+    }
+
+    public function update(OrdenVenta $orden_venta, Request $request)
+    {
+        $request->validate($this->validacion);
+
+        DB::beginTransaction();
+        try {
+            $orden_venta->update(array_map("mb_strtoupper", $request->except("sucursal", "detalle_ordens", "eliminados")));
+            $detalle_ordens = $request->detalle_ordens;
+            foreach ($detalle_ordens as $value) {
+                if ($value["id"] == 0) {
+                    $dv = $orden_venta->detalle_ordens()->create([
+                        "producto_id" => $value["producto_id"],
+                        "sucursal_stock_id" => $value["sucursal_stock_id"],
+                        "cantidad" => $value["cantidad"],
+                        "precio" => $value["precio"],
+                        "subtotal" => $value["subtotal"],
+                    ]);
+                    // registrar kardex
+                    KardexProducto::registroEgreso("SUCURSAL", $orden_venta->sucursal_id, "VENTA", $dv->id, $dv->producto, $dv->cantidad, $dv->precio, "VENTA DE PRODUCTO");
+                } else {
+                    $dv = DetalleOrden::find($value["id"]);
+
+                    if ($dv->producto->descontar_stock == 'SI') {
+                        // incrementar el stock
+                        Producto::incrementarStock($dv->producto, $dv->cantidad, "SUCURSAL", $dv->orden->sucursal_id);
+                    }
+
+                    // VALIDAR STOCK
+                    $sucursal_stock = SucursalStock::where("sucursal_id", $dv->orden->sucursal_id)->where("producto_id", $dv->producto_id)->get()->first();
+                    if ($sucursal_stock->stock_actual < $dv->cantidad) {
+                        throw new Exception('No es posible realizar el registro debido a que la cantidad supera al stock disponible ' . $sucursal_stock->stock_actual);
+                    }
+
+                    $dv->update([
+                        "producto_id" => $value["producto_id"],
+                        "sucursal_stock_id" => $value["sucursal_stock_id"],
+                        "cantidad" => $value["cantidad"],
+                        "precio" => $value["precio"],
+                        "subtotal" => $value["subtotal"],
+                    ]);
+
+                    if ($dv->producto->descontar_stock == 'SI') {
+                        Producto::decrementarStock($dv->producto, $dv->cantidad, "SUCURSAL", $dv->orden->sucursal_id);
+                    }
+                    // actualizar kardex
+                    $kardex = KardexProducto::where("lugar", "SUCURSAL")
+                        ->where("lugar_id", $orden_venta->sucursal_id)
+                        ->where("producto_id", $dv->producto_id)
+                        ->where("tipo_registro", "VENTA")
+                        ->where("registro_id", $dv->id)
+                        ->get()->first();
+
+                    KardexProducto::actualizaRegistrosKardex($kardex->id, $kardex->producto_id, "SUCURSAL", $orden_venta->sucursal_id);
+                }
+            }
+
+            $eliminados = $request->eliminados;
+            foreach ($eliminados as $value) {
+                $dv = DetalleOrden::find($value);
+                $producto = Producto::find($dv->producto_id);
+                // ACTUALIZAR KARDEX
+                $eliminar_kardex = KardexProducto::where("lugar", "SUCURSAL")
+                    ->where("lugar_id", $dv->orden->sucursal_id)
+                    ->where("tipo_registro", "VENTA")
+                    ->where("registro_id", $dv->id)
+                    ->where("producto_id", $dv->producto_id)
+                    ->get()
+                    ->first();
+                $id_kardex = $eliminar_kardex->id;
+                $id_producto = $eliminar_kardex->producto_id;
+                $eliminar_kardex->delete();
+
+                $anterior = KardexProducto::where("lugar", "SUCURSAL")
+                    ->where("lugar_id", $dv->orden->sucursal_id)
+                    ->where("producto_id", $id_producto)
+                    ->where("id", "<", $id_kardex)
+                    ->get()
+                    ->last();
+                $actualiza_desde = null;
+                if ($anterior) {
+                    $actualiza_desde = $anterior;
+                } else {
+                    // comprobar si existen registros posteriorres al actualizado
+                    $siguiente = KardexProducto::where("lugar", "SUCURSAL")
+                        ->where("lugar_id", $dv->orden->sucursal_id)
+                        ->where("producto_id", $id_producto)
+                        ->where("id", ">", $id_kardex)
+                        ->get()->first();
+                    if ($siguiente)
+                        $actualiza_desde = $siguiente;
+                }
+
+                if ($actualiza_desde) {
+                    // actualizar a partir de este registro los sgtes. registros
+                    KardexProducto::actualizaRegistrosKardex($actualiza_desde->id, $actualiza_desde->producto_id, "SUCURSAL", $dv->orden->sucursal_id);
+                }
+
+                // incrementar el stock
+                if ($dv->producto->descontar_stock == 'SI') {
+                    Producto::incrementarStock($producto, $dv->cantidad, "SUCURSAL", $dv->orden->sucursal_id);
+                }
+
+                $dv->delete();
+            }
+            DB::commit();
+            return response()->JSON(["sw" => true, "orden_venta" => $orden_venta, "id" => $orden_venta->id, "msj" => "El registro se actualizó correctamente"]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->JSON([
+                'sw' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function destroy(OrdenVenta $orden_venta)
+    {
+        DB::beginTransaction();
+        try {
+
+            foreach ($orden_venta->detalle_ordens as $dv) {
+                $producto = Producto::find($dv->producto_id);
+                // ACTUALIZAR KARDEX
+                $eliminar_kardex = KardexProducto::where("lugar", "SUCURSAL")
+                    ->where("tipo_registro", "VENTA")
+                    ->where("registro_id", $dv->id)
+                    ->where("producto_id", $dv->producto_id)
+                    ->get()
+                    ->first();
+                $id_kardex = $eliminar_kardex->id;
+                $id_producto = $eliminar_kardex->producto_id;
+                $eliminar_kardex->delete();
+
+                $anterior = KardexProducto::where("lugar", "SUCURSAL")
+                    ->where("lugar_id", $dv->orden->sucursal_id)
+                    ->where("producto_id", $id_producto)
+                    ->where("id", "<", $id_kardex)
+                    ->get()
+                    ->last();
+                $actualiza_desde = null;
+                if ($anterior) {
+                    $actualiza_desde = $anterior;
+                } else {
+                    // comprobar si existen registros posteriorres al actualizado
+                    $siguiente = KardexProducto::where("lugar", "SUCURSAL")
+                        ->where("lugar_id", $dv->orden->sucursal_id)
+                        ->where("producto_id", $id_producto)
+                        ->where("id", ">", $id_kardex)
+                        ->get()->first();
+                    if ($siguiente)
+                        $actualiza_desde = $siguiente;
+                }
+
+                if ($actualiza_desde) {
+                    // actualizar a partir de este registro los sgtes. registros
+                    KardexProducto::actualizaRegistrosKardex($actualiza_desde->id, $actualiza_desde->producto_id, "SUCURSAL", $dv->orden->sucursal_id);
+                }
+
+                // incrementar el stock
+                if ($dv->producto->descontar_stock == 'SI') {
+                    Producto::incrementarStock($producto, $dv->cantidad, "SUCURSAL", $dv->orden->sucursal_id);
+                }
+
+                $dv->delete();
+            }
+            $orden_venta->delete();
+            DB::commit();
+            return response()->JSON(["sw" => true, "msj" => "El registro se eliminó correctamente"]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->JSON([
+                'sw' => false,
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function pdf(OrdenVenta $orden_venta)
+    {
+        $convertir = new NumeroALetras();
+        $array_monto = explode('.', $orden_venta->total);
+        $literal = $convertir->convertir($array_monto[0]);
+        $literal .= " " . $array_monto[1] . "/100." . " BOLIVIANOS";
+
+        $nro_factura = (int)$orden_venta->id;
+        if ($nro_factura < 10) {
+            $nro_factura = '000' . $nro_factura;
+        } else if ($nro_factura < 100) {
+            $nro_factura = '00' . $nro_factura;
+        } else if ($nro_factura < 1000) {
+            $nro_factura = '0' . $nro_factura;
+        }
+
+        $customPaper = array(0, 0, 360, 600);
+
+        $pdf = PDF::loadView('reportes.orden_venta', compact('orden_venta', 'literal', 'nro_factura'))->setPaper('legal', 'landscape');
+        // ENUMERAR LAS PÁGINAS USANDO CANVAS
+        $pdf->output();
+        $dom_pdf = $pdf->getDomPDF();
+        $canvas = $dom_pdf->get_canvas();
+        $alto = $canvas->get_height();
+        $ancho = $canvas->get_width();
+        $canvas->page_text($ancho - 90, $alto - 25, "Página {PAGE_NUM} de {PAGE_COUNT}", null, 9, array(0, 0, 0));
+
+        return $pdf->download('Usuarios.pdf');
+    }
 }

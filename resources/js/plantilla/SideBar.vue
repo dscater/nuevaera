@@ -92,6 +92,34 @@
                     <li
                         class="nav-item"
                         v-if="
+                            permisos.includes('orden_ventas.index')
+                        "
+                    >
+                        <router-link
+                            :to="{ name: 'orden_ventas.index' }"
+                            class="nav-link"
+                        >
+                            <i class="nav-icon fas fa-list"></i>
+                            <p>Orden de Ventas</p>
+                        </router-link>
+                    </li>
+                    <li
+                        class="nav-item"
+                        v-if="
+                            permisos.includes('devolucions.index')
+                        "
+                    >
+                        <router-link
+                            :to="{ name: 'devolucions.index' }"
+                            class="nav-link"
+                        >
+                            <i class="nav-icon fas fa-list"></i>
+                            <p>Devoluciones</p>
+                        </router-link>
+                    </li>
+                    <li
+                        class="nav-item"
+                        v-if="
                             permisos.includes('transferencia_productos.index')
                         "
                     >
@@ -136,10 +164,25 @@
                             permisos.includes('proveedors.index') ||
                             permisos.includes('productos.index') ||
                             permisos.includes('grupos.index') ||
+                            permisos.includes('clientes.index') ||
                             permisos.includes('configuracion.index')
                         "
                     >
                         ADMINISTRACIÓN
+                    </li>
+                    <li
+                        class="nav-item"
+                        v-if="permisos.includes('clientes.index')"
+                    >
+                        <router-link
+                            exact
+                            :to="{ name: 'clientes.index' }"
+                            class="nav-link"
+                            v-loading.fullscreen.lock="fullscreenLoading"
+                        >
+                            <i class="nav-icon fas fa-list"></i>
+                            <p>Clientes</p>
+                        </router-link>
                     </li>
                     <li
                         class="nav-item"

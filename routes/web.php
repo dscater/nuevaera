@@ -64,6 +64,8 @@ Route::middleware(['auth'])->group(function () {
         ]);
 
         // Productos
+        Route::get("productos/valida_stock", [ProductoController::class, 'valida_stock']);
+        Route::get("productos/productos_sucursal", [ProductoController::class, 'productos_sucursal']);
         Route::get("productos/getStock", [ProductoController::class, 'getStock']);
         Route::get("productos/buscar_producto", [ProductoController::class, 'buscar_producto']);
         Route::resource('productos', ProductoController::class)->only([
@@ -101,6 +103,7 @@ Route::middleware(['auth'])->group(function () {
         ]);
 
         // Orden Ventas
+        Route::post("orden_ventas/pdf/{orden_venta}", [OrdenVentaController::class, 'pdf']);
         Route::resource('orden_ventas', OrdenVentaController::class)->only([
             'index', 'store', 'update', 'destroy', 'show'
         ]);

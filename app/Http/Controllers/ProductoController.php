@@ -90,11 +90,18 @@ class ProductoController extends Controller
         }
     }
 
-    public function show(Producto $producto)
+    public function show(Producto $producto, Request $request)
     {
+        if (isset($request->id)) {
+            $stock_sucursal = SucursalStock::where("producto_id", $producto->id)->where("sucursal_id", $request->id)->get()->first();
+        } else {
+            $stock_sucursal["stock_actual"] = 0;
+        }
+
         return response()->JSON([
             'sw' => true,
-            'producto' => $producto
+            'producto' => $producto->load("grupo"),
+            "stock_actual" => $stock_sucursal["stock_actual"]
         ], 200);
     }
 
@@ -147,5 +154,33 @@ class ProductoController extends Controller
             "producto" => $producto,
             "stock_actual" => $stock->stock_actual
         ]);
+    }
+
+    public function productos_sucursal(Request $request)
+    {
+        $productos = SucursalStock::with("sucursal")->with("producto.grupo")->where("sucursal_id", $request->id)->get();
+        return response()->JSON($productos);
+    }
+
+    public function valida_stock(Request $request)
+    {
+        $cantidad = $request->cantidad;
+        $sucursal_stock = SucursalStock::where("sucursal_id", $request->sucursal_id)->where("producto_id", $request->id)->get()->first();
+
+        if ($sucursal_stock->stock_actual >= $cantidad) {
+            return response()->JSON(
+                [
+                    "sw" => true,
+                    "producto" => $sucursal_stock->producto,
+                    "sucursal_stock" => $sucursal_stock,
+                ]
+            );
+        }
+        return response()->JSON(
+            [
+                "sw" => false,
+                "msj" => "La cantidad que desea ingresar supera al stock disponible del producto.<br/> Stock actual: <b>" . $sucursal_stock->stock_actual . " unidades</b>"
+            ]
+        );
     }
 }

@@ -8,4 +8,16 @@ use Illuminate\Database\Eloquent\Model;
 class Cliente extends Model
 {
     use HasFactory;
+
+    protected $fillable = [
+        "nombre", "ci", "ci_exp", "nit", "fono", "dir",
+        "fecha_registro",
+    ];
+
+    protected $appends = ["full_ci"];
+
+    public function getFullCiAttribute()
+    {
+        return $this->ci . ' ' . $this->ci_exp;
+    }
 }

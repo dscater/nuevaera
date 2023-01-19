@@ -17,6 +17,7 @@ class CreateOrdenVentasTable extends Migration
             $table->id();
             $table->unsignedBigInteger("sucursal_id");
             $table->unsignedBigInteger("cliente_id");
+            $table->string("nit", 155);
             $table->enum("venta_mayor", ["NO", "SI"]);
             $table->decimal("total", 24, 2);
             $table->date("fecha_registro");

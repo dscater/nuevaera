@@ -102,6 +102,53 @@ export default new Router({
             component: require('./components/modulos/transferencia_productos/index.vue').default,
         },
 
+        // Clientes
+        {
+            path: '/clientes',
+            name: 'clientes.index',
+            component: require('./components/modulos/clientes/index.vue').default,
+        },
+
+        // Orden Ventas
+        {
+            path: '/orden_ventas',
+            name: 'orden_ventas.index',
+            component: require('./components/modulos/orden_ventas/index.vue').default,
+        },
+
+        {
+            path: '/orden_ventas/create',
+            name: 'orden_ventas.create',
+            component: require('./components/modulos/orden_ventas/create.vue').default,
+        },
+
+        {
+            path: '/orden_ventas/:id',
+            name: 'orden_ventas.edit',
+            props: true,
+            component: require('./components/modulos/orden_ventas/edit.vue').default,
+        },
+
+        // Devoluciones
+        {
+            path: '/devolucions',
+            name: 'devolucions.index',
+            component: require('./components/modulos/devolucions/index.vue').default,
+        },
+
+        {
+            path: '/devolucions/create',
+            name: 'devolucions.create',
+            component: require('./components/modulos/devolucions/create.vue').default,
+        },
+
+        {
+            path: '/devolucions/:id',
+            name: 'devolucions.edit',
+            props: true,
+            component: require('./components/modulos/devolucions/edit.vue').default,
+        },
+
         // Configuración
         {
             path: '/configuracion',

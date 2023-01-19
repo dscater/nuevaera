@@ -79,7 +79,9 @@ class KardexProducto extends Model
         }
 
         // INCREMENTAR STOCK
-        Producto::incrementarStock($producto, $cantidad, $lugar, $lugar_id);
+        if ($producto->descontar_stock == 'SI') {
+            Producto::incrementarStock($producto, $cantidad, $lugar, $lugar_id);
+        }
 
         return true;
     }
@@ -115,7 +117,9 @@ class KardexProducto extends Model
             'fecha' => date('Y-m-d'),
         ]);
 
-        Producto::decrementarStock($producto, $cantidad, $lugar, $lugar_id);
+        if ($producto->descontar_stock == 'SI') {
+            Producto::decrementarStock($producto, $cantidad, $lugar, $lugar_id);
+        }
 
         return true;
     }
@@ -139,6 +143,7 @@ class KardexProducto extends Model
 
         foreach ($siguientes as $item) {
             $anterior = KardexProducto::where("lugar", $lugar)
+                ->where("lugar_id", $lugar_id)
                 ->where("producto_id", $producto_id)
                 ->where("id", "<", $item->id)->get()
                 ->last();
@@ -209,7 +214,6 @@ class KardexProducto extends Model
                             $datos_actualizacion["monto_ingreso"] = $monto;
                             $datos_actualizacion["monto_saldo"] = (float)$anterior->monto_saldo + $monto;
                         } else {
-                            Log::debug($transferencia_producto->cantidad);
                             $datos_actualizacion["precio"] = $transferencia_producto->producto->precio;
                             $datos_actualizacion["cantidad_ingreso"] =  $transferencia_producto->cantidad;
                             $datos_actualizacion["cantidad_saldo"] = (float)$transferencia_producto->cantidad;
@@ -235,7 +239,47 @@ class KardexProducto extends Model
                         }
                     }
                     break;
+                case 'VENTA':
+                    $detalle_orden = DetalleOrden::find($item->registro_id);
+                    $monto = (float)$detalle_orden->cantidad * (float)$detalle_orden->precio;
+                    if ($anterior) {
+                        $datos_actualizacion["precio"] = $detalle_orden->precio;
+                        $datos_actualizacion["cantidad_salida"] =  $detalle_orden->cantidad;
+                        $datos_actualizacion["cantidad_saldo"] = (float)$anterior->cantidad_saldo - (float)$detalle_orden->cantidad;
+                        $datos_actualizacion["cu"] = $detalle_orden->precio;
+                        $datos_actualizacion["monto_salida"] = $monto;
+                        $datos_actualizacion["monto_saldo"] =  (float)$anterior->monto_saldo - $monto;
+                    } else {
+                        $datos_actualizacion["precio"] = $detalle_orden->precio;
+                        $datos_actualizacion["cantidad_salida"] =  $detalle_orden->cantidad;
+                        $datos_actualizacion["cantidad_saldo"] = (float)$detalle_orden->cantidad * (-1);
+                        $datos_actualizacion["cu"] = $detalle_orden->precio;
+                        $datos_actualizacion["monto_salida"] = $monto;
+                        $datos_actualizacion["monto_saldo"] = $monto * (-1);
+                    }
+                    break;
+                case 'DEVOLUCION':
+                    $devolucion_detalle = DevolucionDetalle::find($item->registro_id);
+                    $monto = (float)$devolucion_detalle->cantidad * (float)$devolucion_detalle->detalle_orden->precio;
+                    if ($anterior) {
+                        $datos_actualizacion["precio"] = $devolucion_detalle->detalle_orden->precio;
+                        $datos_actualizacion["cantidad_ingreso"] =  $devolucion_detalle->cantidad;
+                        $datos_actualizacion["cantidad_saldo"] = (float)$anterior->cantidad_saldo + (float)$devolucion_detalle->cantidad;
+                        $datos_actualizacion["cu"] = $devolucion_detalle->detalle_orden->precio;
+                        $datos_actualizacion["monto_ingreso"] = $monto;
+                        $datos_actualizacion["monto_saldo"] =  (float)$anterior->monto_saldo + $monto;
+                    } else {
+                        $datos_actualizacion["precio"] = $devolucion_detalle->detalle_orden->precio;
+                        $datos_actualizacion["cantidad_ingreso"] =  $devolucion_detalle->cantidad;
+                        $datos_actualizacion["cantidad_saldo"] = (float)$devolucion_detalle->cantidad;
+                        $datos_actualizacion["cu"] = $devolucion_detalle->detalle_orden->precio;
+                        $datos_actualizacion["monto_ingreso"] = $monto;
+                        $datos_actualizacion["monto_saldo"] = $monto;
+                    }
+
+                    break;
             }
+
 
             $item->update($datos_actualizacion);
         }

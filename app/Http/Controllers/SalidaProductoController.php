@@ -89,8 +89,10 @@ class SalidaProductoController extends Controller
 
                 $salida_producto->update(array_map('mb_strtoupper', $request->all()));
 
-                // DESCONTAR STOCK
-                Producto::decrementarStock($salida_producto->producto, $salida_producto->cantidad, "ALMACEN");
+                if ($salida_producto->producto->descontar_stock == 'SI') {
+                    // DESCONTAR STOCK
+                    Producto::decrementarStock($salida_producto->producto, $salida_producto->cantidad, "ALMACEN");
+                }
 
                 // actualizar kardex
                 $kardex = KardexProducto::where("lugar", "ALMACEN")

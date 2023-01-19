@@ -17,6 +17,8 @@ class CreateDevolucionDetallesTable extends Migration
             $table->id();
             $table->unsignedBigInteger("devolucion_id");
             $table->unsignedBigInteger("producto_id");
+            $table->unsignedBigInteger("detalle_orden_id");
+            $table->unsignedBigInteger("sucursal_stock_id");
             $table->integer("cantidad");
             $table->timestamps();
 
