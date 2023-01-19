@@ -282,6 +282,9 @@ export default {
             this.oIngresoProducto.descripcion = item.descripcion
                 ? item.descripcion
                 : "";
+            this.oIngresoProducto.nombre_producto = item.nombre_producto
+                ? item.nombre_producto
+                : "";
 
             this.modal_accion = "edit";
             this.muestra_modal = true;

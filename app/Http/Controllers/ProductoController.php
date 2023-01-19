@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Almacen;
 use App\Models\Producto;
+use App\Models\SucursalStock;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -113,5 +115,37 @@ class ProductoController extends Controller
                 'message' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function getStock(Request $request)
+    {
+        $lugar = $request->lugar;
+        $lugar_id = $request->lugar_id;
+        $producto_id = $request->producto_id;
+
+        $producto = Producto::find($producto_id);
+        if ($lugar == 'SUCURSAL') {
+            $stock = SucursalStock::where("sucursal_id", $lugar_id)->where("producto_id", $producto_id)->get()->first();
+            if (!$stock) {
+                $stock = SucursalStock::create([
+                    "sucursal_id" => $lugar_id,
+                    "producto_id" => $producto_id,
+                    "stock_actual" => 0,
+                ]);
+            }
+        } else {
+            $stock = Almacen::where("producto_id", $producto_id)->get()->first();
+            if (!$stock) {
+                $stock = Almacen::create([
+                    "producto_id" => $producto_id,
+                    "stock_actual" => 0,
+                ]);
+            }
+        }
+
+        return response()->JSON([
+            "producto" => $producto,
+            "stock_actual" => $stock->stock_actual
+        ]);
     }
 }

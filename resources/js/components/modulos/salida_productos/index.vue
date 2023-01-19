@@ -26,7 +26,7 @@
                                             class="btn btn-outline-primary bg-primary btn-flat btn-block"
                                             @click="
                                                 abreModal('nuevo');
-                                                limpiaIngresoProducto();
+                                                limpiaSalidaProducto();
                                             "
                                         >
                                             <i class="fa fa-plus"></i>
@@ -129,18 +129,14 @@
                                                             class="btn-flat btn-block"
                                                             title="Eliminar registro"
                                                             @click="
-                                                                eliminaIngresoProducto(
+                                                                eliminaSalidaProducto(
                                                                     row.item.id,
                                                                     row.item
                                                                         .producto
                                                                         .nombre +
                                                                         ' | ' +
                                                                         row.item
-                                                                            .cantidad +
-                                                                        ' | ' +
-                                                                        row.item
-                                                                            .proveedor
-                                                                            .nombre
+                                                                            .cantidad
                                                                 )
                                                             "
                                                         >
@@ -191,7 +187,7 @@
         <Nuevo
             :muestra_modal="muestra_modal"
             :accion="modal_accion"
-            :salida_producto="oIngresoProducto"
+            :salida_producto="oSalidaProducto"
             @close="muestra_modal = false"
             @envioModal="getSalidaProductos"
         ></Nuevo>
@@ -233,7 +229,7 @@ export default {
             }),
             muestra_modal: false,
             modal_accion: "nuevo",
-            oIngresoProducto: {
+            oSalidaProducto: {
                 id: 0,
                 producto_id: "",
                 proveedor_id: "",
@@ -263,23 +259,25 @@ export default {
     methods: {
         // Seleccionar Opciones de Tabla
         editarRegistro(item) {
-            this.oIngresoProducto.id = item.id;
-            this.oIngresoProducto.producto_id = item.producto_id
+            this.oSalidaProducto.id = item.id;
+            this.oSalidaProducto.producto_id = item.producto_id
                 ? item.producto_id
                 : "";
-            this.oIngresoProducto.cantidad = item.cantidad ? item.cantidad : "";
-            this.oIngresoProducto.tipo_salida_id = item.tipo_salida_id
+            this.oSalidaProducto.cantidad = item.cantidad ? item.cantidad : "";
+            this.oSalidaProducto.tipo_salida_id = item.tipo_salida_id
                 ? item.tipo_salida_id
                 : "";
-            this.oIngresoProducto.descripcion = item.descripcion
+            this.oSalidaProducto.descripcion = item.descripcion
                 ? item.descripcion
                 : "";
-
+            this.oSalidaProducto.nombre_producto = item.nombre_producto
+                ? item.nombre_producto
+                : "";
             this.modal_accion = "edit";
             this.muestra_modal = true;
         },
 
-        // Listar IngresoProductos
+        // Listar SalidaProductos
         getSalidaProductos() {
             this.showOverlay = true;
             this.muestra_modal = false;
@@ -297,7 +295,7 @@ export default {
                     this.totalRows = res.data.total;
                 });
         },
-        eliminaIngresoProducto(id, descripcion) {
+        eliminaSalidaProducto(id, descripcion) {
             Swal.fire({
                 title: "¿Quierés eliminar este registro?",
                 html: `<strong>${descripcion}</strong>`,
@@ -330,7 +328,7 @@ export default {
             this.muestra_modal = true;
             this.modal_accion = tipo_accion;
             if (salida_producto) {
-                this.oIngresoProducto = salida_producto;
+                this.oSalidaProducto = salida_producto;
             }
         },
         onFiltered(filteredItems) {
@@ -338,11 +336,11 @@ export default {
             this.totalRows = filteredItems.length;
             this.currentPage = 1;
         },
-        limpiaIngresoProducto() {
-            this.oIngresoProducto.producto_id = "";
-            this.oIngresoProducto.cantidad = "";
-            this.oIngresoProducto.tipo_salida_id = "";
-            this.oIngresoProducto.descripcion = "";
+        limpiaSalidaProducto() {
+            this.oSalidaProducto.producto_id = "";
+            this.oSalidaProducto.cantidad = "";
+            this.oSalidaProducto.tipo_salida_id = "";
+            this.oSalidaProducto.descripcion = "";
         },
         formatoFecha(date) {
             return this.$moment(String(date)).format("DD/MM/YYYY");

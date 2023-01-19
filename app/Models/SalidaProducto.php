@@ -14,6 +14,13 @@ class SalidaProducto extends Model
         "fecha_registro",
     ];
 
+    protected $appends = ["nombre_producto"];
+
+    public function getNombreProductoAttribute()
+    {
+        return $this->producto->nombre;
+    }
+
     public function producto()
     {
         return $this->belongsTo(Producto::class, 'producto_id');

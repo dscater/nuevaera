@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: localhost:3306
--- Tiempo de generación: 12-01-2023 a las 16:27:26
+-- Tiempo de generación: 18-01-2023 a las 16:30:45
 -- Versión del servidor: 5.7.33
 -- Versión de PHP: 7.4.19
 
@@ -34,6 +34,13 @@ CREATE TABLE `almacens` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `almacens`
+--
+
+INSERT INTO `almacens` (`id`, `producto_id`, `stock_actual`, `created_at`, `updated_at`) VALUES
+(1, 1, 12, '2023-01-16 17:04:07', '2023-01-18 15:28:36');
 
 -- --------------------------------------------------------
 
@@ -107,7 +114,7 @@ CREATE TABLE `configuracions` (
 --
 
 INSERT INTO `configuracions` (`id`, `nombre_sistema`, `alias`, `razon_social`, `nit`, `ciudad`, `dir`, `fono`, `web`, `actividad`, `correo`, `logo`, `created_at`, `updated_at`) VALUES
-(1, 'SISTEMA DE INVENTARIO Y VENTAS', 'NUEVAERA', 'NUEVAERA', '10000000000', 'LA PAZ', 'LA PAZ', '222222', NULL, 'ACTIVIDAD', NULL, 'logo.png', NULL, NULL);
+(1, 'SISTEMA DE INVENTARIO Y VENTAS', 'NUEVAERA', 'EMPRESA NUEVAERA', '10000000000', 'LA PAZ', 'LA PAZ', '222222', '', 'ACTIVIDAD', '', 'logo.png', NULL, '2023-01-13 18:32:05');
 
 -- --------------------------------------------------------
 
@@ -170,6 +177,13 @@ CREATE TABLE `grupos` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Volcado de datos para la tabla `grupos`
+--
+
+INSERT INTO `grupos` (`id`, `nombre`, `descripcion`, `fecha_registro`, `created_at`, `updated_at`) VALUES
+(2, 'GRUPO 1', '', '2023-01-13', '2023-01-13 18:08:22', '2023-01-13 18:08:22');
+
 -- --------------------------------------------------------
 
 --
@@ -205,6 +219,13 @@ CREATE TABLE `ingreso_productos` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Volcado de datos para la tabla `ingreso_productos`
+--
+
+INSERT INTO `ingreso_productos` (`id`, `producto_id`, `proveedor_id`, `precio_compra`, `cantidad`, `tipo_ingreso_id`, `descripcion`, `fecha_registro`, `created_at`, `updated_at`) VALUES
+(9, 1, 1, '30.00', 15, 1, '', '2023-01-17', '2023-01-17 15:23:23', '2023-01-17 15:23:23');
+
 -- --------------------------------------------------------
 
 --
@@ -213,21 +234,33 @@ CREATE TABLE `ingreso_productos` (
 
 CREATE TABLE `kardex_productos` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `lugar` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `registro_id` bigint(20) UNSIGNED NOT NULL,
+  `lugar` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `lugar_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `tipo_registro` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `registro_id` bigint(20) UNSIGNED DEFAULT NULL,
   `producto_id` bigint(20) UNSIGNED NOT NULL,
   `detalle` text COLLATE utf8mb4_unicode_ci NOT NULL,
   `precio` decimal(24,2) NOT NULL,
   `tipo_is` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `ingreso` int(11) NOT NULL,
-  `salida` int(11) NOT NULL,
+  `cantidad_ingreso` double DEFAULT NULL,
+  `cantidad_salida` double DEFAULT NULL,
+  `cantidad_saldo` double NOT NULL,
   `cu` decimal(24,2) NOT NULL,
-  `monto_ingreso` decimal(24,2) NOT NULL,
-  `monto_salida` decimal(24,2) NOT NULL,
+  `monto_ingreso` decimal(24,2) DEFAULT NULL,
+  `monto_salida` decimal(24,2) DEFAULT NULL,
   `monto_saldo` decimal(24,2) NOT NULL,
+  `fecha` date NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `kardex_productos`
+--
+
+INSERT INTO `kardex_productos` (`id`, `lugar`, `lugar_id`, `tipo_registro`, `registro_id`, `producto_id`, `detalle`, `precio`, `tipo_is`, `cantidad_ingreso`, `cantidad_salida`, `cantidad_saldo`, `cu`, `monto_ingreso`, `monto_salida`, `monto_saldo`, `fecha`, `created_at`, `updated_at`) VALUES
+(9, 'ALMACEN', 0, 'INGRESO', 9, 1, 'INGRESO DE PRODUCTO', '30.00', 'INGRESO', 15, NULL, 15, '36.00', '450.00', NULL, '450.00', '2023-01-17', '2023-01-17 15:23:23', '2023-01-18 15:28:36'),
+(12, 'ALMACEN', 0, 'SALIDA', 3, 1, 'SALIDA DE PRODUCTO', '36.00', 'EGRESO', NULL, 3, 12, '36.00', NULL, '108.00', '342.00', '2023-01-18', '2023-01-18 15:28:31', '2023-01-18 15:28:36');
 
 -- --------------------------------------------------------
 
@@ -326,6 +359,13 @@ CREATE TABLE `productos` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Volcado de datos para la tabla `productos`
+--
+
+INSERT INTO `productos` (`id`, `codigo`, `nombre`, `medida`, `grupo_id`, `precio`, `precio_mayor`, `stock_min`, `descontar_stock`, `fecha_registro`, `created_at`, `updated_at`) VALUES
+(1, 'P001', 'PRODUCTO 001', '100X10', 2, '36.00', '30.00', 10, 'SI', '2023-01-16', '2023-01-16 17:04:07', '2023-01-16 17:04:07');
+
 -- --------------------------------------------------------
 
 --
@@ -345,6 +385,13 @@ CREATE TABLE `proveedors` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Volcado de datos para la tabla `proveedors`
+--
+
+INSERT INTO `proveedors` (`id`, `nombre`, `nit`, `dir`, `fono`, `nombre_contacto`, `descripcion`, `fecha_registro`, `created_at`, `updated_at`) VALUES
+(1, 'PROVEEDOR 1', '100000001', 'LOS OLIVOS #333', '22222; 777777; 66666', 'JUAN PERES SOLIZ', 'DESCRIPCION PROVEEDOR', '2023-01-13', '2023-01-13 18:24:11', '2023-01-13 18:24:33');
+
 -- --------------------------------------------------------
 
 --
@@ -361,6 +408,13 @@ CREATE TABLE `salida_productos` (
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+--
+-- Volcado de datos para la tabla `salida_productos`
+--
+
+INSERT INTO `salida_productos` (`id`, `producto_id`, `cantidad`, `tipo_salida_id`, `descripcion`, `fecha_registro`, `created_at`, `updated_at`) VALUES
+(3, 1, 3, 1, '', '2023-01-18', '2023-01-18 15:28:31', '2023-01-18 15:28:31');
 
 -- --------------------------------------------------------
 
@@ -399,7 +453,7 @@ CREATE TABLE `sucursal_stocks` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `sucursal_id` bigint(20) UNSIGNED NOT NULL,
   `producto_id` bigint(20) UNSIGNED NOT NULL,
-  `stock` bigint(20) UNSIGNED NOT NULL,
+  `stock_actual` bigint(20) UNSIGNED NOT NULL,
   `created_at` timestamp NULL DEFAULT NULL,
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -440,6 +494,13 @@ CREATE TABLE `tipo_ingresos` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Volcado de datos para la tabla `tipo_ingresos`
+--
+
+INSERT INTO `tipo_ingresos` (`id`, `nombre`, `descripcion`, `created_at`, `updated_at`) VALUES
+(1, 'INGRESO TIPO 1', '', '2023-01-16 14:46:18', '2023-01-16 14:46:28');
+
 -- --------------------------------------------------------
 
 --
@@ -454,6 +515,13 @@ CREATE TABLE `tipo_salidas` (
   `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+--
+-- Volcado de datos para la tabla `tipo_salidas`
+--
+
+INSERT INTO `tipo_salidas` (`id`, `nombre`, `descripcion`, `created_at`, `updated_at`) VALUES
+(1, 'SALIDA DE TIPO 1', 'DESC SALIDA', '2023-01-17 15:35:33', '2023-01-17 15:35:41');
+
 -- --------------------------------------------------------
 
 --
@@ -463,9 +531,9 @@ CREATE TABLE `tipo_salidas` (
 CREATE TABLE `transferencia_productos` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `origen` varchar(155) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `origen_id` bigint(20) UNSIGNED NOT NULL,
+  `origen_id` bigint(20) UNSIGNED DEFAULT NULL,
   `destino` varchar(155) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `destino_id` bigint(20) UNSIGNED NOT NULL,
+  `destino_id` bigint(20) UNSIGNED DEFAULT NULL,
   `producto_id` bigint(20) UNSIGNED NOT NULL,
   `cantidad` int(11) NOT NULL,
   `descripcion` text COLLATE utf8mb4_unicode_ci,
@@ -687,7 +755,7 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT de la tabla `almacens`
 --
 ALTER TABLE `almacens`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `cajas`
@@ -729,7 +797,7 @@ ALTER TABLE `devolucion_detalles`
 -- AUTO_INCREMENT de la tabla `grupos`
 --
 ALTER TABLE `grupos`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT de la tabla `importancion_aperturas`
@@ -741,13 +809,13 @@ ALTER TABLE `importancion_aperturas`
 -- AUTO_INCREMENT de la tabla `ingreso_productos`
 --
 ALTER TABLE `ingreso_productos`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
 
 --
 -- AUTO_INCREMENT de la tabla `kardex_productos`
 --
 ALTER TABLE `kardex_productos`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT de la tabla `migrations`
@@ -771,19 +839,19 @@ ALTER TABLE `personal_access_tokens`
 -- AUTO_INCREMENT de la tabla `productos`
 --
 ALTER TABLE `productos`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `proveedors`
 --
 ALTER TABLE `proveedors`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `salida_productos`
 --
 ALTER TABLE `salida_productos`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `sucursals`
@@ -807,13 +875,13 @@ ALTER TABLE `sucursal_usuarios`
 -- AUTO_INCREMENT de la tabla `tipo_ingresos`
 --
 ALTER TABLE `tipo_ingresos`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `tipo_salidas`
 --
 ALTER TABLE `tipo_salidas`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `transferencia_productos`

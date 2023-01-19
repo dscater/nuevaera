@@ -81,9 +81,27 @@
                     </li>
                     <li
                         class="nav-header bg-navy"
-                        v-if="permisos.includes('ingreso_productos.index')"
+                        v-if="
+                            permisos.includes('ingreso_productos.index') ||
+                            permisos.includes('salida_productos.index') ||
+                            permisos.includes('transferencia_productos.index')
+                        "
                     >
                         OPERACIONES
+                    </li>
+                    <li
+                        class="nav-item"
+                        v-if="
+                            permisos.includes('transferencia_productos.index')
+                        "
+                    >
+                        <router-link
+                            :to="{ name: 'transferencia_productos.index' }"
+                            class="nav-link"
+                        >
+                            <i class="nav-icon fas fa-list"></i>
+                            <p>Transferencia de Productos</p>
+                        </router-link>
                     </li>
                     <li
                         class="nav-item"

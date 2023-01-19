@@ -13,6 +13,13 @@ class IngresoProducto extends Model
         "producto_id", "proveedor_id", "precio_compra", "cantidad", "tipo_ingreso_id", "descripcion", "fecha_registro",
     ];
 
+    protected $appends = ["nombre_producto"];
+
+    public function getNombreProductoAttribute()
+    {
+        return $this->producto->nombre;
+    }
+
     public function producto()
     {
         return $this->belongsTo(Producto::class, 'producto_id');

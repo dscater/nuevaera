@@ -1,10 +1,13 @@
 <?php
 
 use App\Http\Controllers\CajaController;
+use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ConfiguracionController;
+use App\Http\Controllers\DevolucionController;
 use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\IngresoProductoController;
 use App\Http\Controllers\LoginController;
+use App\Http\Controllers\OrdenVentaController;
 use App\Http\Controllers\ProductoController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\ReporteController;
@@ -12,6 +15,7 @@ use App\Http\Controllers\SalidaProductoController;
 use App\Http\Controllers\SucursalController;
 use App\Http\Controllers\TipoIngresoController;
 use App\Http\Controllers\TipoSalidaController;
+use App\Http\Controllers\TransferenciaProductoController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -60,6 +64,7 @@ Route::middleware(['auth'])->group(function () {
         ]);
 
         // Productos
+        Route::get("productos/getStock", [ProductoController::class, 'getStock']);
         Route::get("productos/buscar_producto", [ProductoController::class, 'buscar_producto']);
         Route::resource('productos', ProductoController::class)->only([
             'index', 'store', 'update', 'destroy', 'show'
@@ -82,6 +87,26 @@ Route::middleware(['auth'])->group(function () {
 
         // Salida productos
         Route::resource('salida_productos', SalidaProductoController::class)->only([
+            'index', 'store', 'update', 'destroy', 'show'
+        ]);
+
+        // Transferencia Productos
+        Route::resource('transferencia_productos', TransferenciaProductoController::class)->only([
+            'index', 'store', 'update', 'destroy', 'show'
+        ]);
+
+        // Clientes
+        Route::resource('clientes', ClienteController::class)->only([
+            'index', 'store', 'update', 'destroy', 'show'
+        ]);
+
+        // Orden Ventas
+        Route::resource('orden_ventas', OrdenVentaController::class)->only([
+            'index', 'store', 'update', 'destroy', 'show'
+        ]);
+
+        // Devoluciones
+        Route::resource('devolucions', DevolucionController::class)->only([
             'index', 'store', 'update', 'destroy', 'show'
         ]);
 

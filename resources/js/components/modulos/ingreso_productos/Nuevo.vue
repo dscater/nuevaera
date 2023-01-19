@@ -23,7 +23,10 @@
                 <div class="modal-body">
                     <form>
                         <div class="row">
-                            <div class="form-group col-md-6">
+                            <div
+                                class="form-group col-md-6"
+                                v-if="accion != 'edit'"
+                            >
                                 <label
                                     :class="{
                                         'text-danger': errors.producto_id,
@@ -57,6 +60,20 @@
                                     v-if="errors.producto_id"
                                     v-text="errors.producto_id[0]"
                                 ></span>
+                            </div>
+                            <div class="form-group col-md-6" v-else>
+                                <label
+                                    :class="{
+                                        'text-danger': errors.producto_id,
+                                    }"
+                                    >Producto*</label
+                                >
+                                <input
+                                    type="readonly"
+                                    class="form-control"
+                                    readonly
+                                    v-model="ingreso_producto.nombre_producto"
+                                />
                             </div>
                             <div class="form-group col-md-6">
                                 <label
@@ -461,7 +478,7 @@ export default {
                     );
                 }, 200);
             } else {
-                this.aux_lista_productos = [];
+                this.aux_lista_productos = this.listProductos;
             }
         },
     },

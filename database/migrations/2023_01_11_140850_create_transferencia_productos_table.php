@@ -16,9 +16,9 @@ class CreateTransferenciaProductosTable extends Migration
         Schema::create('transferencia_productos', function (Blueprint $table) {
             $table->id();
             $table->string("origen", 155);
-            $table->unsignedBigInteger("origen_id");
+            $table->unsignedBigInteger("origen_id")->nullable();
             $table->string("destino", 155);
-            $table->unsignedBigInteger("destino_id");
+            $table->unsignedBigInteger("destino_id")->nullable();
             $table->unsignedBigInteger("producto_id");
             $table->integer("cantidad");
             $table->text("descripcion")->nullable();

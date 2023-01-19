@@ -95,6 +95,13 @@ export default new Router({
             component: require('./components/modulos/salida_productos/index.vue').default,
         },
 
+        // transferencia de productos
+        {
+            path: '/transferencia_productos',
+            name: 'transferencia_productos.index',
+            component: require('./components/modulos/transferencia_productos/index.vue').default,
+        },
+
         // Configuración
         {
             path: '/configuracion',

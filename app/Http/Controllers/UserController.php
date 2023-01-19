@@ -101,6 +101,11 @@ class UserController extends Controller
             'salida_productos.edit',
             'salida_productos.destroy',
 
+            'transferencia_productos.index',
+            'transferencia_productos.create',
+            'transferencia_productos.edit',
+            'transferencia_productos.destroy',
+
             'configuracion.index',
             'configuracion.edit',
 

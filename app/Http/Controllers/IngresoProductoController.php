@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\IngresoProducto;
 use App\Models\KardexProducto;
+use App\Models\Producto;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class IngresoProductoController extends Controller
 {
@@ -36,7 +38,7 @@ class IngresoProductoController extends Controller
             $nuevo_ingreso_producto = IngresoProducto::create(array_map('mb_strtoupper', $request->all()));
 
             // registrar kardex
-            KardexProducto::registroIngreso("ALMACEN", 0, "INGRESO", $nuevo_ingreso_producto->id, $nuevo_ingreso_producto->producto, $nuevo_ingreso_producto->cantidad, $nuevo_ingreso_producto->precio_compra, $nuevo_ingreso_producto->descripcion);
+            KardexProducto::registroIngreso("ALMACEN", 0, "INGRESO", $nuevo_ingreso_producto->id, $nuevo_ingreso_producto->producto, $nuevo_ingreso_producto->cantidad, $nuevo_ingreso_producto->producto->precio, $nuevo_ingreso_producto->descripcion);
 
             DB::commit();
             return response()->JSON([
@@ -48,7 +50,7 @@ class IngresoProductoController extends Controller
             DB::rollBack();
             return response()->JSON([
                 'sw' => false,
-                'msj' => $e->getMessage(),
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
@@ -56,35 +58,43 @@ class IngresoProductoController extends Controller
     public function update(Request $request, IngresoProducto $ingreso_producto)
     {
         $request->validate($this->validacion, $this->mensajes);
-
-        DB::beginTransaction();
-        try {
-            // descontar el stock
-            $ingreso_producto->producto->almacen->stock_actual =  (float)$ingreso_producto->producto->almacen->stock_actual - (float)$ingreso_producto->cantidad;
-            $ingreso_producto->producto->almacen->save();
-
-            $ingreso_producto->update(array_map('mb_strtoupper', $request->all()));
-
-            // INCREMENTAR STOCK
-            $ingreso_producto->producto->almacen->stock_actual = (float)$ingreso_producto->producto->almacen->stock_actual + $ingreso_producto->cantidad;
-            $ingreso_producto->producto->almacen->save();
-
-            // actualizar kardex
-            $kardex = KardexProducto::where("lugar", "ALMACEN")->where("tipo_is", "INGRESO")->where("registro_id", $ingreso_producto->id)->get()->first();
-            KardexProducto::actualizaRegistrosKardex($kardex->id, "ALMACEN");
-
-            DB::commit();
-            return response()->JSON([
-                'sw' => true,
-                'ingreso_producto' => $ingreso_producto,
-                'msj' => 'El registro se actualizó de forma correcta'
-            ], 200);
-        } catch (\Exception $e) {
-            DB::rollBack();
+        if ($request->producto_id != $ingreso_producto->producto_id) {
             return response()->JSON([
                 'sw' => false,
-                'message' => $e->getMessage(),
+                'message' => "Error, los datos enviados son incorrectos",
             ], 500);
+        } else {
+            DB::beginTransaction();
+            try {
+                // descontar el stock
+                Producto::decrementarStock($ingreso_producto->producto, $ingreso_producto->cantidad, "ALMACEN");
+
+                $ingreso_producto->update(array_map('mb_strtoupper', $request->all()));
+
+                // INCREMENTAR STOCK
+                Producto::incrementarStock($ingreso_producto->producto, $ingreso_producto->cantidad, "ALMACEN");
+
+                // actualizar kardex
+                $kardex = KardexProducto::where("lugar", "ALMACEN")
+                    ->where("producto_id", $ingreso_producto->producto_id)
+                    ->where("tipo_registro", "INGRESO")
+                    ->where("registro_id", $ingreso_producto->id)
+                    ->get()->first();
+                KardexProducto::actualizaRegistrosKardex($kardex->id, $kardex->producto_id, "ALMACEN");
+                DB::commit();
+
+                return response()->JSON([
+                    'sw' => true,
+                    'ingreso_producto' => $ingreso_producto,
+                    'msj' => 'El registro se actualizó de forma correcta'
+                ], 200);
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return response()->JSON([
+                    'sw' => false,
+                    'message' => $e->getMessage(),
+                ], 500);
+            }
         }
     }
 
@@ -100,16 +110,18 @@ class IngresoProductoController extends Controller
     {
         DB::beginTransaction();
         try {
-
             $eliminar_kardex = KardexProducto::where("lugar", "ALMACEN")
                 ->where("tipo_registro", "INGRESO")
                 ->where("registro_id", $ingreso_producto->id)
+                ->where("producto_id", $ingreso_producto->producto_id)
                 ->get()
                 ->first();
             $id_kardex = $eliminar_kardex->id;
+            $id_producto = $eliminar_kardex->producto_id;
             $eliminar_kardex->delete();
 
             $anterior = KardexProducto::where("lugar", "ALMACEN")
+                ->where("producto_id", $id_producto)
                 ->where("id", "<", $id_kardex)
                 ->get()
                 ->last();
@@ -119,6 +131,7 @@ class IngresoProductoController extends Controller
             } else {
                 // comprobar si existen registros posteriorres al actualizado
                 $siguiente = KardexProducto::where("lugar", "ALMACEN")
+                    ->where("producto_id", $id_producto)
                     ->where("id", ">", $id_kardex)
                     ->get()->first();
                 if ($siguiente)
@@ -127,13 +140,13 @@ class IngresoProductoController extends Controller
 
             if ($actualiza_desde) {
                 // actualizar a partir de este registro los sgtes. registros
-                KardexProducto::actualizaRegistrosKardex($actualiza_desde->id, "ALMACEN");
+                KardexProducto::actualizaRegistrosKardex($actualiza_desde->id, $actualiza_desde->producto_id, "ALMACEN");
             }
 
             // descontar el stock
-            $ingreso_producto->producto->almacen->stock_actual =  (float)$ingreso_producto->producto->almacen->stock_actual - (float)$ingreso_producto->cantidad;
-            $ingreso_producto->producto->almacen->save();
+            Producto::decrementarStock($ingreso_producto->producto, $ingreso_producto->cantidad, "ALMACEN");
             $ingreso_producto->delete();
+
             DB::commit();
             return response()->JSON([
                 'sw' => true,
@@ -143,7 +156,7 @@ class IngresoProductoController extends Controller
             DB::rollBack();
             return response()->JSON([
                 'sw' => false,
-                'msj' => $e->getMessage(),
+                'message' => $e->getMessage(),
             ], 500);
         }
     }
