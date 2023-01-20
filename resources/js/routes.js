@@ -157,6 +157,19 @@ export default new Router({
             props: true
         },
 
+        // importacion_aperturas
+        {
+            path: '/importacion_aperturas',
+            name: 'importacion_aperturas.index',
+            component: require('./components/modulos/importacion_aperturas/index.vue').default,
+        },
+
+        {
+            path: '/importacion_aperturas/create',
+            name: 'importacion_aperturas.create',
+            component: require('./components/modulos/importacion_aperturas/create.vue').default,
+        },
+
         // Reportes
         {
             path: '/reportes/usuarios',

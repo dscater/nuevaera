@@ -121,6 +121,11 @@ class UserController extends Controller
             'devolucions.edit',
             'devolucions.destroy',
 
+            'importacion_aperturas.index',
+            'importacion_aperturas.create',
+            'importacion_aperturas.edit',
+            'importacion_aperturas.destroy',
+
             'configuracion.index',
             'configuracion.edit',
 

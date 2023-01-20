@@ -91,9 +91,7 @@
                     </li>
                     <li
                         class="nav-item"
-                        v-if="
-                            permisos.includes('orden_ventas.index')
-                        "
+                        v-if="permisos.includes('orden_ventas.index')"
                     >
                         <router-link
                             :to="{ name: 'orden_ventas.index' }"
@@ -105,9 +103,7 @@
                     </li>
                     <li
                         class="nav-item"
-                        v-if="
-                            permisos.includes('devolucions.index')
-                        "
+                        v-if="permisos.includes('devolucions.index')"
                     >
                         <router-link
                             :to="{ name: 'devolucions.index' }"
@@ -269,18 +265,6 @@
                         </router-link>
                     </li>
                     <li
-                        class="nav-item"
-                        v-if="permisos.includes('configuracion.index')"
-                    >
-                        <router-link
-                            :to="{ name: 'configuracion' }"
-                            class="nav-link"
-                        >
-                            <i class="nav-icon fas fa-cog"></i>
-                            <p>Configuración</p>
-                        </router-link>
-                    </li>
-                    <li
                         class="nav-header bg-navy"
                         v-if="permisos.includes('reportes.usuarios')"
                     >
@@ -321,6 +305,30 @@
                         >
                             <i class="nav-icon fas fa-list"></i>
                             <p>Tipo de Salidas</p>
+                        </router-link>
+                    </li>
+                    <li
+                        class="nav-item"
+                        v-if="permisos.includes('importacion_aperturas.index')"
+                    >
+                        <router-link
+                            :to="{ name: 'importacion_aperturas.index' }"
+                            class="nav-link"
+                        >
+                            <i class="nav-icon fas fa-list"></i>
+                            <p>Importación de Apertura</p>
+                        </router-link>
+                    </li>
+                    <li
+                        class="nav-item"
+                        v-if="permisos.includes('configuracion.index')"
+                    >
+                        <router-link
+                            :to="{ name: 'configuracion' }"
+                            class="nav-link"
+                        >
+                            <i class="nav-icon fas fa-cog"></i>
+                            <p>Configuración</p>
                         </router-link>
                     </li>
                     <li class="nav-item">

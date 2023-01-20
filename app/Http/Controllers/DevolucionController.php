@@ -58,7 +58,7 @@ class DevolucionController extends Controller
                 ]);
                 if ($value["cantidad"] > 0) {
                     // registrar kardex
-                    KardexProducto::registroIngreso("SUCURSAL", $devolucion->orden->sucursal_id, "DEVOLUCION", $dv->id, $dv->producto, $dv->cantidad, $dv->producto->precio, "DEVOLUCIÓN DE PRODUCTO");
+                    KardexProducto::registroIngreso("SUCURSAL", $devolucion->orden->sucursal_id, "DEVOLUCION", $dv->id, $dv->producto, $dv->cantidad, $dv->detalle_orden->precio, "DEVOLUCIÓN DE PRODUCTO");
                 }
             }
             DB::commit();
@@ -95,7 +95,7 @@ class DevolucionController extends Controller
                     ]);
                     if ($value["cantidad"] > 0) {
                         // registrar kardex
-                        KardexProducto::registroIngreso("SUCURSAL", $devolucion->orden->sucursal_id, "DEVOLUCION", $dv->id, $dv->producto, $dv->cantidad, $dv->producto->precio, "DEVOLUCIÓN DE PRODUCTO");
+                        KardexProducto::registroIngreso("SUCURSAL", $devolucion->orden->sucursal_id, "DEVOLUCION", $dv->id, $dv->producto, $dv->cantidad, $dv->detalle_orden->precio, "DEVOLUCIÓN DE PRODUCTO");
                     }
                 } else {
                     $dv = DevolucionDetalle::find($value["id"]);
@@ -167,7 +167,7 @@ class DevolucionController extends Controller
                             ->get()->first();
                         if (!$kardex_devolucion) {
                             // registrar kardex
-                            KardexProducto::registroIngreso("SUCURSAL", $devolucion->orden->sucursal_id, "DEVOLUCION", $dv->id, $dv->producto, $dv->cantidad, $dv->producto->precio, "DEVOLUCIÓN DE PRODUCTO");
+                            KardexProducto::registroIngreso("SUCURSAL", $devolucion->orden->sucursal_id, "DEVOLUCION", $dv->id, $dv->producto, $dv->cantidad, $dv->detalle_orden->precio, "DEVOLUCIÓN DE PRODUCTO");
                         } else {
                             if ($d_orden->producto->descontar_stock == 'SI') {
                                 Producto::incrementarStock($d_orden->producto, $value["cantidad"], "SUCURSAL", $d_orden->orden->sucursal_id);

@@ -25,7 +25,7 @@ class ProductoController extends Controller
 
     public function index(Request $request)
     {
-        $productos = Producto::with("grupo")->get();
+        $productos = Producto::with("grupo")->orderBy("nombre", "asc")->get();
         return response()->JSON(['productos' => $productos, 'total' => count($productos)], 200);
     }
 

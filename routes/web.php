@@ -5,6 +5,7 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\DevolucionController;
 use App\Http\Controllers\GrupoController;
+use App\Http\Controllers\ImportancionAperturaController;
 use App\Http\Controllers\IngresoProductoController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\OrdenVentaController;
@@ -44,6 +45,7 @@ Route::middleware(['auth'])->group(function () {
 
         // Sucursales
         Route::get('sucursals/getCajas', [SucursalController::class, 'getCajas']);
+        Route::get('sucursals/sin_importacion', [SucursalController::class, 'sin_importacion']);
         Route::resource('sucursals', SucursalController::class)->only([
             'index', 'store', 'update', 'destroy', 'show'
         ]);
@@ -110,6 +112,13 @@ Route::middleware(['auth'])->group(function () {
 
         // Devoluciones
         Route::resource('devolucions', DevolucionController::class)->only([
+            'index', 'store', 'update', 'destroy', 'show'
+        ]);
+
+        // Devoluciones
+        Route::post("importacion_aperturas/importar_archivo", [ImportancionAperturaController::class, 'importar_archivo']);
+        Route::post("importacion_aperturas/actualiza_stock", [ImportancionAperturaController::class, 'actualiza_stock']);
+        Route::resource('importacion_aperturas', ImportancionAperturaController::class)->only([
             'index', 'store', 'update', 'destroy', 'show'
         ]);
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Caja;
+use App\Models\ImportancionApertura;
 use App\Models\Sucursal;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +25,26 @@ class SucursalController extends Controller
     public function index(Request $request)
     {
         $sucursals = Sucursal::all();
+
         return response()->JSON(['sucursals' => $sucursals, 'total' => count($sucursals)], 200);
+    }
+
+
+    public function sin_importacion(Request $request)
+    {
+        $sucursals = Sucursal::whereNotExists(function ($query) {
+            $query->select(DB::raw(1))
+                ->from('importancion_aperturas')
+                ->whereRaw('sucursals.id = importancion_aperturas.registro_id');
+        })->get();
+        // verificiar almacen
+        $existe_importacion_almacen = ImportancionApertura::where("lugar", "ALMACEN")->get()->first();
+        if ($existe_importacion_almacen) {
+            $almacen = true;
+        } else {
+            $almacen = false;
+        }
+        return response()->JSON(['sucursals' => $sucursals, 'almacen' => $almacen, 'total' => count($sucursals)], 200);
     }
 
     public function store(Request $request)
