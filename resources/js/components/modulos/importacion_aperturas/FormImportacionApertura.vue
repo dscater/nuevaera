@@ -53,8 +53,7 @@
                         >
                     </div>
                 </div>
-                <!-- <div class="row" v-if="muestra_importacion"> -->
-                <div class="row">
+                <div class="row" v-if="muestra_importacion">
                     <div class="col-md-12 contenedor_tabla_productos">
                         <table class="table table-striped tabla_importacion">
                             <thead>
@@ -68,7 +67,7 @@
                             <tbody id="contenedor_productos">
                                 <tr
                                     v-for="(item, index) in listProductos"
-                                    :key="item.id"
+                                    :key="index"
                                 >
                                     <td data-col="Nombre: ">
                                         {{ item.nombre }}
@@ -169,7 +168,6 @@ export default {
         if (this.user.tipo != "ADMINISTRADOR") {
             this.importacion_apertura.sucursal_id = this.user.sucursal_id;
         }
-        this.cargarProductos();
         window.addEventListener("scroll", this.handleScroll);
     },
     methods: {
@@ -184,7 +182,11 @@ export default {
             try {
                 axios
                     .get("/admin/productos/paginado", {
-                        params: { page: this.page },
+                        params: {
+                            page: this.page,
+                            importacion: true,
+                            lugar: this.importacion_apertura.lugar,
+                        },
                     })
                     .then((response) => {
                         let nuevos_datos = response.data.productos.data;
@@ -256,6 +258,7 @@ export default {
                                         showConfirmButton: false,
                                         timer: 2000,
                                     });
+                                    this.cargarProductos();
                                     setTimeout(() => {
                                         this.muestra_importacion = true;
                                     }, 500);

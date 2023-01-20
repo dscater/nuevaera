@@ -219,6 +219,11 @@ export default {
                     sortable: true,
                 },
                 {
+                    key: "caja.nombre",
+                    label: "Caja",
+                    sortable: true,
+                },
+                {
                     key: "cliente.nombre",
                     label: "Cliente",
                     sortable: true,

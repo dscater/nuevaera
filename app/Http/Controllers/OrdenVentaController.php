@@ -27,9 +27,9 @@ class OrdenVentaController extends Controller
 
     public function index()
     {
-        $orden_ventas = OrdenVenta::with("sucursal")->with("cliente")->get();
-        if (Auth::user()->tipo != 'ADMINISTRADOR') {
-            $orden_ventas = OrdenVenta::with("sucursal")->with("cliente")->where("sucursal_id", Auth::user()->sucursal_id)->get();
+        $orden_ventas = OrdenVenta::with("sucursal")->with("caja")->with("cliente")->get();
+        if (Auth::user()->tipo == 'CAJA') {
+            $orden_ventas = OrdenVenta::with("sucursal")->with("caja")->with("cliente")->where("sucursal_id", Auth::user()->sucursal->sucursal_id)->get();
         }
 
         return response()->JSON(["orden_ventas" => $orden_ventas, "total" => count($orden_ventas)]);

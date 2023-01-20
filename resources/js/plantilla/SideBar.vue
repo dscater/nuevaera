@@ -82,6 +82,8 @@
                     <li
                         class="nav-header bg-navy"
                         v-if="
+                            permisos.includes('orden_ventas.index') ||
+                            permisos.includes('devolucions.index') ||
                             permisos.includes('ingreso_productos.index') ||
                             permisos.includes('salida_productos.index') ||
                             permisos.includes('transferencia_productos.index')

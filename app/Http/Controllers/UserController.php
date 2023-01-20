@@ -7,6 +7,8 @@ use App\Models\Cliente;
 use App\Models\MaestroRegistro;
 use App\Models\Nota;
 use App\Models\Notificacion;
+use App\Models\OrdenVenta;
+use App\Models\Producto;
 use App\Models\SeguimientoAprobado;
 use App\Models\SeguimientoRectificacion;
 use App\Models\SeguimientoTramite;
@@ -131,8 +133,77 @@ class UserController extends Controller
 
             'reportes.usuarios',
         ],
-        'SUPERVISOR' => [],
-        'CAJA' => [],
+        'SUPERVISOR' => [
+            'proveedors.index',
+            'proveedors.create',
+            'proveedors.edit',
+            'proveedors.destroy',
+
+            'grupos.index',
+            'grupos.create',
+            'grupos.edit',
+            'grupos.destroy',
+
+            'productos.index',
+            'productos.create',
+            'productos.edit',
+            'productos.destroy',
+
+            'tipo_ingresos.index',
+            'tipo_ingresos.create',
+            'tipo_ingresos.edit',
+            'tipo_ingresos.destroy',
+
+            'ingreso_productos.index',
+            'ingreso_productos.create',
+            'ingreso_productos.edit',
+            'ingreso_productos.destroy',
+
+            'tipo_salidas.index',
+            'tipo_salidas.create',
+            'tipo_salidas.edit',
+            'tipo_salidas.destroy',
+
+            'salida_productos.index',
+            'salida_productos.create',
+            'salida_productos.edit',
+            'salida_productos.destroy',
+
+            'transferencia_productos.index',
+            'transferencia_productos.create',
+            'transferencia_productos.edit',
+            'transferencia_productos.destroy',
+
+            'clientes.index',
+            'clientes.create',
+            'clientes.edit',
+            'clientes.destroy',
+
+            'orden_ventas.index',
+            'orden_ventas.create',
+            'orden_ventas.edit',
+            'orden_ventas.destroy',
+
+            'devolucions.index',
+            'devolucions.create',
+            'devolucions.edit',
+            'devolucions.destroy',
+        ],
+        'CAJA' => [
+            'clientes.index',
+            'clientes.create',
+            'clientes.edit',
+            'clientes.destroy',
+
+            'orden_ventas.index',
+            'orden_ventas.create',
+            'orden_ventas.edit',
+            'orden_ventas.destroy',
+
+            'devolucions.index',
+            'devolucions.create',
+            'devolucions.edit',
+        ],
     ];
 
 
@@ -146,6 +217,11 @@ class UserController extends Controller
     {
         if ($request->hasFile('foto')) {
             $this->validacion['foto'] = 'image|mimes:jpeg,jpg,png|max:2048';
+        }
+
+        if ($request->tipo == 'CAJA') {
+            $this->validacion['sucursal_id'] = 'required';
+            $this->validacion['caja_id'] = 'required';
         }
 
         $request->validate($this->validacion, $this->mensajes);
@@ -205,6 +281,10 @@ class UserController extends Controller
         $this->validacion['correo'] = 'nullable|email|unique:users,correo,' . $usuario->id;
         if ($request->hasFile('foto')) {
             $this->validacion['foto'] = 'image|mimes:jpeg,jpg,png|max:2048';
+        }
+        if ($request->tipo == 'CAJA') {
+            $this->validacion['sucursal_id'] = 'required';
+            $this->validacion['caja_id'] = 'required';
         }
 
         $request->validate($this->validacion, $this->mensajes);
@@ -371,74 +451,38 @@ class UserController extends Controller
                 'icon' => 'fas fa-users',
             ];
         }
-
-        if (in_array('maestro_registros.index', $this->permisos[$tipo])) {
+        if (in_array('clientes.index', $this->permisos[$tipo])) {
             $array_infos[] = [
+                'label' => 'Clientes',
+                'cantidad' => count(User::where('id', '!=', 1)->get()),
+                'color' => 'bg-success',
+                'icon' => 'fas fa-users',
+            ];
+        }
 
-                'label' => 'Maestro de Registro',
-                'cantidad' => count(MaestroRegistro::all()),
+        if (in_array('orden_ventas.index', $this->permisos[$tipo])) {
+
+            if (Auth::user()->tipo == 'CAJA') {
+                $orden_ventas = OrdenVenta::where("sucursal_id", Auth::user()->sucursal->sucursal_id)->get();
+            } else {
+                $orden_ventas = OrdenVenta::all();
+            }
+
+            $array_infos[] = [
+                'label' => 'Orden de ventas',
+                'cantidad' => count($orden_ventas),
                 'color' => 'bg-primary',
-                'icon' => 'fas fa-list-alt',
+                'icon' => 'fas fa-cash-register',
             ];
         }
 
-        if (in_array('seguimiento_tramites.index', $this->permisos[$tipo])) {
+        if (in_array('productos.index', $this->permisos[$tipo])) {
             $array_infos[] = [
 
-                'label' => 'Seguimiento de Trámites',
-                'cantidad' => count(SeguimientoTramite::all()),
+                'label' => 'Productos',
+                'cantidad' => count(Producto::all()),
                 'color' => 'bg-danger',
-                'icon' => 'fas fa-book',
-            ];
-        }
-
-        if (in_array('seguimiento_aprobados.index', $this->permisos[$tipo])) {
-            $array_infos[] = [
-
-                'label' => 'Seguimiento de Trámites Aprobados',
-                'cantidad' => count(SeguimientoAprobado::all()),
-                'color' => 'bg-cyan',
-                'icon' => 'fas fa-book',
-            ];
-        }
-
-        if (in_array('seguimiento_rectificacions.index', $this->permisos[$tipo])) {
-            $array_infos[] = [
-
-                'label' => 'Seguimiento de Trámites de Rectificación',
-                'cantidad' => count(SeguimientoRectificacion::all()),
-                'color' => 'bg-warning',
-                'icon' => 'fas fa-book',
-            ];
-        }
-
-        if (in_array('notas.index', $this->permisos[$tipo])) {
-            $array_infos[] = [
-
-                'label' => 'Notas',
-                'cantidad' => count(Nota::all()),
-                'color' => 'bg-teal',
-                'icon' => 'fas fa-clipboard',
-            ];
-        }
-
-        if (in_array('notificacions.index', $this->permisos[$tipo])) {
-            $array_infos[] = [
-
-                'label' => 'Notificaciones',
-                'cantidad' => count(Notificacion::all()),
-                'color' => 'bg-navy',
-                'icon' => 'fas fa-exclamation-triangle',
-            ];
-        }
-
-        if (in_array('alertas.index', $this->permisos[$tipo])) {
-            $array_infos[] = [
-
-                'label' => 'Alertas',
-                'cantidad' => count(Alerta::all()),
-                'color' => 'bg-danger',
-                'icon' => 'fas fa-bell',
+                'icon' => 'fas fa-box',
             ];
         }
 

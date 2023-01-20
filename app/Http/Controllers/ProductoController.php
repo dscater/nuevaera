@@ -34,35 +34,55 @@ class ProductoController extends Controller
         $productos = [];
         $sortBy = $request->sortBy;
         $sortDesc = $request->sortDesc;
-        if (isset($request->value) && $request->value != "") {
-            $value = $request->value;
-            $productos = Producto::select("productos.*")->with("grupo")
-                ->join("grupos", "grupos.id", "=", "productos.grupo_id")
-                ->orWhere("productos.id", "LIKE", "%$value%")
-                ->orWhere("productos.codigo", "LIKE", "%$value%")
-                ->orWhere("productos.nombre", "LIKE", "%$value%")
-                ->orWhere("productos.medida", "LIKE", "%$value%")
-                ->orWhere("productos.precio", "LIKE", "%$value%")
-                ->orWhere("productos.precio_mayor", "LIKE", "%$value%")
-                ->orWhere("productos.fecha_registro", "LIKE", "%$value%")
-                ->orWhere("grupos.nombre", "LIKE", "%$value%");
-        } else {
-            $productos = Producto::with("grupo")->join("grupos", "grupos.id", "=", "productos.grupo_id");
-        }
 
-        if (isset($sortBy) && $sortBy != "") {
-            $asc_desc = "ASC";
-            if ($sortDesc == "true") {
-                $asc_desc = "DESC";
-            }
-            if ($sortBy != "grupo.nombre") {
-                $productos = $productos->orderBy("productos." . $sortBy, $asc_desc);
+        if (isset($request->importacion)) {
+            $lugar = $request->lugar;
+            if ($lugar == 'ALMACEN') {
+                $productos = Producto::select("productos.*")->with("grupo")->join("grupos", "grupos.id", "=", "productos.grupo_id")
+                    ->whereNotExists(function ($query) {
+                        $query->select(DB::raw(1))
+                            ->from('almacens')
+                            ->whereRaw('productos.id = almacens.producto_id');
+                    })->paginate();
             } else {
-                $productos = $productos->orderBy("grupos.nombre", $asc_desc);
+                $productos = Producto::select("productos.*")->with("grupo")->join("grupos", "grupos.id", "=", "productos.grupo_id")
+                    ->whereNotExists(function ($query) use ($lugar) {
+                        $query->select(DB::raw(1))
+                            ->from('sucursal_stocks')
+                            ->whereRaw('productos.id = sucursal_stocks.producto_id')
+                            ->whereRaw('sucursal_stocks.sucursal_id = ' . $lugar);
+                    })->paginate();
             }
+        } else {
+            if (isset($request->value) && $request->value != "") {
+                $value = $request->value;
+                $productos = Producto::select("productos.*")->with("grupo")
+                    ->join("grupos", "grupos.id", "=", "productos.grupo_id")
+                    ->orWhere("productos.id", "LIKE", "%$value%")
+                    ->orWhere("productos.codigo", "LIKE", "%$value%")
+                    ->orWhere("productos.nombre", "LIKE", "%$value%")
+                    ->orWhere("productos.medida", "LIKE", "%$value%")
+                    ->orWhere("productos.precio", "LIKE", "%$value%")
+                    ->orWhere("productos.precio_mayor", "LIKE", "%$value%")
+                    ->orWhere("productos.fecha_registro", "LIKE", "%$value%")
+                    ->orWhere("grupos.nombre", "LIKE", "%$value%");
+            } else {
+                $productos = Producto::select("productos.*")->with("grupo")->join("grupos", "grupos.id", "=", "productos.grupo_id");
+            }
+            if (isset($sortBy) && $sortBy != "") {
+                $asc_desc = "ASC";
+                if ($sortDesc == "true") {
+                    $asc_desc = "DESC";
+                }
+                if ($sortBy != "grupo.nombre") {
+                    $productos = $productos->orderBy("productos." . $sortBy, $asc_desc);
+                } else {
+                    $productos = $productos->orderBy("grupos.nombre", $asc_desc);
+                }
+            }
+            $productos = $productos->paginate($request->per_page);
         }
 
-        $productos = $productos->paginate($request->per_page);
         return response()->JSON(['productos' => $productos, 'total' => count($productos)], 200);
     }
 

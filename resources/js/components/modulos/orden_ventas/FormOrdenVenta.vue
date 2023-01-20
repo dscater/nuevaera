@@ -7,9 +7,7 @@
                         <div class="card">
                             <div class="card-body">
                                 <div class="row">
-                                    <template
-                                        v-if="user.tipo == 'ADMINISTRADOR'"
-                                    >
+                                    <template v-if="user.tipo != 'CAJA'">
                                         <div
                                             class="form-group col-md-6"
                                             v-if="accion != 'edit'"
@@ -59,9 +57,7 @@
                                                 type="readonly"
                                                 class="form-control"
                                                 readonly
-                                                v-model="
-                                                    orden_venta.sucursal.nombre
-                                                "
+                                                :value="getNombreSucursal"
                                             />
                                             <span
                                                 class="error invalid-feedback"
@@ -71,13 +67,8 @@
                                         </div>
                                     </template>
                                     <div
-                                        class="form-group"
-                                        :class="{
-                                            'col-md-6':
-                                                user.tipo == 'ADMINISTRADOR',
-                                            'col-md-12':
-                                                user.tipo != 'ADMINISTRADOR',
-                                        }"
+                                        class="form-group col-md-6"
+                                        v-if="user.tipo != 'CAJA'"
                                     >
                                         <label
                                             :class="{
@@ -550,6 +541,14 @@ export default {
                 return '<i class="fa fa-edit"></i> Actualizar';
             }
         },
+        getNombreSucursal() {
+            if (this.orden_venta) {
+                if (this.orden_venta.sucursal) {
+                    return this.orden_venta.sucursal.nombre;
+                }
+            }
+            return "";
+        },
     },
     data() {
         return {
@@ -581,8 +580,9 @@ export default {
         if (this.orden_venta.id == 0) {
             this.orden_venta.fecha = this.fechaActual();
         }
-        if (this.user.tipo != "ADMINISTRADOR") {
-            this.orden_venta.sucursal_id = this.user.sucursal_id;
+        if (this.user.tipo == "CAJA") {
+            this.orden_venta.sucursal_id = this.user.sucursal.sucursal_id;
+            this.orden_venta.caja_id = this.user.sucursal.caja_id;
         }
         this.getClientes();
         this.iniciaSeleccionFilas();

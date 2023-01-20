@@ -15,8 +15,13 @@
 <body class="sidebar-mini layout-fixed control-sidebar-slide-open layout-navbar-fixed text-sm">
     <div id="app">
         @if (Auth::check())
-            <App ruta="{{ route('base_path') }}" configuracion="{{ $configuracion->first() }}"
-                user="{{ Auth::user() }}"></App>
+            @if (Auth::user()->tipo == 'CAJA')
+                <App ruta="{{ route('base_path') }}" configuracion="{{ $configuracion->first() }}"
+                    user="{{ Auth::user()->load('sucursal') }}"></App>
+            @else
+                <App ruta="{{ route('base_path') }}" configuracion="{{ $configuracion->first() }}"
+                    user="{{ Auth::user() }}"></App>
+            @endif
         @else
             <Auth ruta="{{ route('base_path') }}" logo="{{ asset('imgs/' . $configuracion->first()->logo) }}"
                 empresa="{{ $configuracion->first()->razon_social }}" configuracion="{{ $configuracion->first() }}">

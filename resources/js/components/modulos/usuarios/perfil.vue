@@ -36,7 +36,7 @@
                                 <h3 class="profile-username text-center">
                                     {{ oUsuario.full_name }}
                                 </h3>
-                                <p class="text-green text-center">
+                                <p class="text-primary text-center">
                                     {{ oUsuario.tipo }}
                                 </p>
                                 <label
@@ -81,7 +81,7 @@
                                     Correo</strong
                                 >
                                 <p
-                                    class="text-green"
+                                    class="text-primary"
                                     v-text="oUsuario?.correo"
                                 ></p>
                                 <hr />
@@ -90,7 +90,7 @@
                                     C.I:</strong
                                 >
                                 <p
-                                    class="text-green"
+                                    class="text-primary"
                                     v-text="oUsuario?.full_ci"
                                 ></p>
                                 <hr />
@@ -99,12 +99,8 @@
                                     >Teléfono/Celular:</strong
                                 >
                                 <p
-                                    class="text-green"
-                                    v-text="
-                                        `${oUsuario ? oUsuario.fono : ''} - ${
-                                            oUsuario ? oUsuario.cel : ''
-                                        }`
-                                    "
+                                    class="text-primary"
+                                    v-text="`${oUsuario ? oUsuario.fono : ''}`"
                                 ></p>
                                 <hr />
                                 <strong
@@ -112,7 +108,7 @@
                                     Dirección:</strong
                                 >
                                 <p
-                                    class="text-green"
+                                    class="text-primary"
                                     v-text="oUsuario?.dir"
                                 ></p>
                             </div>

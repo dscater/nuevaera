@@ -3,7 +3,7 @@
         <div class="col-md-12">
             <form>
                 <div class="row">
-                    <template v-if="user.tipo == 'ADMINISTRADOR'">
+                    <template>
                         <div
                             class="form-group col-md-12"
                             v-if="accion != 'edit'"
@@ -21,6 +21,7 @@
                                 }"
                                 v-model="devolucion.orden_id"
                                 clearable
+                                filterable
                                 @change="getOrdenVenta()"
                             >
                                 <el-option

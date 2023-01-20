@@ -22,11 +22,11 @@ class DevolucionController extends Controller
     public function index()
     {
         $devolucions = Devolucion::with("orden.cliente")->get();
-        if (Auth::user()->tipo != 'ADMINISTRADOR') {
+        if (Auth::user()->tipo == 'CAJA') {
             $devolucions = Devolucion::select("devolucions.*")
                 ->with("orden.cliente")
-                ->join("ordens", "ordens.id", "=", "devolucions.orden_id")
-                ->where("ordens.sucursal_id", Auth::user()->sucursal_id)
+                ->join("orden_ventas", "orden_ventas.id", "=", "devolucions.orden_id")
+                ->where("orden_ventas.sucursal_id", Auth::user()->sucursal->sucursal_id)
                 ->get();
         }
 
