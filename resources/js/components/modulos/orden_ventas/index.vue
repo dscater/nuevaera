@@ -83,10 +83,13 @@
                                                 empty-filtered-text="Sin resultados"
                                                 :filter="filter"
                                             >
-                                                <template #cell(fecha_registro)="row">
+                                                <template
+                                                    #cell(fecha_registro)="row"
+                                                >
                                                     {{
                                                         formatoFecha(
-                                                            row.item.fecha_registro
+                                                            row.item
+                                                                .fecha_registro
                                                         )
                                                     }}
                                                 </template>
@@ -95,22 +98,23 @@
                                                     <div
                                                         class="row justify-content-center flex-column"
                                                     >
-                                                        <b-button
-                                                            size="sm"
+                                                        <router-link
                                                             pill
-                                                            variant="outline-primary"
-                                                            class="btn-flat mb-1"
-                                                            title="Pdf"
-                                                            @click="
-                                                                generaReporte(
-                                                                    row.item.id
-                                                                )
-                                                            "
+                                                            class="btn btn-outline-primary rounded-pill mb-1"
+                                                            title="Ticket"
+                                                            :to="{
+                                                                name: 'orden_ventas.ticket',
+                                                                params: {
+                                                                    id: row.item
+                                                                        .id,
+                                                                    imprime: true,
+                                                                },
+                                                            }"
                                                         >
                                                             <i
-                                                                class="fa fa-file-pdf"
+                                                                class="fa fa-print"
                                                             ></i>
-                                                        </b-button>
+                                                        </router-link>
                                                         <b-button
                                                             size="sm"
                                                             pill
@@ -142,7 +146,8 @@
                                                                         .nombre +
                                                                         ' - ' +
                                                                         row.item
-                                                                            .cliente.nombre +
+                                                                            .cliente
+                                                                            .nombre +
                                                                         ' <br/>Con fecha ' +
                                                                         formatoFecha(
                                                                             row

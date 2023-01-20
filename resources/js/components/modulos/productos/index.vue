@@ -50,6 +50,7 @@
                                                 <b-form-input
                                                     id="filter-input"
                                                     v-model="filter"
+                                                    @keyup="listaProductos"
                                                     type="search"
                                                     placeholder="Buscar"
                                                 ></b-form-input>
@@ -73,16 +74,17 @@
                                         >
                                             <b-table
                                                 :fields="fields"
-                                                :items="listRegistros"
+                                                :items="getProductos"
+                                                :busy.sync="isBusy"
+                                                @sort-changed="sortingChanged"
                                                 show-empty
                                                 stacked="md"
+                                                :currentPage="currentPage"
+                                                :perPage="perPage"
                                                 responsive
-                                                :current-page="currentPage"
-                                                :per-page="perPage"
-                                                @filtered="onFiltered"
                                                 empty-text="Sin resultados"
                                                 empty-filtered-text="Sin resultados"
-                                                :filter="filter"
+                                                ref="table"
                                             >
                                                 <template
                                                     #cell(fecha_registro)="row"
@@ -158,7 +160,7 @@
                                                 v-if="perPage"
                                             >
                                                 <b-pagination
-                                                    v-model="currentPage"
+                                                    v-model="page"
                                                     :total-rows="totalRows"
                                                     :per-page="perPage"
                                                     align="left"
@@ -178,7 +180,7 @@
             :accion="modal_accion"
             :producto="oProducto"
             @close="muestra_modal = false"
-            @envioModal="getProductos"
+            @envioModal="listaProductos"
         ></Nuevo>
     </div>
 </template>
@@ -205,9 +207,17 @@ export default {
                 { key: "medida", label: "Medida", sortable: true },
                 { key: "grupo.nombre", label: "Grupo", sortable: true },
                 { key: "precio", label: "Precio de venta", sortable: true },
-                { key: "precio_mayor", label: "Previo de venta por mayor", sortable: true },
+                {
+                    key: "precio_mayor",
+                    label: "Previo de venta por mayor",
+                    sortable: true,
+                },
                 { key: "stock_min", label: "Stock mínimo", sortable: true },
-                { key: "descontar_stock", label: "Descontar de stock", sortable: true },
+                {
+                    key: "descontar_stock",
+                    label: "Descontar de stock",
+                    sortable: true,
+                },
                 {
                     key: "fecha_registro",
                     label: "Fecha de registro",
@@ -215,6 +225,7 @@ export default {
                 },
                 { key: "accion", label: "Acción" },
             ],
+            isBusy: false,
             loading: true,
             fullscreenLoading: true,
             loadingWindow: Loading.service({
@@ -233,6 +244,7 @@ export default {
                 stock_min: "",
                 descontar_stock: "SI",
             },
+            page: 1,
             currentPage: 1,
             perPage: 5,
             pageOptions: [
@@ -241,15 +253,28 @@ export default {
                 { value: 25, text: "Mostrar 25 Registros" },
                 { value: 50, text: "Mostrar 50 Registros" },
                 { value: 100, text: "Mostrar 100 Registros" },
-                { value: this.totalRows, text: "Mostrar Todo" },
+                // { value: this.totalRows, text: "Mostrar Todo" },
             ],
             totalRows: 10,
             filter: null,
+            sortBy: null,
+            sortDesc: null,
+            links: null,
         };
+    },
+    watch: {
+        page(newVal) {
+            // this.listaProductos();
+            this.$refs.table.refresh();
+        },
+        perPage(newVal) {
+            // this.listaProductos();
+            this.$refs.table.refresh();
+        },
     },
     mounted() {
         this.loadingWindow.close();
-        this.getProductos();
+        this.listaProductos();
     },
     methods: {
         // Seleccionar Opciones de Tabla
@@ -271,23 +296,41 @@ export default {
             this.modal_accion = "edit";
             this.muestra_modal = true;
         },
-
-        // Listar Productos
-        getProductos() {
-            this.showOverlay = true;
+        listaProductos() {
+            this.page = 1;
+            this.$refs.table.refresh();
             this.muestra_modal = false;
-            let url = "/admin/productos";
-            if (this.pagina != 0) {
-                url += "?page=" + this.pagina;
-            }
-            axios
-                .get(url, {
-                    params: { per_page: this.per_page },
+        },
+        // Listar Productos
+        sortingChanged(ctx) {
+            this.sortBy = ctx.sortBy;
+            this.sortDesc = ctx.sortDesc;
+            this.$refs.table.refresh();
+        },
+
+        getProductos(ctx) {
+            this.isBusy = true;
+            let promise = axios.get("/admin/productos/paginado", {
+                params: {
+                    page: this.page,
+                    per_page: this.perPage,
+                    value: this.filter,
+                    sortBy: this.sortBy,
+                    sortDesc: this.sortDesc,
+                },
+            });
+            return promise
+                .then((data) => {
+                    this.currentPage = data.data.productos.current_page;
+                    this.totalRows = data.data.productos.total;
+                    const items = data.data.productos.data;
+                    this.isBusy = false;
+                    return items;
                 })
-                .then((res) => {
-                    this.showOverlay = false;
-                    this.listRegistros = res.data.productos;
-                    this.totalRows = res.data.total;
+                .catch((error) => {
+                    console.log(error);
+                    this.isBusy = false;
+                    return [];
                 });
         },
         eliminaProducto(id, descripcion) {
@@ -307,7 +350,7 @@ export default {
                             _method: "DELETE",
                         })
                         .then((res) => {
-                            this.getProductos();
+                            this.listaProductos();
                             this.filter = "";
                             Swal.fire({
                                 icon: "success",
@@ -325,11 +368,6 @@ export default {
             if (producto) {
                 this.oProducto = producto;
             }
-        },
-        onFiltered(filteredItems) {
-            // Trigger pagination to update the number of buttons/pages due to filtering
-            this.totalRows = filteredItems.length;
-            this.currentPage = 1;
         },
         limpiaProducto() {
             this.oProducto.codigo = "";

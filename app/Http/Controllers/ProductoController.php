@@ -31,7 +31,38 @@ class ProductoController extends Controller
 
     public function paginado(Request $request)
     {
-        $productos = Producto::with("grupo")->orderBy("nombre", "asc")->paginate(10);
+        $productos = [];
+        $sortBy = $request->sortBy;
+        $sortDesc = $request->sortDesc;
+        if (isset($request->value) && $request->value != "") {
+            $value = $request->value;
+            $productos = Producto::select("productos.*")->with("grupo")
+                ->join("grupos", "grupos.id", "=", "productos.grupo_id")
+                ->orWhere("productos.id", "LIKE", "%$value%")
+                ->orWhere("productos.codigo", "LIKE", "%$value%")
+                ->orWhere("productos.nombre", "LIKE", "%$value%")
+                ->orWhere("productos.medida", "LIKE", "%$value%")
+                ->orWhere("productos.precio", "LIKE", "%$value%")
+                ->orWhere("productos.precio_mayor", "LIKE", "%$value%")
+                ->orWhere("productos.fecha_registro", "LIKE", "%$value%")
+                ->orWhere("grupos.nombre", "LIKE", "%$value%");
+        } else {
+            $productos = Producto::with("grupo")->join("grupos", "grupos.id", "=", "productos.grupo_id");
+        }
+
+        if (isset($sortBy) && $sortBy != "") {
+            $asc_desc = "ASC";
+            if ($sortDesc == "true") {
+                $asc_desc = "DESC";
+            }
+            if ($sortBy != "grupo.nombre") {
+                $productos = $productos->orderBy("productos." . $sortBy, $asc_desc);
+            } else {
+                $productos = $productos->orderBy("grupos.nombre", $asc_desc);
+            }
+        }
+
+        $productos = $productos->paginate($request->per_page);
         return response()->JSON(['productos' => $productos, 'total' => count($productos)], 200);
     }
 

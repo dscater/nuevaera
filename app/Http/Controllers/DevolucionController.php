@@ -46,6 +46,7 @@ class DevolucionController extends Controller
         DB::beginTransaction();
         try {
             $request["fecha_registro"] = date("Y-m-d");
+            $request["user_id"] = Auth::user()->id;
             $devolucion = Devolucion::create(array_map("mb_strtoupper", $request->except("devolucion_detalles")));
 
             $devolucion_detalles = $request->devolucion_detalles;

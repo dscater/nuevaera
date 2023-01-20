@@ -9,11 +9,16 @@ class Devolucion extends Model
 {
     use HasFactory;
 
-    protected $fillable = ["orden_id", "fecha_registro",];
+    protected $fillable = ["orden_id", "user_id", "fecha_registro",];
 
     public function orden()
     {
         return $this->belongsTo(OrdenVenta::class, 'orden_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function devolucion_detalles()

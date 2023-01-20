@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use PDF;
 use App\library\numero_a_letras\src\NumeroALetras;
 use App\Models\DetalleOrden;
+use App\Models\Devolucion;
+use App\Models\DevolucionDetalle;
 use App\Models\KardexProducto;
 use App\Models\OrdenVenta;
 use App\Models\Producto;
@@ -46,7 +48,8 @@ class OrdenVentaController extends Controller
         DB::beginTransaction();
         try {
             $request["fecha_registro"] = date("Y-m-d");
-            $orden_venta = OrdenVenta::create(array_map("mb_strtoupper", $request->except("detalle_ordens")));
+            $request["user_id"] = Auth::user()->id;
+            $orden_venta = OrdenVenta::create(array_map("mb_strtoupper", $request->except("detalle_ordens", "cliente", "sucursal", "user")));
 
             $detalle_ordens = $request->detalle_ordens;
             foreach ($detalle_ordens as $value) {
@@ -74,7 +77,7 @@ class OrdenVentaController extends Controller
 
     public function show(OrdenVenta $orden_venta)
     {
-        return response()->JSON($orden_venta->load("sucursal")->load("detalle_ordens.producto"));
+        return response()->JSON($orden_venta->load("user")->load("sucursal")->load("cliente")->load("detalle_ordens.producto"));
     }
 
     public function update(OrdenVenta $orden_venta, Request $request)
@@ -83,7 +86,7 @@ class OrdenVentaController extends Controller
 
         DB::beginTransaction();
         try {
-            $orden_venta->update(array_map("mb_strtoupper", $request->except("sucursal", "detalle_ordens", "eliminados")));
+            $orden_venta->update(array_map("mb_strtoupper", $request->except("sucursal", "detalle_ordens", "eliminados", "cliente", "user")));
             $detalle_ordens = $request->detalle_ordens;
             foreach ($detalle_ordens as $value) {
                 if ($value["id"] == 0) {
@@ -254,6 +257,43 @@ class OrdenVentaController extends Controller
                 'message' => $e->getMessage(),
             ], 500);
         }
+    }
+
+    public function getLiteral(Request $request)
+    {
+        $convertir = new NumeroALetras();
+        $array_monto = explode('.', number_format($request->total, 2, '.', ''));
+        $literal = $convertir->convertir($array_monto[0]);
+        $literal .= " " . $array_monto[1] . "/100." . " BOLIVIANOS";
+        return response()->JSON($literal);
+    }
+
+    public function getDevolucions(Request $request)
+    {
+        $devolucion = Devolucion::with("devolucion_detalles.producto")->with("devolucion_detalles.detalle_orden")->where("orden_id", $request->id)->get()->first();
+        $total_cantidad_devolucion = 0;
+        $total_final = 0;
+        if ($devolucion) {
+            $orden_venta = $devolucion->orden;
+            $total_final = $devolucion->orden->total;
+            $total_cantidad_devolucion = DevolucionDetalle::where("devolucion_id", $devolucion->id)->sum("cantidad");
+            if ($total_cantidad_devolucion > 0) {
+                $total_devolucion = 0;
+                foreach ($orden_venta->detalle_ordens as $do) {
+                    // restar totales
+                    $detalle_devolucion = DevolucionDetalle::where("detalle_orden_id", $do->id)->get()->first();
+                    if ($detalle_devolucion && $detalle_devolucion->cantidad > 0) {
+                        $total_devolucion += (float)$detalle_devolucion->cantidad * $do->precio;
+                    }
+                }
+                $total_final = (float)$total_final - $total_devolucion;
+            }
+        }
+        return response()->JSON([
+            "devolucion" => $devolucion,
+            "total_cantidad_devolucion" => $total_cantidad_devolucion,
+            "total_final" => number_format($total_final, 2, '.', '')
+        ]);
     }
 
     public function pdf(OrdenVenta $orden_venta)

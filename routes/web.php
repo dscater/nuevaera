@@ -108,6 +108,8 @@ Route::middleware(['auth'])->group(function () {
 
         // Orden Ventas
         Route::post("orden_ventas/pdf/{orden_venta}", [OrdenVentaController::class, 'pdf']);
+        Route::get("orden_ventas/info/getLiteral", [OrdenVentaController::class, 'getLiteral']);
+        Route::get("orden_ventas/info/devolucions", [OrdenVentaController::class, 'getDevolucions']);
         Route::resource('orden_ventas', OrdenVentaController::class)->only([
             'index', 'store', 'update', 'destroy', 'show'
         ]);

@@ -479,17 +479,16 @@
                         :disabled="orden_venta.detalle_ordens.length <= 0"
                         v-if="orden_venta.editable || accion == 'nuevo'"
                     ></el-button>
-                    <el-button type="info" v-else>
+                    <el-button type="info" class="btn-block" v-else>
                         No editable, debido a que existe una
                         devolución</el-button
                     >
-                    <el-button
+                    <router-link
                         v-if="this.orden_venta.id != 0"
-                        class="btn-block m-0 mt-2"
-                        type="success"
-                        :loading="enviando"
-                        @click="generaReporte()"
-                        ><i class="fa fa-file-pdf"></i> Exportar</el-button
+                        class="btn btn-success btn-lg btn-block"
+                        :to="{ name: 'orden_ventas.ticket' }"
+                        ><i class="fa fa-print"></i> Imprimir
+                        Ticket</router-link
                     >
 
                     <router-link
@@ -926,7 +925,7 @@ export default {
     .tabla_responsive.table-bordered tfoot tr th.ocultar,
     .tabla_responsive.table-striped tfoot tr td.ocultar,
     .tabla_responsive.table-striped tfoot tr th.ocultar {
-        display: none!important;
+        display: none !important;
     }
 
     .tabla_responsive.table-bordered tfoot tr td:before,

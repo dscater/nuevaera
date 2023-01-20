@@ -10,14 +10,19 @@ class OrdenVenta extends Model
     use HasFactory;
 
     protected $fillable = [
-        "sucursal_id", "caja_id", "cliente_id", "nit", "total", "fecha_registro",
+        "sucursal_id", "user_id", "caja_id", "cliente_id", "nit", "total", "fecha_registro",
     ];
 
-    protected $appends = ["editable"];
+    protected $appends = ["editable", "fecha_formateado", "hora", "nro_orden"];
 
     public function sucursal()
     {
         return $this->belongsTo(Sucursal::class, 'sucursal_id');
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function caja()
@@ -38,6 +43,27 @@ class OrdenVenta extends Model
     public function devolucion()
     {
         return $this->hasOne(Devolucion::class, 'orden_id');
+    }
+
+    public function getNroOrdenAttribute()
+    {
+        $nro = $this->id;
+        if ($nro < 10) {
+            $nro = '00' . $nro;
+        } elseif ($nro < 100) {
+            $nro = '0' . $nro;
+        }
+
+        return $nro;
+    }
+    public function getFechaFormateadoAttribute()
+    {
+        return date("d/m/Y", strtotime($this->created_at));
+    }
+
+    public function getHoraAttribute()
+    {
+        return date("H:i", strtotime($this->created_at));
     }
 
     public function getEditableAttribute()

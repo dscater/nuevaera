@@ -16,6 +16,7 @@ class CreateDevolucionsTable extends Migration
         Schema::create('devolucions', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger("orden_id");
+            $table->unsignedBigInteger("user_id");
             $table->date("fecha_registro");
             $table->timestamps();
         });

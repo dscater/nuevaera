@@ -18,7 +18,7 @@
                                 <FormOrdenVenta
                                     :orden_venta="oOrdenVenta"
                                     :accion="'edit'"
-                                    @envioFormulario="recargaFormulario()"
+                                    @envioFormulario="recargaFormulario"
                                 ></FormOrdenVenta>
                             </div>
                         </div>
@@ -57,8 +57,15 @@ export default {
         this.loadingWindow.close();
     },
     methods: {
-        recargaFormulario() {
-            location.reload();
+        recargaFormulario(id) {
+            this.$router.push({
+                name: "orden_ventas.ticket",
+                params: {
+                    id: id,
+                    imprime: true,
+                },
+            });
+            // location.reload();
         },
         getOrdenVenta() {
             axios.get("/admin/orden_ventas/" + this.id).then((response) => {

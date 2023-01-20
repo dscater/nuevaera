@@ -129,6 +129,13 @@ export default new Router({
             component: require('./components/modulos/orden_ventas/edit.vue').default,
         },
 
+        {
+            path: '/orden_ventas/ticket_orden/:id',
+            name: 'orden_ventas.ticket',
+            props: true,
+            component: require('./components/modulos/orden_ventas/Ticket.vue').default,
+        },
+
         // Devoluciones
         {
             path: '/devolucions',

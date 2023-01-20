@@ -39,9 +39,10 @@ export default {
     methods: {
         enviaEdit(id) {
             this.$router.push({
-                name: "orden_ventas.edit",
+                name: "orden_ventas.ticket",
                 params: {
                     id: id,
+                    imprime: true,
                 },
             });
         },
