@@ -29,11 +29,29 @@ class ProductoController extends Controller
         return response()->JSON(['productos' => $productos, 'total' => count($productos)], 200);
     }
 
+    public function paginado(Request $request)
+    {
+        $productos = Producto::with("grupo")->orderBy("nombre", "asc")->paginate(10);
+        return response()->JSON(['productos' => $productos, 'total' => count($productos)], 200);
+    }
+
     public function buscar_producto(Request $request)
     {
         $value = $request->value;
-        $productos = Producto::select("productos.*")->with("grupo")
-            ->where("grupo")
+        // $productos = Producto::select("productos.*")
+        //     ->join("grupos", "grupos.id", "=", "productos.grupo_id")
+        //     ->where(DB::raw('CONCAT(productos.id, productos.codigo, productos.nombre, productos.medida, productos.precio, productos.precio_mayor, productos.fecha_registro, grupos.nombre)'), 'LIKE', "%$value%")
+        //     ->get();
+        $productos = Producto::select("productos.*")
+            ->join("grupos", "grupos.id", "=", "productos.grupo_id")
+            ->orWhere("productos.id", "LIKE", "%$value%")
+            ->orWhere("productos.codigo", "LIKE", "%$value%")
+            ->orWhere("productos.nombre", "LIKE", "%$value%")
+            ->orWhere("productos.medida", "LIKE", "%$value%")
+            ->orWhere("productos.precio", "LIKE", "%$value%")
+            ->orWhere("productos.precio_mayor", "LIKE", "%$value%")
+            ->orWhere("productos.fecha_registro", "LIKE", "%$value%")
+            ->orWhere("grupos.nombre", "LIKE", "%$value%")
             ->get();
         return response()->JSON($productos);
     }
@@ -92,6 +110,7 @@ class ProductoController extends Controller
 
     public function show(Producto $producto, Request $request)
     {
+        $stock_sucursal["stock_actual"] = 0;
         if (isset($request->id)) {
             $stock_sucursal = SucursalStock::where("producto_id", $producto->id)->where("sucursal_id", $request->id)->get()->first();
         } else {
@@ -158,7 +177,25 @@ class ProductoController extends Controller
 
     public function productos_sucursal(Request $request)
     {
-        $productos = SucursalStock::with("sucursal")->with("producto.grupo")->where("sucursal_id", $request->id)->get();
+        if (isset($request->value)) {
+            $value = $request->value;
+            $productos = SucursalStock::select("sucursal_stocks.*")
+                ->with("sucursal")->with("producto.grupo")
+                ->join("productos", "productos.id", "=", "sucursal_stocks.producto_id")
+                ->join("grupos", "grupos.id", "=", "productos.grupo_id")
+                ->orWhere("productos.id", "LIKE", "%$value%")
+                ->orWhere("productos.codigo", "LIKE", "%$value%")
+                ->orWhere("productos.nombre", "LIKE", "%$value%")
+                ->orWhere("productos.medida", "LIKE", "%$value%")
+                ->orWhere("productos.precio", "LIKE", "%$value%")
+                ->orWhere("productos.precio_mayor", "LIKE", "%$value%")
+                ->orWhere("productos.fecha_registro", "LIKE", "%$value%")
+                ->orWhere("grupos.nombre", "LIKE", "%$value%")
+                ->distinct("productos.id")
+                ->get();
+        } else {
+            $productos = SucursalStock::with("sucursal")->with("producto.grupo")->where("sucursal_id", $request->id)->get();
+        }
         return response()->JSON($productos);
     }
 

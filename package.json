@@ -13,7 +13,7 @@
         "@popperjs/core": "^2.10.2",
         "axios": "^0.21",
         "bootstrap": "^4.6.1",
-        "browser-sync": "^1.7.1",
+        "browser-sync": "^2.27.11",
         "browser-sync-webpack-plugin": "^0.1.0",
         "jquery": "^3.6.0",
         "laravel-mix": "^6.0.6",
@@ -34,6 +34,7 @@
         "element-ui": "^2.15.8",
         "highcharts": "^10.2.0",
         "moment": "^2.29.4",
-        "sweetalert2": "^11.4.8"
+        "sweetalert2": "^11.4.8",
+        "vue-infinite-loading": "^2.4.3"
     }
 }

@@ -66,6 +66,7 @@ Route::middleware(['auth'])->group(function () {
         ]);
 
         // Productos
+        Route::get("productos/paginado", [ProductoController::class, 'paginado']);
         Route::get("productos/valida_stock", [ProductoController::class, 'valida_stock']);
         Route::get("productos/productos_sucursal", [ProductoController::class, 'productos_sucursal']);
         Route::get("productos/getStock", [ProductoController::class, 'getStock']);

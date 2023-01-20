@@ -51,7 +51,13 @@
                                     <el-option
                                         v-for="item in aux_lista_productos"
                                         :key="item.id"
-                                        :label="item.nombre"
+                                        :label="
+                                            item.nombre +
+                                            ' (' +
+                                            item.medida +
+                                            ')'
+                                        "
+                                        s
                                         :value="item.id"
                                     >
                                     </el-option>
@@ -280,6 +286,7 @@
                                                 "
                                                 filterable
                                                 :disabled="accion == 'edit'"
+                                                @change="validaIguales"
                                             >
                                                 <el-option
                                                     v-for="item in listSucursals"
@@ -455,20 +462,14 @@ export default {
             loading_buscador: false,
             stock_actual: 0,
             aux_stock_actual: 0,
+            timeOutProductos: null,
         };
     },
     mounted() {
         this.bModal = this.muestra_modal;
-        this.getProductos();
         this.getSucursals();
     },
     methods: {
-        getProductos() {
-            axios.get("/admin/productos").then((response) => {
-                this.listProductos = response.data.productos;
-                this.aux_lista_productos = this.listProductos;
-            });
-        },
         getSucursals() {
             axios.get("/admin/sucursals").then((response) => {
                 this.listSucursals = response.data.sucursals;
@@ -660,36 +661,50 @@ export default {
             this.transferencia_producto.descripcion = "";
         },
         buscarProducto(query) {
+            this.aux_lista_productos = [];
+            this.loading_buscador = true;
+            clearTimeout(this.timeOutProductos);
+            let self = this;
+            this.timeOutProductos = setTimeout(() => {
+                self.getProductosQuery(query);
+            }, 1000);
+        },
+        getProductosQuery(query) {
             if (query !== "") {
-                this.loading_buscador = true;
-                setTimeout(() => {
-                    this.loading_buscador = false;
-                    this.aux_lista_productos = this.listProductos.filter(
-                        (item) => {
-                            return (
-                                item.codigo
-                                    .toLowerCase()
-                                    .includes(query.toLowerCase()) ||
-                                item.nombre
-                                    .toLowerCase()
-                                    .includes(query.toLowerCase()) ||
-                                item.medida
-                                    .toLowerCase()
-                                    .includes(query.toLowerCase()) ||
-                                item.grupo.nombre
-                                    .toLowerCase()
-                                    .includes(query.toLowerCase())
-                            );
-                        }
-                    );
-                }, 200);
+                axios
+                    .get("/admin/productos/buscar_producto", {
+                        params: { value: query },
+                    })
+                    .then((response) => {
+                        this.loading_buscador = false;
+                        this.listProductos;
+                        this.aux_lista_productos = response.data;
+                    });
             } else {
-                this.aux_lista_productos = this.listProductos;
+                this.loading_buscador = false;
+                this.aux_lista_productos = [];
             }
         },
         detectarOrigen() {
             if (this.transferencia_producto.origen == "ALMACEN") {
                 this.transferencia_producto.destino = "SUCURSAL";
+            }
+        },
+        validaIguales() {
+            if (this.transferencia_producto.origen != "ALMACEN") {
+                if (
+                    this.transferencia_producto.origen_id ==
+                    this.transferencia_producto.destino_id
+                ) {
+                    Swal.fire({
+                        icon: "info",
+                        title: "Atención",
+                        html: "No es posible transferir productos a la misma sucursal",
+                        showConfirmButton: false,
+                        timer: 2000,
+                    });
+                    this.transferencia_producto.destino_id = "";
+                }
             }
         },
         detectaCantidad() {

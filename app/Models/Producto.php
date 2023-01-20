@@ -48,7 +48,7 @@ class Producto extends Model
                 $producto->almacen->save();
             }
         } else {
-            $stock_sucursal = $producto->stock_sucursal()->where("sucursal_id", $lugar_id)->get()->first();
+            $stock_sucursal = SucursalStock::where("producto_id", $producto->id)->where("sucursal_id", $lugar_id)->get()->first();
             if (!$stock_sucursal) {
                 $producto->stock_sucursal()->create([
                     "sucursal_id" => $lugar_id,

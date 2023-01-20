@@ -114,22 +114,41 @@ class ImportancionAperturaController extends Controller
                         ->where("producto_id", $producto->id)
                         ->where("tipo_registro", "APERTURA ALMACEN")
                         ->get()->first();
-                    $kardex->update([
-                        'lugar' => "ALMACEN",
-                        'lugar_id' => 0,
-                        'tipo_registro' => "APERTURA ALMACEN", //INGRESO, EGRESO, VENTA, COMPRA,etc...
-                        'registro_id' => $existe->id,
-                        'producto_id' => $producto->id,
-                        'detalle' => "VALOR INICIAL POR APERTURA",
-                        'precio' => $producto->precio,
-                        'tipo_is' => 'INGRESO',
-                        'cantidad_ingreso' => $cantidad,
-                        'cantidad_saldo' => (float)$cantidad,
-                        'cu' => $producto->precio,
-                        'monto_ingreso' => $monto,
-                        'monto_saldo' => $monto,
-                        'fecha' => date('Y-m-d'),
-                    ]);
+                    if ($kardex) {
+                        $kardex->update([
+                            'lugar' => "ALMACEN",
+                            'lugar_id' => 0,
+                            'tipo_registro' => "APERTURA ALMACEN", //INGRESO, EGRESO, VENTA, COMPRA,etc...
+                            'registro_id' => $existe->id,
+                            'producto_id' => $producto->id,
+                            'detalle' => "VALOR INICIAL POR APERTURA",
+                            'precio' => $producto->precio,
+                            'tipo_is' => 'INGRESO',
+                            'cantidad_ingreso' => $cantidad,
+                            'cantidad_saldo' => (float)$cantidad,
+                            'cu' => $producto->precio,
+                            'monto_ingreso' => $monto,
+                            'monto_saldo' => $monto,
+                            'fecha' => date('Y-m-d'),
+                        ]);
+                    } else {
+                        KardexProducto::create([
+                            'lugar' => "ALMACEN",
+                            'lugar_id' => 0,
+                            'tipo_registro' => "APERTURA ALMACEN", //INGRESO, EGRESO, VENTA, COMPRA,etc...
+                            'registro_id' => $existe->id,
+                            'producto_id' => $producto->id,
+                            'detalle' => "VALOR INICIAL POR APERTURA",
+                            'precio' => $producto->precio,
+                            'tipo_is' => 'INGRESO',
+                            'cantidad_ingreso' => $cantidad,
+                            'cantidad_saldo' => (float)$cantidad,
+                            'cu' => $producto->precio,
+                            'monto_ingreso' => $monto,
+                            'monto_saldo' => $monto,
+                            'fecha' => date('Y-m-d'),
+                        ]);
+                    }
                 }
             } else {
                 $existe = SucursalStock::where("producto_id", $producto->id)->where("sucursal_id", $request->lugar)->get()->first();
@@ -166,22 +185,41 @@ class ImportancionAperturaController extends Controller
                         ->where("producto_id", $producto->id)
                         ->where("tipo_registro", "APERTURA SUCURSAL")
                         ->get()->first();
-                    $kardex->update([
-                        'lugar' => "SUCURSAL",
-                        'lugar_id' => $request->lugar,
-                        'tipo_registro' => "APERTURA SUCURSAL", //INGRESO, EGRESO, VENTA, COMPRA,etc...
-                        'registro_id' => $existe->id,
-                        'producto_id' => $producto->id,
-                        'detalle' => "VALOR INICIAL POR APERTURA",
-                        'precio' => $producto->precio,
-                        'tipo_is' => 'INGRESO',
-                        'cantidad_ingreso' => $cantidad,
-                        'cantidad_saldo' => (float)$cantidad,
-                        'cu' => $producto->precio,
-                        'monto_ingreso' => $monto,
-                        'monto_saldo' => $monto,
-                        'fecha' => date('Y-m-d'),
-                    ]);
+                    if ($kardex) {
+                        $kardex->update([
+                            'lugar' => "SUCURSAL",
+                            'lugar_id' => $request->lugar,
+                            'tipo_registro' => "APERTURA SUCURSAL", //INGRESO, EGRESO, VENTA, COMPRA,etc...
+                            'registro_id' => $existe->id,
+                            'producto_id' => $producto->id,
+                            'detalle' => "VALOR INICIAL POR APERTURA",
+                            'precio' => $producto->precio,
+                            'tipo_is' => 'INGRESO',
+                            'cantidad_ingreso' => $cantidad,
+                            'cantidad_saldo' => (float)$cantidad,
+                            'cu' => $producto->precio,
+                            'monto_ingreso' => $monto,
+                            'monto_saldo' => $monto,
+                            'fecha' => date('Y-m-d'),
+                        ]);
+                    } else {
+                        KardexProducto::create([
+                            'lugar' => "SUCURSAL",
+                            'lugar_id' => $request->lugar,
+                            'tipo_registro' => "APERTURA SUCURSAL", //INGRESO, EGRESO, VENTA, COMPRA,etc...
+                            'registro_id' => $existe->id,
+                            'producto_id' => $producto->id,
+                            'detalle' => "VALOR INICIAL POR APERTURA",
+                            'precio' => $producto->precio,
+                            'tipo_is' => 'INGRESO',
+                            'cantidad_ingreso' => $cantidad,
+                            'cantidad_saldo' => (float)$cantidad,
+                            'cu' => $producto->precio,
+                            'monto_ingreso' => $monto,
+                            'monto_saldo' => $monto,
+                            'fecha' => date('Y-m-d'),
+                        ]);
+                    }
                 }
             }
 

@@ -21,7 +21,6 @@
                                 }"
                                 v-model="orden_venta.sucursal_id"
                                 clearable
-                                @change="getProductos()"
                             >
                                 <el-option
                                     v-for="item in listSucursales"
@@ -171,8 +170,13 @@
                                             <el-option
                                                 v-for="item in aux_lista_productos"
                                                 :key="item.id"
-                                                :value="item.id"
-                                                :label="item.producto.nombre"
+                                                :value="item.producto.id"
+                                                :label="
+                                                    item.producto.nombre +
+                                                    ' (' +
+                                                    item.producto.medida +
+                                                    ')'
+                                                "
                                             >
                                             </el-option>
                                         </el-select>
@@ -412,7 +416,6 @@ export default {
             if (newVal.id != 0) {
                 this.getClientes();
                 this.getCliente();
-                this.getProductos();
             }
         },
     },
@@ -455,6 +458,7 @@ export default {
             //     },
             // },
             loading_buscador: false,
+            timeOutProductos: null,
         };
     },
     mounted() {
@@ -466,7 +470,6 @@ export default {
             this.orden_venta.sucursal_id = this.user.sucursal_id;
         }
         this.getClientes();
-        this.getProductos();
         this.iniciaSeleccionFilas();
     },
     methods: {
@@ -515,28 +518,6 @@ export default {
                     });
             } else {
                 this.oProducto = null;
-            }
-        },
-        getProductos() {
-            if (this.orden_venta.sucursal_id != "") {
-                axios
-                    .get("/admin/productos/productos_sucursal", {
-                        params: {
-                            id: this.orden_venta.sucursal_id,
-                        },
-                    })
-                    .then((response) => {
-                        if (response.data.length > 0) {
-                            this.listProductos = response.data;
-                            this.aux_lista_productos = this.listProductos;
-                        } else {
-                            this.listProductos = [];
-                            this.aux_lista_productos = [];
-                            this.producto_id = "";
-                        }
-                    });
-            } else {
-                this.listProductos = [];
             }
         },
         // ENVIAR REGISTRO
@@ -645,31 +626,28 @@ export default {
             });
         },
         buscarProducto(query) {
+            this.aux_lista_productos = [];
+            this.loading_buscador = true;
+            clearTimeout(this.timeOutProductos);
+            let self = this;
+            this.timeOutProductos = setTimeout(() => {
+                self.getProductosQuery(query);
+            }, 1000);
+        },
+        getProductosQuery(query) {
             if (query !== "") {
-                this.loading_buscador = true;
-                setTimeout(() => {
-                    this.loading_buscador = false;
-                    this.aux_lista_productos = this.listProductos.filter(
-                        (item) => {
-                            return (
-                                item.producto.codigo
-                                    .toLowerCase()
-                                    .includes(query.toLowerCase()) ||
-                                item.producto.nombre
-                                    .toLowerCase()
-                                    .includes(query.toLowerCase()) ||
-                                item.producto.medida
-                                    .toLowerCase()
-                                    .includes(query.toLowerCase()) ||
-                                item.producto.grupo.nombre
-                                    .toLowerCase()
-                                    .includes(query.toLowerCase())
-                            );
-                        }
-                    );
-                }, 200);
+                axios
+                    .get("/admin/productos/productos_sucursal", {
+                        params: { value: query },
+                    })
+                    .then((response) => {
+                        this.loading_buscador = false;
+                        this.listProductos;
+                        this.aux_lista_productos = response.data;
+                    });
             } else {
-                this.aux_lista_productos = this.listProductos;
+                this.loading_buscador = false;
+                this.aux_lista_productos = [];
             }
         },
         generaReporte() {

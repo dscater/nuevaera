@@ -53,8 +53,12 @@
                         >
                     </div>
                 </div>
-                <div class="row" v-if="muestra_importacion">
-                    <div class="col-md-12 contenedor_tabla">
+                <div
+                    class="row"
+                    v-if="muestra_importacion"
+                    style="height: 90vh; overflow: auto"
+                >
+                    <div class="col-md-12 contenedor_tabla_productos">
                         <table class="table table-striped">
                             <thead>
                                 <tr>
@@ -63,7 +67,9 @@
                                     <th>STOCK</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="contenedor_productos"
+                                
+                            >
                                 <tr
                                     v-for="(item, index) in listProductos"
                                     :key="item.id"
@@ -92,6 +98,14 @@
                                         />
                                     </td>
                                 </tr>
+                                <infinite-loading
+                                    @infinite="infiniteHandler"
+                                    ref="infiniteLoading"
+                                >
+                                    <div slot="no-more">--</div>
+                                    <div slot="spinner">Cargando...</div>
+                                    <div slot="no-results">Sin resultados</div>
+                                </infinite-loading>
                             </tbody>
                         </table>
                     </div>
@@ -141,11 +155,11 @@ export default {
             muestra_importacion: false,
             setTimeEnvios: {},
             existe_importacion_almacen: false,
+            page: 0,
         };
     },
     mounted() {
         this.getSucursales();
-        this.getProductos();
         if (this.user.tipo != "ADMINISTRADOR") {
             this.importacion_apertura.sucursal_id = this.user.sucursal_id;
         }
@@ -158,10 +172,27 @@ export default {
                 this.existe_importacion_almacen = response.data.almacen;
             });
         },
-        getProductos() {
-            axios.get("/admin/productos").then((response) => {
-                this.listProductos = response.data.productos;
-            });
+        infiniteHandler($state) {
+            try {
+                this.page = this.page + 1;
+                axios
+                    .get("/admin/productos/paginado", {
+                        params: { page: this.page },
+                    })
+                    .then((response) => {
+                        let nuevos_datos = response.data.productos.data;
+                        if (nuevos_datos.length) {
+                            this.listProductos =
+                                this.listProductos.concat(nuevos_datos);
+                            $state.loaded();
+                        } else {
+                            $state.complete();
+                        }
+                    });
+            } catch (e) {
+                console.error(e);
+                $state.complete();
+            }
         },
         iniciarImportación() {
             let lugar = "ALMACEN";
@@ -329,6 +360,7 @@ export default {
         limpiaImportacionApertura() {
             this.errors = [];
         },
+        loadMore() {},
     },
 };
 </script>
@@ -343,11 +375,22 @@ export default {
     padding-left: 5px;
 }
 
-.contenedor_tabla {
+.contenedor_tabla_productos {
     overflow: auto;
+}
+
+.contenedor_tabla_productos table {
+    height: 40px !important;
+    max-height: 40px !important;
 }
 
 .input_stock_importacion {
     min-width: 120px !important;
+}
+
+#contenedor_productos {
+    height: 40px !important;
+    max-height: 40px !important;
+    overflow: auto;
 }
 </style>

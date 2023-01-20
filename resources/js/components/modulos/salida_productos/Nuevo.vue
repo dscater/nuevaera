@@ -50,7 +50,12 @@
                                     <el-option
                                         v-for="item in aux_lista_productos"
                                         :key="item.id"
-                                        :label="item.nombre"
+                                        :label="
+                                            item.nombre +
+                                            ' (' +
+                                            item.medida +
+                                            ')'
+                                        "
                                         :value="item.id"
                                     >
                                     </el-option>
@@ -234,20 +239,14 @@ export default {
             aux_lista_productos: [],
             listTipoSalidas: [],
             loading_buscador: false,
+            timeOutProductos: null,
         };
     },
     mounted() {
         this.bModal = this.muestra_modal;
-        this.getProductos();
         this.getTipoSalidas();
     },
     methods: {
-        getProductos() {
-            axios.get("/admin/productos").then((response) => {
-                this.listProductos = response.data.productos;
-                this.aux_lista_productos = this.listProductos;
-            });
-        },
         getProveedors() {
             axios.get("/admin/proveedors").then((response) => {
                 this.listProveedors = response.data.proveedors;
@@ -373,31 +372,28 @@ export default {
             this.salida_producto.descripcion = "";
         },
         buscarProducto(query) {
+            this.aux_lista_productos = [];
+            this.loading_buscador = true;
+            clearTimeout(this.timeOutProductos);
+            let self = this;
+            this.timeOutProductos = setTimeout(() => {
+                self.getProductosQuery(query);
+            }, 1000);
+        },
+        getProductosQuery(query) {
             if (query !== "") {
-                this.loading_buscador = true;
-                setTimeout(() => {
-                    this.loading_buscador = false;
-                    this.aux_lista_productos = this.listProductos.filter(
-                        (item) => {
-                            return (
-                                item.codigo
-                                    .toLowerCase()
-                                    .includes(query.toLowerCase()) ||
-                                item.nombre
-                                    .toLowerCase()
-                                    .includes(query.toLowerCase()) ||
-                                item.medida
-                                    .toLowerCase()
-                                    .includes(query.toLowerCase()) ||
-                                item.grupo.nombre
-                                    .toLowerCase()
-                                    .includes(query.toLowerCase())
-                            );
-                        }
-                    );
-                }, 200);
+                axios
+                    .get("/admin/productos/buscar_producto", {
+                        params: { value: query },
+                    })
+                    .then((response) => {
+                        this.loading_buscador = false;
+                        this.listProductos;
+                        this.aux_lista_productos = response.data;
+                    });
             } else {
-                this.aux_lista_productos = this.listProductos;
+                this.loading_buscador = false;
+                this.aux_lista_productos = [];
             }
         },
     },
