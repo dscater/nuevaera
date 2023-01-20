@@ -10,7 +10,7 @@ class DetalleOrden extends Model
     use HasFactory;
 
     protected $fillable = [
-        "orden_id", "producto_id", "sucursal_stock_id", "cantidad",
+        "orden_id", "producto_id", "sucursal_stock_id", "cantidad", "venta_mayor",
         "precio", "subtotal",
     ];
 

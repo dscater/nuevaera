@@ -1,141 +1,203 @@
 <template>
     <div class="row">
-        <div class="col-md-12">
+        <div class="col-md-6">
             <form>
                 <div class="row">
-                    <template v-if="user.tipo == 'ADMINISTRADOR'">
-                        <div
-                            class="form-group col-md-6"
-                            v-if="accion != 'edit'"
-                        >
-                            <label
-                                :class="{
-                                    'text-danger': errors.sucursal_id,
-                                }"
-                                >Seleccionar sucursal</label
-                            >
-                            <el-select
-                                class="w-full d-block"
-                                :class="{
-                                    'is-invalid': errors.sucursal_id,
-                                }"
-                                v-model="orden_venta.sucursal_id"
-                                clearable
-                            >
-                                <el-option
-                                    v-for="item in listSucursales"
-                                    :key="item.id"
-                                    :value="item.id"
-                                    :label="item.nombre"
-                                >
-                                </el-option>
-                            </el-select>
-                            <span
-                                class="error invalid-feedback"
-                                v-if="errors.sucursal_id"
-                                v-text="errors.sucursal_id[0]"
-                            ></span>
-                        </div>
-                        <div class="form-group col-md-6" v-else>
-                            <label
-                                :class="{
-                                    'text-danger': errors.sucursal_id,
-                                }"
-                                >Sucursal</label
-                            >
-                            <input
-                                type="readonly"
-                                class="form-control"
-                                readonly
-                                v-model="orden_venta.sucursal.nombre"
-                            />
-                            <span
-                                class="error invalid-feedback"
-                                v-if="errors.sucursal_id"
-                                v-text="errors.sucursal_id[0]"
-                            ></span>
-                        </div>
-                    </template>
-                    <div
-                        class="form-group"
-                        :class="{
-                            'col-md-6': user.tipo == 'ADMINISTRADOR',
-                            'col-md-12': user.tipo != 'ADMINISTRADOR',
-                        }"
-                    >
-                        <label
-                            :class="{
-                                'text-danger': errors.cliente_id,
-                            }"
-                            >Seleccionar cliente</label
-                        >
-                        <el-select
-                            class="w-full d-block"
-                            :class="{ 'is-invalid': errors.cliente_id }"
-                            v-model="orden_venta.cliente_id"
-                            clearable
-                            @change="getCliente()"
-                        >
-                            <el-option
-                                v-for="item in listClientes"
-                                :key="item.id"
-                                :value="item.id"
-                                :label="item.nombre"
-                            >
-                            </el-option>
-                        </el-select>
-                        <span
-                            class="error invalid-feedback"
-                            v-if="errors.cliente_id"
-                            v-text="errors.cliente_id[0]"
-                        ></span>
-                    </div>
-                </div>
-                <div class="row">
                     <div class="col-md-12">
                         <div class="card">
                             <div class="card-body">
-                                <table class="table table-bordered">
-                                    <thead>
-                                        <tr>
-                                            <th>Nombre Completo</th>
-                                            <th>Número C.I. o Nit</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td v-text>
-                                                {{ oCliente.nombre }}
-                                            </td>
-                                            <td>
-                                                <select
-                                                    class="form-control"
-                                                    v-model="orden_venta.nit"
+                                <div class="row">
+                                    <template
+                                        v-if="user.tipo == 'ADMINISTRADOR'"
+                                    >
+                                        <div
+                                            class="form-group col-md-6"
+                                            v-if="accion != 'edit'"
+                                        >
+                                            <label
+                                                :class="{
+                                                    'text-danger':
+                                                        errors.sucursal_id,
+                                                }"
+                                                >Seleccionar sucursal</label
+                                            >
+                                            <el-select
+                                                class="w-full d-block"
+                                                :class="{
+                                                    'is-invalid':
+                                                        errors.sucursal_id,
+                                                }"
+                                                v-model="
+                                                    orden_venta.sucursal_id
+                                                "
+                                                clearable
+                                                @change="getCajas()"
+                                            >
+                                                <el-option
+                                                    v-for="item in listSucursales"
+                                                    :key="item.id"
+                                                    :value="item.id"
+                                                    :label="item.nombre"
                                                 >
-                                                    <option value="0">0</option>
-                                                    <option
-                                                        :value="oCliente.nit"
+                                                </el-option>
+                                            </el-select>
+                                            <span
+                                                class="error invalid-feedback"
+                                                v-if="errors.sucursal_id"
+                                                v-text="errors.sucursal_id[0]"
+                                            ></span>
+                                        </div>
+                                        <div class="form-group col-md-6" v-else>
+                                            <label
+                                                :class="{
+                                                    'text-danger':
+                                                        errors.sucursal_id,
+                                                }"
+                                                >Sucursal</label
+                                            >
+                                            <input
+                                                type="readonly"
+                                                class="form-control"
+                                                readonly
+                                                v-model="
+                                                    orden_venta.sucursal.nombre
+                                                "
+                                            />
+                                            <span
+                                                class="error invalid-feedback"
+                                                v-if="errors.sucursal_id"
+                                                v-text="errors.sucursal_id[0]"
+                                            ></span>
+                                        </div>
+                                    </template>
+                                    <div
+                                        class="form-group"
+                                        :class="{
+                                            'col-md-6':
+                                                user.tipo == 'ADMINISTRADOR',
+                                            'col-md-12':
+                                                user.tipo != 'ADMINISTRADOR',
+                                        }"
+                                    >
+                                        <label
+                                            :class="{
+                                                'text-danger': errors.caja_id,
+                                            }"
+                                            >Seleccionar caja</label
+                                        >
+                                        <el-select
+                                            class="w-full d-block"
+                                            :class="{
+                                                'is-invalid': errors.caja_id,
+                                            }"
+                                            v-model="orden_venta.caja_id"
+                                            clearable
+                                        >
+                                            <el-option
+                                                v-for="item in listCajas"
+                                                :key="item.id"
+                                                :value="item.id"
+                                                :label="item.nombre"
+                                            >
+                                            </el-option>
+                                        </el-select>
+                                        <span
+                                            class="error invalid-feedback"
+                                            v-if="errors.caja_id"
+                                            v-text="errors.caja_id[0]"
+                                        ></span>
+                                    </div>
+                                    <div class="form-group col-md-12">
+                                        <label
+                                            :class="{
+                                                'text-danger':
+                                                    errors.cliente_id,
+                                            }"
+                                            >Seleccionar cliente</label
+                                        >
+                                        <el-select
+                                            class="w-full d-block"
+                                            :class="{
+                                                'is-invalid': errors.cliente_id,
+                                            }"
+                                            v-model="orden_venta.cliente_id"
+                                            clearable
+                                            @change="getCliente()"
+                                        >
+                                            <el-option
+                                                v-for="item in listClientes"
+                                                :key="item.id"
+                                                :value="item.id"
+                                                :label="item.nombre"
+                                            >
+                                            </el-option>
+                                        </el-select>
+                                        <span
+                                            class="error invalid-feedback"
+                                            v-if="errors.cliente_id"
+                                            v-text="errors.cliente_id[0]"
+                                        ></span>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <table
+                                            class="table table-bordered tabla_responsive"
+                                        >
+                                            <thead>
+                                                <tr>
+                                                    <th>Nombre Completo</th>
+                                                    <th>Número C.I. o Nit</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td
+                                                        data-col="Nombre Completo: "
+                                                        v-text
                                                     >
-                                                        Nit: {{ oCliente.nit }}
-                                                    </option>
-                                                    <option
-                                                        :value="oCliente.ci"
+                                                        {{ oCliente.nombre }}
+                                                    </td>
+                                                    <td
+                                                        data-col="Número C.I. o Nit: "
                                                     >
-                                                        C.I.: {{ oCliente.ci }}
-                                                    </option>
-                                                </select>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="card">
-                            <div class="card-body">
+                                                        <select
+                                                            class="form-control"
+                                                            v-model="
+                                                                orden_venta.nit
+                                                            "
+                                                        >
+                                                            <option value="0">
+                                                                0
+                                                            </option>
+                                                            <option
+                                                                :value="
+                                                                    oCliente.nit
+                                                                "
+                                                            >
+                                                                Nit:
+                                                                {{
+                                                                    oCliente.nit
+                                                                }}
+                                                            </option>
+                                                            <option
+                                                                :value="
+                                                                    oCliente.ci
+                                                                "
+                                                            >
+                                                                C.I.:
+                                                                {{
+                                                                    oCliente.ci
+                                                                }}
+                                                            </option>
+                                                        </select>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
                                 <div class="row">
                                     <div class="col-md-12 contenedor_tabla">
                                         <h5 class="w-100 text-center">
@@ -186,12 +248,22 @@
                                             v-text="errors.producto_id[0]"
                                         ></span>
                                     </div>
-                                    <div class="col-md-12">
-                                        <table class="table table-bordered">
+                                    <div
+                                        class="col-md-12"
+                                        style="overflow: auto"
+                                    >
+                                        <table
+                                            class="table table-bordered tabla_responsive"
+                                        >
                                             <thead>
                                                 <tr>
+                                                    <th>Código</th>
                                                     <th>Nombre</th>
                                                     <th>Grupo</th>
+                                                    <th>
+                                                        Precios<br />Menor /
+                                                        Mayor
+                                                    </th>
                                                     <th>Medida</th>
                                                     <th>Stock Disponible</th>
                                                 </tr>
@@ -199,22 +271,44 @@
                                             <tbody>
                                                 <tr>
                                                     <td
+                                                        data-col="Código: "
+                                                        v-text="
+                                                            oProducto?.codigo
+                                                        "
+                                                    ></td>
+                                                    <td
+                                                        data-col="Nombre: "
                                                         v-text="
                                                             oProducto?.nombre
                                                         "
                                                     ></td>
                                                     <td
+                                                        data-col="Grupo:"
                                                         v-text="
                                                             oProducto?.grupo
                                                                 .nombre
                                                         "
                                                     ></td>
                                                     <td
+                                                        data-col="Precio Menor/Mayor: "
+                                                        v-text="
+                                                            (oProducto
+                                                                ? oProducto?.precio
+                                                                : '') +
+                                                            ' / ' +
+                                                            (oProducto
+                                                                ? oProducto?.precio_mayor
+                                                                : '')
+                                                        "
+                                                    ></td>
+                                                    <td
+                                                        data-col="Medida: "
                                                         v-text="
                                                             oProducto?.medida
                                                         "
                                                     ></td>
                                                     <td
+                                                        data-col="Stock actual: "
                                                         v-text="
                                                             oProducto?.stock_actual
                                                         "
@@ -245,6 +339,21 @@
                                         ></span>
                                     </div>
                                     <div class="col-md-12">
+                                        <div class="form-group">
+                                            <label
+                                                >Seleccionar Venta por
+                                                Mayor*</label
+                                            >
+                                            <select
+                                                class="form-control"
+                                                v-model="venta_mayor"
+                                            >
+                                                <option value="NO">NO</option>
+                                                <option value="SI">SI</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-12">
                                         <button
                                             class="btn btn-primary btn-flat btn-block"
                                             :disabled="
@@ -263,128 +372,142 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="row">
-                    <div class="col-md-12 contenedor_tabla">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th
-                                        colspan="6"
-                                        class="bg-blue text-md text-center"
-                                    >
-                                        DETALLE DE LA VENTA
-                                        <i class="fa fa-list-alt"></i>
-                                    </th>
-                                </tr>
-                                <tr>
-                                    <th>N°</th>
-                                    <th>Producto</th>
-                                    <th>Precio Unitario</th>
-                                    <th>Cantidad</th>
-                                    <th>Subtotal</th>
-                                    <th width="5px"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr
-                                    v-if="orden_venta.detalle_ordens.length > 0"
-                                    v-for="(
-                                        item, index
-                                    ) in orden_venta.detalle_ordens"
-                                >
-                                    <td>{{ index + 1 }}</td>
-                                    <td>{{ item.producto.nombre }}</td>
-                                    <td>{{ item.precio }}</td>
-                                    <td>{{ item.cantidad }}</td>
-                                    <td>{{ item.subtotal }}</td>
-                                    <td>
-                                        <button
-                                            v-if="orden_venta.editable"
-                                            class="btn-sm btn-flat btn-danger"
-                                            @click.prevent="
-                                                quitarDetalleOrdenVenta(
-                                                    item.id,
-                                                    index
-                                                )
-                                            "
+            </form>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-12 contenedor_tabla">
+                            <table class="table table-striped tabla_responsive">
+                                <thead>
+                                    <tr>
+                                        <th
+                                            colspan="5"
+                                            class="bg-blue text-md text-center"
                                         >
-                                            <i class="fa fa-times"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                                <tr
-                                    v-if="
-                                        orden_venta.detalle_ordens.length == 0
-                                    "
-                                >
-                                    <td
-                                        colspan="6"
-                                        class="text-center text-gray font-weight-bold"
+                                            DETALLE DE LA VENTA
+                                            <i class="fa fa-list-alt"></i>
+                                        </th>
+                                    </tr>
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th>Precio Unitario</th>
+                                        <th>Cantidad</th>
+                                        <th>Subtotal</th>
+                                        <th width="5px"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr
+                                        v-if="
+                                            orden_venta.detalle_ordens.length >
+                                            0
+                                        "
+                                        v-for="(
+                                            item, index
+                                        ) in orden_venta.detalle_ordens"
                                     >
-                                        NO SE AGREGÓ NINGUN PRODUCTO
-                                    </td>
-                                </tr>
-                            </tbody>
-                            <tfoot class="bg-blue">
-                                <tr>
-                                    <td colspan="4">TOTAL</td>
-                                    <td>{{ orden_venta.total }}</td>
-                                    <td></td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label>Seleccionar Venta por Mayor*</label>
-                            <select
-                                class="form-control"
-                                v-model="orden_venta.venta_mayor"
-                                @change="sumaTotalOrdenVenta"
-                            >
-                                <option value="NO">NO</option>
-                                <option value="SI">SI</option>
-                            </select>
+                                        <td data-col="Nombre: ">
+                                            {{ item.producto.nombre }}
+                                        </td>
+                                        <td data-col="Precio Unitario: ">
+                                            {{ item.precio }}
+                                        </td>
+                                        <td data-col="Cantidad: ">
+                                            {{ item.cantidad }}
+                                        </td>
+                                        <td data-col="Subtotal: ">
+                                            {{ item.subtotal }}
+                                        </td>
+                                        <td class="text-center">
+                                            <button
+                                                v-if="orden_venta.editable"
+                                                class="btn-sm btn-flat btn-danger"
+                                                @click.prevent="
+                                                    quitarDetalleOrdenVenta(
+                                                        item.id,
+                                                        index
+                                                    )
+                                                "
+                                            >
+                                                <i class="fa fa-times"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr
+                                        v-if="
+                                            orden_venta.detalle_ordens.length ==
+                                            0
+                                        "
+                                    >
+                                        <td
+                                            colspan="5"
+                                            class="text-center text-gray font-weight-bold"
+                                        >
+                                            NO SE AGREGÓ NINGUN PRODUCTO
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot class="bg-blue">
+                                    <tr>
+                                        <td colspan="3" class="ocultar">
+                                            TOTAL
+                                        </td>
+                                        <td
+                                            data-col="TOTAL: "
+                                            class="font-weight-bold text-lg"
+                                        >
+                                            {{ orden_venta.total }}
+                                        </td>
+                                        <td class="ocultar"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
                         </div>
                     </div>
                 </div>
-            </form>
-        </div>
-        <div class="modal-footer justify-content-between">
-            <el-button
-                type="primary"
-                class="bg-lightblue"
-                :loading="enviando"
-                @click="enviarFormulario()"
-                v-html="textoBoton"
-                :disabled="orden_venta.detalle_ordens.length <= 0"
-                v-if="orden_venta.editable || accion == 'nuevo'"
-            ></el-button>
-            <el-button type="info" v-else>
-                No editable, debido a que existe una devolución</el-button
-            >
-            <el-button
-                v-if="this.orden_venta.id != 0"
-                type="success"
-                :loading="enviando"
-                @click="generaReporte()"
-                ><i class="fa fa-file-pdf"></i> Exportar</el-button
-            >
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <el-button
+                        type="primary"
+                        class="bg-lightblue btn-block"
+                        :loading="enviando"
+                        @click="enviarFormulario()"
+                        v-html="textoBoton"
+                        :disabled="orden_venta.detalle_ordens.length <= 0"
+                        v-if="orden_venta.editable || accion == 'nuevo'"
+                    ></el-button>
+                    <el-button type="info" v-else>
+                        No editable, debido a que existe una
+                        devolución</el-button
+                    >
+                    <el-button
+                        v-if="this.orden_venta.id != 0"
+                        class="btn-block m-0 mt-2"
+                        type="success"
+                        :loading="enviando"
+                        @click="generaReporte()"
+                        ><i class="fa fa-file-pdf"></i> Exportar</el-button
+                    >
 
-            <router-link
-                :to="{ name: 'orden_ventas.create' }"
-                v-if="this.orden_venta.id != 0"
-                class="btn btn-danger btn-lg"
-                ><i class="fa fa-plus"></i> Realizar otra orden</router-link
-            >
+                    <router-link
+                        :to="{ name: 'orden_ventas.create' }"
+                        v-if="this.orden_venta.id != 0"
+                        class="btn btn-danger btn-lg btn-block"
+                        ><i class="fa fa-plus"></i> Realizar nueva
+                        orden</router-link
+                    >
 
-            <router-link
-                :to="{ name: 'orden_ventas.index' }"
-                class="btn btn-default btn-lg"
-                ><i class="fa fa-cash-register"></i> Volver a orden de
-                ventas</router-link
-            >
+                    <router-link
+                        :to="{ name: 'orden_ventas.index' }"
+                        class="btn btn-default btn-lg btn-block"
+                        ><i class="fa fa-cash-register"></i> Volver a orden de
+                        ventas</router-link
+                    >
+                </div>
+            </div>
         </div>
     </div>
 </template>
@@ -404,9 +527,9 @@ export default {
                     sucursal_id: "",
                     cliente_id: "",
                     nit: "",
-                    venta_mayor: "NO",
                     total: "0.00",
                     detalle_ordens: [],
+                    editable: true,
                 };
             },
         },
@@ -416,6 +539,7 @@ export default {
             if (newVal.id != 0) {
                 this.getClientes();
                 this.getCliente();
+                this.getCajas();
             }
         },
     },
@@ -433,12 +557,14 @@ export default {
             user: JSON.parse(localStorage.getItem("user")),
             enviando: false,
             producto_id: "",
+            venta_mayor: "NO",
             cantidad: 1,
             errors: [],
             listClientes: [],
             aux_lista_productos: [],
             listProductos: [],
             listSucursales: [],
+            listCajas: [],
             eliminados: [],
             oCliente: {
                 nombre: "",
@@ -447,16 +573,6 @@ export default {
                 dir: "",
             },
             oProducto: null,
-            // oProducto: {
-            //     nombre: "",
-            //     medida: "",
-            //     grupo_id: "",
-            //     precio: 0,
-            //     precio_mayor: 0,
-            //     grupo: {
-            //         nombre: "",
-            //     },
-            // },
             loading_buscador: false,
             timeOutProductos: null,
         };
@@ -478,6 +594,21 @@ export default {
             axios.get("/admin/sucursals").then((response) => {
                 this.listSucursales = response.data.sucursals;
             });
+        },
+        getCajas() {
+            if (this.orden_venta.sucursal_id != "") {
+                axios
+                    .get("/admin/cajas/cajas_sucursal", {
+                        params: {
+                            id: this.orden_venta.sucursal_id,
+                        },
+                    })
+                    .then((response) => {
+                        this.listCajas = response.data;
+                    });
+            } else {
+                this.listCajas = [];
+            }
         },
         getCliente() {
             if (this.orden_venta.cliente_id != "") {
@@ -638,7 +769,10 @@ export default {
             if (query !== "") {
                 axios
                     .get("/admin/productos/productos_sucursal", {
-                        params: { value: query },
+                        params: {
+                            value: query,
+                            id: this.orden_venta.sucursal_id,
+                        },
                     })
                     .then((response) => {
                         this.loading_buscador = false;
@@ -695,7 +829,7 @@ export default {
                     if (response.data.sw) {
                         let subtotal = 0;
                         let precio = 0;
-                        if (this.orden_venta.venta_mayor == "SI") {
+                        if (this.venta_mayor == "SI") {
                             precio = response.data.producto.precio_mayor;
                             subtotal =
                                 parseFloat(this.cantidad) * parseFloat(precio);
@@ -711,12 +845,14 @@ export default {
                             producto_id: response.data.producto.id,
                             sucursal_stock_id: response.data.sucursal_stock.id,
                             cantidad: this.cantidad,
+                            venta_mayor: this.venta_mayor,
                             precio: precio,
                             subtotal: subtotal.toFixed(2),
                             producto: response.data.producto,
                         });
                         this.sumaTotalOrdenVenta();
                         this.producto_id = "";
+                        this.venta_mayor = "NO";
                         this.oProducto = null;
                         this.cantidad = 1;
                     } else {
@@ -735,18 +871,6 @@ export default {
             let precio = 0;
             let subtotal = 0;
             this.orden_venta.detalle_ordens.forEach((elem) => {
-                precio = 0;
-                subtotal = 0;
-                if (this.orden_venta.venta_mayor == "SI") {
-                    precio = elem.producto.precio_mayor;
-                    subtotal = parseFloat(elem.cantidad) * parseFloat(precio);
-                } else {
-                    precio = elem.producto.precio;
-                    subtotal = parseFloat(elem.cantidad) * parseFloat(precio);
-                }
-                elem.precio = precio;
-                elem.subtotal = subtotal;
-
                 suma_total += parseFloat(elem.subtotal);
             });
             this.orden_venta.total = suma_total.toFixed(2);
@@ -774,5 +898,43 @@ export default {
 
 .contenedor_tabla {
     overflow: auto;
+}
+
+@media (max-width: 780px) {
+    .tabla_responsive thead {
+        display: none;
+    }
+
+    .tabla_responsive.table-striped tbody tr td,
+    .tabla_responsive.table-bordered tbody tr td {
+        display: block !important;
+    }
+    .tabla_responsive.table-striped tbody tr td:before,
+    .tabla_responsive.table-bordered tbody tr td:before {
+        content: attr(data-col);
+        font-weight: bold;
+    }
+
+    .tabla_responsive.table-bordered tfoot tr td,
+    .tabla_responsive.table-bordered tfoot tr th,
+    .tabla_responsive.table-striped tfoot tr td,
+    .tabla_responsive.table-striped tfoot tr th {
+        display: block;
+    }
+
+    .tabla_responsive.table-bordered tfoot tr td.ocultar,
+    .tabla_responsive.table-bordered tfoot tr th.ocultar,
+    .tabla_responsive.table-striped tfoot tr td.ocultar,
+    .tabla_responsive.table-striped tfoot tr th.ocultar {
+        display: none!important;
+    }
+
+    .tabla_responsive.table-bordered tfoot tr td:before,
+    .tabla_responsive.table-bordered tfoot tr th:before,
+    .tabla_responsive.table-striped tfoot tr td:before,
+    .tabla_responsive.table-striped tfoot tr th:before {
+        content: attr(data-col);
+        font-weight: bold;
+    }
 }
 </style>

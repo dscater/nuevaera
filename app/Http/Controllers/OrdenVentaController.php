@@ -19,8 +19,8 @@ class OrdenVentaController extends Controller
 {
     public $validacion = [
         "sucursal_id" => "required",
+        "caja_id" => "required",
         "cliente_id" => "required",
-        "venta_mayor" => "required",
     ];
 
     public function index()
@@ -54,6 +54,7 @@ class OrdenVentaController extends Controller
                     "producto_id" => $value["producto_id"],
                     "sucursal_stock_id" => $value["sucursal_stock_id"],
                     "cantidad" => $value["cantidad"],
+                    "venta_mayor" => $value["venta_mayor"],
                     "precio" => $value["precio"],
                     "subtotal" => $value["subtotal"],
                 ]);
@@ -90,6 +91,7 @@ class OrdenVentaController extends Controller
                         "producto_id" => $value["producto_id"],
                         "sucursal_stock_id" => $value["sucursal_stock_id"],
                         "cantidad" => $value["cantidad"],
+                        "venta_mayor" => $value["venta_mayor"],
                         "precio" => $value["precio"],
                         "subtotal" => $value["subtotal"],
                     ]);
@@ -113,6 +115,7 @@ class OrdenVentaController extends Controller
                         "producto_id" => $value["producto_id"],
                         "sucursal_stock_id" => $value["sucursal_stock_id"],
                         "cantidad" => $value["cantidad"],
+                        "venta_mayor" => $value["venta_mayor"],
                         "precio" => $value["precio"],
                         "subtotal" => $value["subtotal"],
                     ]);

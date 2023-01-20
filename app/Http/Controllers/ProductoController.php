@@ -52,7 +52,7 @@ class ProductoController extends Controller
             ->orWhere("productos.precio_mayor", "LIKE", "%$value%")
             ->orWhere("productos.fecha_registro", "LIKE", "%$value%")
             ->orWhere("grupos.nombre", "LIKE", "%$value%")
-            ->get();
+            ->get()->take(100);
         return response()->JSON($productos);
     }
 
@@ -177,22 +177,26 @@ class ProductoController extends Controller
 
     public function productos_sucursal(Request $request)
     {
+        $productos = [];
         if (isset($request->value)) {
             $value = $request->value;
             $productos = SucursalStock::select("sucursal_stocks.*")
                 ->with("sucursal")->with("producto.grupo")
                 ->join("productos", "productos.id", "=", "sucursal_stocks.producto_id")
                 ->join("grupos", "grupos.id", "=", "productos.grupo_id")
-                ->orWhere("productos.id", "LIKE", "%$value%")
-                ->orWhere("productos.codigo", "LIKE", "%$value%")
-                ->orWhere("productos.nombre", "LIKE", "%$value%")
-                ->orWhere("productos.medida", "LIKE", "%$value%")
-                ->orWhere("productos.precio", "LIKE", "%$value%")
-                ->orWhere("productos.precio_mayor", "LIKE", "%$value%")
-                ->orWhere("productos.fecha_registro", "LIKE", "%$value%")
-                ->orWhere("grupos.nombre", "LIKE", "%$value%")
-                ->distinct("productos.id")
-                ->get();
+                ->where("sucursal_stocks.sucursal_id", $request->id)
+                ->where(function ($query) use ($value) {
+                    $query->where('productos.id', "%$value%")
+                        ->orWhere('productos.id', "LIKE", "%$value%")
+                        ->orWhere("productos.codigo", "LIKE", "%$value%")
+                        ->orWhere("productos.nombre", "LIKE", "%$value%")
+                        ->orWhere("productos.medida", "LIKE", "%$value%")
+                        ->orWhere("productos.precio", "LIKE", "%$value%")
+                        ->orWhere("productos.precio_mayor", "LIKE", "%$value%")
+                        ->orWhere("productos.fecha_registro", "LIKE", "%$value%")
+                        ->orWhere("grupos.nombre", "LIKE", "%$value%");
+                })
+                ->get()->take(100);
         } else {
             $productos = SucursalStock::with("sucursal")->with("producto.grupo")->where("sucursal_id", $request->id)->get();
         }

@@ -95,4 +95,9 @@ class CajaController extends Controller
             ], 500);
         }
     }
+
+    public function cajas_sucursal(Request $request)
+    {
+        return response()->JSON(Caja::where("sucursal_id", $request->id)->get());
+    }
 }

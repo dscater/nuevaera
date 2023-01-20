@@ -51,6 +51,7 @@ Route::middleware(['auth'])->group(function () {
         ]);
 
         // Cajas
+        Route::get("cajas/cajas_sucursal", [CajaController::class, 'cajas_sucursal']);
         Route::resource('cajas', CajaController::class)->only([
             'index', 'store', 'update', 'destroy', 'show'
         ]);

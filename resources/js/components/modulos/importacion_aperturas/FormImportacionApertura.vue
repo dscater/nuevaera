@@ -53,29 +53,32 @@
                         >
                     </div>
                 </div>
-                <div
-                    class="row"
-                    v-if="muestra_importacion"
-                    style="height: 90vh; overflow: auto"
-                >
+                <!-- <div class="row" v-if="muestra_importacion"> -->
+                <div class="row">
                     <div class="col-md-12 contenedor_tabla_productos">
-                        <table class="table table-striped">
+                        <table class="table table-striped tabla_importacion">
                             <thead>
                                 <tr>
                                     <th>PRODUCTO</th>
+                                    <th>MEDIDA</th>
                                     <th>GRUPO</th>
                                     <th>STOCK</th>
                                 </tr>
                             </thead>
-                            <tbody id="contenedor_productos"
-                                
-                            >
+                            <tbody id="contenedor_productos">
                                 <tr
                                     v-for="(item, index) in listProductos"
                                     :key="item.id"
                                 >
-                                    <td>{{ item.nombre }}</td>
-                                    <td>{{ item.grupo.nombre }}</td>
+                                    <td data-col="Nombre: ">
+                                        {{ item.nombre }}
+                                    </td>
+                                    <td data-col="Medida: ">
+                                        {{ item.medida }}
+                                    </td>
+                                    <td data-col="Grupo: ">
+                                        {{ item.grupo.nombre }}
+                                    </td>
                                     <td>
                                         <input
                                             type="number"
@@ -98,16 +101,17 @@
                                         />
                                     </td>
                                 </tr>
-                                <infinite-loading
-                                    @infinite="infiniteHandler"
-                                    ref="infiniteLoading"
-                                >
-                                    <div slot="no-more">--</div>
-                                    <div slot="spinner">Cargando...</div>
-                                    <div slot="no-results">Sin resultados</div>
-                                </infinite-loading>
                             </tbody>
                         </table>
+                    </div>
+                    <div
+                        class="cargando col-md-12 text-center"
+                        v-if="!fin_registros"
+                    >
+                        <i class="fa fa-spinner fa-spin text-lg"></i>
+                    </div>
+                    <div class="cargando col-md-12 text-center" v-else>
+                        <span class="text-lg">-- Fin de registros --</span>
                     </div>
                 </div>
             </form>
@@ -155,7 +159,9 @@ export default {
             muestra_importacion: false,
             setTimeEnvios: {},
             existe_importacion_almacen: false,
-            page: 0,
+            page: 1,
+            sw_scroll: true,
+            fin_registros: false,
         };
     },
     mounted() {
@@ -163,6 +169,8 @@ export default {
         if (this.user.tipo != "ADMINISTRADOR") {
             this.importacion_apertura.sucursal_id = this.user.sucursal_id;
         }
+        this.cargarProductos();
+        window.addEventListener("scroll", this.handleScroll);
     },
     methods: {
         // OBTENER LISTADOS E INFORMACIÓN
@@ -171,6 +179,28 @@ export default {
                 this.listSucursales = response.data.sucursals;
                 this.existe_importacion_almacen = response.data.almacen;
             });
+        },
+        cargarProductos() {
+            try {
+                axios
+                    .get("/admin/productos/paginado", {
+                        params: { page: this.page },
+                    })
+                    .then((response) => {
+                        let nuevos_datos = response.data.productos.data;
+                        if (nuevos_datos.length) {
+                            this.listProductos =
+                                this.listProductos.concat(nuevos_datos);
+                            this.sw_scroll = false;
+                            this.fin_registros = false;
+                        } else {
+                            this.fin_registros = true;
+                        }
+                    });
+            } catch (e) {
+                console.error(e);
+                $state.complete();
+            }
         },
         infiniteHandler($state) {
             try {
@@ -360,37 +390,58 @@ export default {
         limpiaImportacionApertura() {
             this.errors = [];
         },
-        loadMore() {},
+        handleScroll(e) {
+            if (!this.fin_registros) {
+                this.sw_scroll = true;
+                if (
+                    $(window).scrollTop() + $(window).height() >=
+                    $(document).height() - 100
+                ) {
+                    if (this.sw_scroll) {
+                        this.page++;
+                        this.cargarProductos();
+                    }
+                }
+                $(window).scroll(function () {
+                    if (
+                        $(window).scrollTop() + $(window).height() >=
+                        $(document).height() - 100
+                    ) {
+                        if (this.sw_scroll) {
+                            this.page++;
+                            this.cargarProductos();
+                        }
+                    }
+                });
+            } else {
+                window.removeEventListener("scroll", this.handleScroll);
+            }
+        },
+    },
+    destroyed: function () {
+        window.removeEventListener("scroll", this.handleScroll);
     },
 };
 </script>
 
 <style>
-.importacion_apertura_detalles tbody tr td {
-    padding: 0px;
-    vertical-align: middle;
-}
-
-.importacion_apertura_detalles tbody tr td:nth-child(1) {
-    padding-left: 5px;
-}
-
 .contenedor_tabla_productos {
     overflow: auto;
 }
-
-.contenedor_tabla_productos table {
-    height: 40px !important;
-    max-height: 40px !important;
-}
-
 .input_stock_importacion {
-    min-width: 120px !important;
+    min-width: 100px !important;
 }
+@media (max-width: 780px) {
+    .tabla_importacion thead {
+        display: none;
+    }
 
-#contenedor_productos {
-    height: 40px !important;
-    max-height: 40px !important;
-    overflow: auto;
+    .tabla_importacion.table-striped tbody tr td {
+        display: block !important;
+    }
+    .tabla_importacion.table-striped tbody tr td:before {
+        content: attr(data-col);
+        font-weight: bold;
+    }
 }
 </style>

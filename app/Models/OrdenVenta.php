@@ -10,7 +10,7 @@ class OrdenVenta extends Model
     use HasFactory;
 
     protected $fillable = [
-        "sucursal_id", "cliente_id", "nit", "venta_mayor", "total", "fecha_registro",
+        "sucursal_id", "caja_id", "cliente_id", "nit", "total", "fecha_registro",
     ];
 
     protected $appends = ["editable"];
@@ -18,6 +18,11 @@ class OrdenVenta extends Model
     public function sucursal()
     {
         return $this->belongsTo(Sucursal::class, 'sucursal_id');
+    }
+
+    public function caja()
+    {
+        return $this->belongsTo(Caja::class, 'caja_id');
     }
 
     public function cliente()

@@ -102,80 +102,9 @@
                                                 >
                                                     {{
                                                         formatoFecha(
-                                                            row.item
-                                                                .fecha_registro
+                                                            row.item.created_at
                                                         )
                                                     }}
-                                                </template>
-
-                                                <template #cell(accion)="row">
-                                                    <div
-                                                        class="row justify-content-center flex-column"
-                                                    >
-                                                        <b-button
-                                                            size="sm"
-                                                            pill
-                                                            variant="outline-primary"
-                                                            class="btn-flat mb-1"
-                                                            title="Pdf"
-                                                            @click="
-                                                                generaReporte(
-                                                                    row.item.id
-                                                                )
-                                                            "
-                                                        >
-                                                            <i
-                                                                class="fa fa-file-pdf"
-                                                            ></i>
-                                                        </b-button>
-                                                        <b-button
-                                                            size="sm"
-                                                            pill
-                                                            variant="outline-warning"
-                                                            class="btn-flat mb-1"
-                                                            title="Editar registro"
-                                                            @click="
-                                                                editarRegistro(
-                                                                    row.item
-                                                                )
-                                                            "
-                                                        >
-                                                            <i
-                                                                class="fa fa-edit"
-                                                            ></i>
-                                                        </b-button>
-
-                                                        <b-button
-                                                            size="sm"
-                                                            pill
-                                                            variant="outline-danger"
-                                                            class="btn-flat"
-                                                            title="Eliminar registro"
-                                                            @click="
-                                                                eliminaImportacionApertura(
-                                                                    row.item.id,
-                                                                    row.item
-                                                                        .orden
-                                                                        .id +
-                                                                        ' - ' +
-                                                                        row.item
-                                                                            .orden
-                                                                            .cliente
-                                                                            .nombre +
-                                                                        ' <br/>Con fecha ' +
-                                                                        formatoFecha(
-                                                                            row
-                                                                                .item
-                                                                                .fecha_registro
-                                                                        )
-                                                                )
-                                                            "
-                                                        >
-                                                            <i
-                                                                class="fa fa-trash"
-                                                            ></i>
-                                                        </b-button>
-                                                    </div>
                                                 </template>
                                             </b-table>
                                         </b-overlay>
@@ -238,13 +167,8 @@ export default {
             showOverlay: false,
             fields: [
                 {
-                    key: "orden.id",
-                    label: "Nro. de Orden",
-                    sortable: true,
-                },
-                {
-                    key: "orden.cliente.nombre",
-                    label: "Cliente",
+                    key: "texto_lugar",
+                    label: "Lugar",
                     sortable: true,
                 },
                 {
@@ -252,7 +176,6 @@ export default {
                     label: "Fecha de registro",
                     sortable: true,
                 },
-                { key: "accion", label: "Acción" },
             ],
             loading: true,
             fullscreenLoading: true,
