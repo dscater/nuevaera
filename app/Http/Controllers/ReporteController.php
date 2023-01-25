@@ -13,6 +13,7 @@ use App\Models\Inscripcion;
 use App\Models\KardexProducto;
 use App\Models\MantenimientoMaquina;
 use App\Models\Maquina;
+use App\Models\OrdenVenta;
 use App\Models\Plan;
 use App\Models\Producto;
 use App\Models\Sucursal;
@@ -150,6 +151,56 @@ class ReporteController extends Controller
         $canvas->page_text($ancho - 90, $alto - 25, "Página {PAGE_NUM} de {PAGE_COUNT}", null, 10, array(0, 0, 0));
 
         return $pdf->stream('kardex.pdf');
+    }
+
+    public function orden_ventas(Request $request)
+    {
+        $filtro = $request->filtro;
+        $lugar_id = $request->lugar_id;
+        $producto_id = $request->producto_id;
+        $fecha_ini = $request->fecha_ini;
+        $fecha_fin = $request->fecha_fin;
+        $request->validate([
+            'lugar_id' => 'required',
+        ]);
+
+        if ($filtro == 'Producto') {
+            $request->validate([
+                'producto_id' => 'required',
+            ]);
+        }
+        if ($filtro == 'Rango de fechas') {
+            $request->validate([
+                'fecha_ini' => 'required|date',
+                'fecha_fin' => 'required|date',
+            ]);
+        }
+
+        $orden_ventas = OrdenVenta::where("sucursal_id", $lugar_id)->get();
+        if ($filtro != 'todos') {
+            if ($filtro == 'Producto') {
+                $orden_ventas = OrdenVenta::select("orden_ventas.*")
+                    ->join("detalle_ordens", "detalle_ordens.orden_id", "=", "orden_ventas.id")
+                    ->where("detalle_ordens.producto_id", $producto_id)
+                    ->where("orden_ventas.sucursal_id", $lugar_id)
+                    ->get();
+            }
+            if ($filtro == 'Rango de fechas') {
+                $orden_ventas = OrdenVenta::where("sucursal_id", $lugar_id)
+                    ->whereBetween("fecha_registro", [$fecha_ini, $fecha_fin])->get();
+            }
+        }
+        $pdf = PDF::loadView('reportes.orden_ventas', compact('orden_ventas'))->setOption("public_path", public_path())->setPaper('legal', 'portrait');
+
+        // ENUMERAR LAS PÁGINAS USANDO CANVAS
+        $pdf->output();
+        $dom_pdf = $pdf->getDomPDF();
+        $canvas = $dom_pdf->get_canvas();
+        $alto = $canvas->get_height();
+        $ancho = $canvas->get_width();
+        $canvas->page_text($ancho - 90, $alto - 25, "Página {PAGE_NUM} de {PAGE_COUNT}", null, 10, array(0, 0, 0));
+
+        return $pdf->download('orden_ventas.pdf');
     }
 
     public function ingreso_productos(Request $request)

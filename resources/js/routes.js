@@ -190,6 +190,12 @@ export default new Router({
             component: require('./components/modulos/reportes/kardex.vue').default,
             props: true
         },
+        {
+            path: '/reportes/orden_ventas',
+            name: 'reportes.orden_ventas',
+            component: require('./components/modulos/reportes/orden_ventas.vue').default,
+            props: true
+        },
 
         // PÁGINA NO ENCONTRADA
         {

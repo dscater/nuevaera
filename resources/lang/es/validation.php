@@ -140,6 +140,7 @@ return [
     'attributes' => [
 
         'cliente_id' => 'cliente',
+        'lugar_id' => 'lugar',
         'tipo_embarque_id' => 'tipo embarque',
         'oficina_id' => 'oficina',
         'puerto_destino_id' => 'puerto destino',
