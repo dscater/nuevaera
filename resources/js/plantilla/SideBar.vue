@@ -99,7 +99,7 @@
                             :to="{ name: 'orden_ventas.index' }"
                             class="nav-link"
                         >
-                            <i class="nav-icon fas fa-list"></i>
+                            <i class="nav-icon fas fa-clipboard-list"></i>
                             <p>Orden de Ventas</p>
                         </router-link>
                     </li>
@@ -111,7 +111,7 @@
                             :to="{ name: 'devolucions.index' }"
                             class="nav-link"
                         >
-                            <i class="nav-icon fas fa-list"></i>
+                            <i class="nav-icon fas fa-arrow-left"></i>
                             <p>Devoluciones</p>
                         </router-link>
                     </li>
@@ -125,7 +125,7 @@
                             :to="{ name: 'transferencia_productos.index' }"
                             class="nav-link"
                         >
-                            <i class="nav-icon fas fa-list"></i>
+                            <i class="nav-icon fas fa-retweet"></i>
                             <p>Transferencia de Productos</p>
                         </router-link>
                     </li>
@@ -137,7 +137,7 @@
                             :to="{ name: 'ingreso_productos.index' }"
                             class="nav-link"
                         >
-                            <i class="nav-icon fas fa-list"></i>
+                            <i class="nav-icon fas fa-sign-in-alt"></i>
                             <p>Ingreso de Productos</p>
                         </router-link>
                     </li>
@@ -149,7 +149,7 @@
                             :to="{ name: 'salida_productos.index' }"
                             class="nav-link"
                         >
-                            <i class="nav-icon fas fa-list"></i>
+                            <i class="nav-icon fas fa-sign-out-alt"></i>
                             <p>Salida de Productos</p>
                         </router-link>
                     </li>
@@ -178,7 +178,7 @@
                             class="nav-link"
                             v-loading.fullscreen.lock="fullscreenLoading"
                         >
-                            <i class="nav-icon fas fa-list"></i>
+                            <i class="nav-icon fas fa-user-friends"></i>
                             <p>Clientes</p>
                         </router-link>
                     </li>
@@ -192,7 +192,7 @@
                             class="nav-link"
                             v-loading.fullscreen.lock="fullscreenLoading"
                         >
-                            <i class="nav-icon fas fa-list"></i>
+                            <i class="nav-icon fas fa-building"></i>
                             <p>Sucursales</p>
                         </router-link>
                     </li>
@@ -206,7 +206,7 @@
                             class="nav-link"
                             v-loading.fullscreen.lock="fullscreenLoading"
                         >
-                            <i class="nav-icon fas fa-list"></i>
+                            <i class="nav-icon fas fa-cash-register"></i>
                             <p>Cajas</p>
                         </router-link>
                     </li>
@@ -234,7 +234,7 @@
                             class="nav-link"
                             v-loading.fullscreen.lock="fullscreenLoading"
                         >
-                            <i class="nav-icon fas fa-list"></i>
+                            <i class="nav-icon fas fa-box"></i>
                             <p>Productos</p>
                         </router-link>
                     </li>

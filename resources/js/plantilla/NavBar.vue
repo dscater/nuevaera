@@ -20,13 +20,13 @@
                 </li>
                 <li
                     class="nav-item d-none d-sm-inline-block"
-                    v-if="permisos.includes('tickets.create')"
+                    v-if="permisos.includes('orden_ventas.create')"
                 >
                     <router-link
                         exact
-                        :to="{ name: 'tickets.create' }"
+                        :to="{ name: 'orden_ventas.create' }"
                         class="nav-link text-white"
-                        >Nuevo ticket</router-link
+                        >Nueva orden</router-link
                     >
                 </li>
             </ul>
@@ -54,17 +54,6 @@
                         <i class="fas fa-expand-arrows-alt"></i>
                     </a>
                 </li>
-                <!-- <li class="nav-item">
-                    <a
-                        class="nav-link"
-                        data-widget="control-sidebar"
-                        data-slide="true"
-                        href="#"
-                        role="button"
-                    >
-                        <i class="fas fa-th-large"></i>
-                    </a>
-                </li> -->
             </ul>
         </nav>
         <!-- /.navbar -->
