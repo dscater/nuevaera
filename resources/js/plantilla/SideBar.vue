@@ -272,7 +272,7 @@
                     >
                         REPORTES
                     </li>
-                    <!-- <li
+                    <li
                         class="nav-item"
                         v-if="permisos.includes('reportes.usuarios')"
                     >
@@ -283,7 +283,7 @@
                             <i class="fas fa-file-pdf nav-icon"></i>
                             <p>Lista de Usuarios</p>
                         </router-link>
-                    </li> -->
+                    </li>
                     <li class="nav-header bg-navy">OTRAS OPCIONES</li>
                     <li
                         class="nav-item"

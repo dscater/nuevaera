@@ -22,40 +22,6 @@
                                                 <label
                                                     :class="{
                                                         'text-danger':
-                                                            errors.sucursal_id,
-                                                    }"
-                                                    >Sucursal*</label
-                                                >
-                                                <el-select
-                                                    v-model="
-                                                        oReporte.sucursal_id
-                                                    "
-                                                    filterable
-                                                    placeholder="Seleccione"
-                                                    class="d-block"
-                                                    :class="{
-                                                        'is-invalid':
-                                                            errors.sucursal_id,
-                                                    }"
-                                                >
-                                                    <el-option
-                                                        v-for="item in listSucursales"
-                                                        :key="item.id"
-                                                        :value="item.id"
-                                                        :label="item.nombre"
-                                                    >
-                                                    </el-option>
-                                                </el-select>
-                                                <span
-                                                    class="error invalid-feedback"
-                                                    v-if="errors.sucursal_id"
-                                                    v-text="errors.sucursal_id[0]"
-                                                ></span>
-                                            </div>
-                                            <div class="form-group col-md-12">
-                                                <label
-                                                    :class="{
-                                                        'text-danger':
                                                             errors.filtro,
                                                     }"
                                                     >Seleccione*</label
@@ -94,7 +60,7 @@
                                                 <label
                                                     :class="{
                                                         'text-danger':
-                                                            errors.filtro,
+                                                            errors.tipo,
                                                     }"
                                                     >Seleccione*</label
                                                 >
@@ -203,6 +169,9 @@
 export default {
     data() {
         return {
+            loadingWindow: Loading.service({
+                fullscreen: this.fullscreenLoading,
+            }),
             errors: [],
             oReporte: {
                 filtro: "Todos",
@@ -220,19 +189,12 @@ export default {
             ],
             listTipos: ["GERENTE", "ENCARGADO DE RECEPCIÓN", "ENTRENADOR"],
             errors: [],
-            sucursal_id: [],
-            listSucursales: [],
         };
     },
     mounted() {
-        this.getSucursales();
+        this.loadingWindow.close();
     },
     methods: {
-        getSucursales() {
-            axios.get("/admin/sucursals").then((response) => {
-                this.listSucursales = response.data.sucursals;
-            });
-        },
         limpiarFormulario() {
             this.oReporte.filtro = "Todos";
         },
@@ -255,10 +217,26 @@ export default {
                 .catch(async (error) => {
                     let responseObj = await error.response.data.text();
                     responseObj = JSON.parse(responseObj);
+                    console.log(error);
                     this.enviando = false;
                     if (error.response) {
-                        if (error.response.status == 422)
-                            this.errors = responseObj.errors;
+                        if (error.response.status === 422) {
+                            this.errors = error.response.data.errors;
+                        }
+                        if (
+                            error.response.status === 420 ||
+                            error.response.status === 419 ||
+                            error.response.status === 401
+                        ) {
+                            window.location = "/";
+                        }
+                        Swal.fire({
+                            icon: "error",
+                            title: "Error",
+                            html: responseObj.message,
+                            showConfirmButton: false,
+                            timer: 2000,
+                        });
                     }
                 });
         },

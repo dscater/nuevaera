@@ -14,7 +14,6 @@
             margin-bottom: 1cm;
             margin-left: 1.5cm;
             margin-right: 1cm;
-            border: 5px solid blue;
         }
 
         table {
@@ -142,7 +141,7 @@
         }
 
         .green {
-            background: #28a745;
+            background: #5398d8;
             color: white;
         }
 
@@ -170,10 +169,14 @@
         <thead class="green">
             <tr>
                 <th width="3%">N°</th>
-                <th width="5%">Foto</th>
-                <th>NOMBRE USUARIO</th>
-                <th>CÓDIGO DE USUARIO</th>
-                <th>E-MAIL</th>
+                <th width="5%">FOTO</th>
+                <th>USUARIO</th>
+                <th>PATERNO</th>
+                <th>MATERNO</th>
+                <th>NOMBRE(S)</th>
+                <th>C.I.</th>
+                <th>DIRECCIÓN</th>
+                <th>TELEFÓNO(S)</th>
                 <th>TIPO DE USUARIO</th>
                 <th>SUCURSAL</th>
                 <th width="9%">FECHA DE REGISTRO</th>
@@ -188,10 +191,14 @@
                     <td class="centreado">{{ $cont++ }}</td>
                     <td class="img_celda"><img src="{{ asset('imgs/users/' . $user->foto) }}" alt="Foto"></td>
                     <td>{{ $user->usuario }}</td>
-                    <td class="centreado">{{ $user->codigo }}</td>
-                    <td class="centreado">{{ $user->correo }}</td>
+                    <td class="centreado">{{ $user->paterno }}</td>
+                    <td class="centreado">{{ $user->materno }}</td>
+                    <td class="centreado">{{ $user->nombre }}</td>
+                    <td class="centreado">{{ $user->full_ci }}</td>
+                    <td class="centreado">{{ $user->dir }}</td>
+                    <td class="centreado">{{ $user->fono }}</td>
                     <td class="centreado">{{ $user->tipo }}</td>
-                    <td class="centreado">{{ $user->sucursal->nombre }}</td>
+                    <td class="centreado">{{ $user->tipo == 'CAJA' ? $user->sucursal->sucursal->nombre : '' }}</td>
                     <td class="centreado">{{ $user->fecha_registro }}</td>
                 </tr>
             @endforeach
