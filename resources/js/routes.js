@@ -184,6 +184,12 @@ export default new Router({
             component: require('./components/modulos/reportes/usuarios.vue').default,
             props: true
         },
+        {
+            path: '/reportes/kardex',
+            name: 'reportes.kardex',
+            component: require('./components/modulos/reportes/kardex.vue').default,
+            props: true
+        },
 
         // PÁGINA NO ENCONTRADA
         {

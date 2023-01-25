@@ -23,6 +23,10 @@
             position: relative;
         }
 
+        table {
+            page-break-before: avoid;
+        }
+
         .titulo {
             margin-right: auto;
             margin-left: auto;

@@ -268,7 +268,10 @@
                     </li>
                     <li
                         class="nav-header bg-navy"
-                        v-if="permisos.includes('reportes.usuarios')"
+                        v-if="
+                            permisos.includes('reportes.usuarios') ||
+                            permisos.includes('reportes.kardex')
+                        "
                     >
                         REPORTES
                     </li>
@@ -282,6 +285,18 @@
                         >
                             <i class="fas fa-file-pdf nav-icon"></i>
                             <p>Lista de Usuarios</p>
+                        </router-link>
+                    </li>
+                    <li
+                        class="nav-item"
+                        v-if="permisos.includes('reportes.kardex')"
+                    >
+                        <router-link
+                            :to="{ name: 'reportes.kardex' }"
+                            class="nav-link"
+                        >
+                            <i class="fas fa-file-pdf nav-icon"></i>
+                            <p>Kardex de productos</p>
                         </router-link>
                     </li>
                     <li class="nav-header bg-navy">OTRAS OPCIONES</li>

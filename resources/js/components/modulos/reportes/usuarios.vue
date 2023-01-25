@@ -221,22 +221,22 @@ export default {
                     this.enviando = false;
                     if (error.response) {
                         if (error.response.status === 422) {
-                            this.errors = error.response.data.errors;
+                            this.errors = responseObj.errors;
                         }
                         if (
                             error.response.status === 420 ||
                             error.response.status === 419 ||
                             error.response.status === 401
                         ) {
+                            Swal.fire({
+                                icon: "error",
+                                title: "Error",
+                                html: responseObj.message,
+                                showConfirmButton: false,
+                                timer: 2000,
+                            });
                             window.location = "/";
                         }
-                        Swal.fire({
-                            icon: "error",
-                            title: "Error",
-                            html: responseObj.message,
-                            showConfirmButton: false,
-                            timer: 2000,
-                        });
                     }
                 });
         },

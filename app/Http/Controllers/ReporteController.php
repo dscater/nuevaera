@@ -3,17 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\Acceso;
+use App\Models\Almacen;
 use App\Models\Cliente;
 use App\Models\Cobro;
 use App\Models\DetalleVenta;
 use App\Models\Empleado;
 use App\Models\IngresoProducto;
 use App\Models\Inscripcion;
+use App\Models\KardexProducto;
 use App\Models\MantenimientoMaquina;
 use App\Models\Maquina;
 use App\Models\Plan;
 use App\Models\Producto;
 use App\Models\Sucursal;
+use App\Models\SucursalStock;
 use App\Models\User;
 use Illuminate\Http\Request;
 use PDF;
@@ -45,6 +48,108 @@ class ReporteController extends Controller
         $canvas->page_text($ancho - 90, $alto - 25, "Página {PAGE_NUM} de {PAGE_COUNT}", null, 10, array(0, 0, 0));
 
         return $pdf->download('Usuarios.pdf');
+    }
+
+    public function kardex(Request $request)
+    {
+        $filtro = $request->filtro;
+        $lugar_id = $request->lugar_id;
+        $producto_id = $request->producto_id;
+        $fecha_ini = $request->fecha_ini;
+        $fecha_fin = $request->fecha_fin;
+
+        $request->validate([
+            'lugar_id' => 'required',
+        ]);
+
+        if ($request->filtro == 'Producto') {
+            $request->validate([
+                'producto_id' => 'required',
+            ]);
+        }
+
+        if ($request->filtro == 'Rango de fechas') {
+            $request->validate([
+                'fecha_ini' => 'required|date',
+                'fecha_fin' => 'required|date',
+            ]);
+        }
+
+        if ($lugar_id == 'ALMACEN') {
+            $productos = Almacen::all();
+            if ($filtro != 'todos') {
+                if ($filtro == 'Producto') {
+                    $productos = Almacen::where("producto_id", $producto_id)->get();
+                }
+            }
+        } else {
+            $productos = SucursalStock::where("sucursal_id", $lugar_id)->get();
+            if ($filtro != 'todos') {
+                if ($filtro == 'Producto') {
+                    $productos = SucursalStock::where("sucursal_id", $lugar_id)
+                        ->where("producto_id", $producto_id)
+                        ->get();
+                }
+            }
+        }
+
+        $array_kardex = [];
+        $array_saldo_anterior = [];
+        $sw_lugar = "ALMACEN";
+        if ($lugar_id == 'ALMACEN') {
+            $lugar_id = 0;
+        } else {
+            $sw_lugar = 'SUCURSAL';
+        }
+        foreach ($productos as $registro) {
+            $kardex = KardexProducto::where("lugar", $sw_lugar)
+                ->where("lugar_id", $lugar_id)
+                ->where('producto_id', $registro->producto_id)->get();
+            $array_saldo_anterior[$registro->producto_id] = [
+                'sw' => false,
+                'saldo_anterior' => []
+            ];
+            if ($filtro == 'Rango de fechas') {
+                $kardex = KardexProducto::where("lugar", $sw_lugar)
+                    ->where("lugar_id", $lugar_id)
+                    ->where('producto_id', $registro->producto_id)
+                    ->whereBetween('fecha', [$fecha_ini, $fecha_fin])->get();
+                // buscar saldo anterior si existe
+                $saldo_anterior = KardexProducto::where("lugar", $sw_lugar)
+                    ->where("lugar_id", $lugar_id)
+                    ->where('producto_id', $registro->producto_id)
+                    ->where('fecha', '<', $fecha_ini)
+                    ->orderBy('created_at', 'asc')->get()->last();
+                if ($saldo_anterior) {
+                    $cantidad_saldo = $saldo_anterior->cantidad_saldo;
+                    $monto_saldo = $saldo_anterior->monto_saldo;
+                    $array_saldo_anterior[$registro->producto_id] = [
+                        'sw' => true,
+                        'saldo_anterior' => [
+                            'cantidad_saldo' => $cantidad_saldo,
+                            'monto_saldo' => $monto_saldo,
+                        ]
+                    ];
+                }
+            }
+            $array_kardex[$registro->producto_id] = $kardex;
+        }
+
+        $lugar = "ALMACEN";
+        if ($lugar_id != "ALMACEN") {
+            $lugar = Sucursal::find($lugar_id)->nombre;
+        }
+
+        $pdf = PDF::loadView('reportes.kardex', compact('productos', 'array_kardex', 'array_saldo_anterior', 'lugar'))->setPaper('letter', 'portrait');
+        // ENUMERAR LAS PÁGINAS USANDO CANVAS
+        $pdf->output();
+        $dom_pdf = $pdf->getDomPDF();
+        $canvas = $dom_pdf->get_canvas();
+        $alto = $canvas->get_height();
+        $ancho = $canvas->get_width();
+        $canvas->page_text($ancho - 90, $alto - 25, "Página {PAGE_NUM} de {PAGE_COUNT}", null, 10, array(0, 0, 0));
+
+        return $pdf->stream('kardex.pdf');
     }
 
     public function ingreso_productos(Request $request)
