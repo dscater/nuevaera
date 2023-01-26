@@ -2,8 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\HistorialAccion;
+use App\Models\IngresoProducto;
+use App\Models\SalidaProducto;
 use App\Models\TipoSalida;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class TipoSalidaController extends Controller
@@ -28,12 +33,23 @@ class TipoSalidaController extends Controller
         try {
             // crear TipoSalida
             $request["fecha_registro"] = date("Y-m-d");
-            $nueva_tipo_salida = TipoSalida::create(array_map('mb_strtoupper', $request->all()));
+            $nuevo_tipo_salida = TipoSalida::create(array_map('mb_strtoupper', $request->all()));
+
+            $datos_original =  implode("|", $nuevo_tipo_salida->attributesToArray());
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'CREACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' REGISTRO UN TIPO DE SALIDA',
+                'datos_original' => $datos_original,
+                'modulo' => 'TIPO DE SALIDAS',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
 
             DB::commit();
             return response()->JSON([
                 'sw' => true,
-                'tipo_salida' => $nueva_tipo_salida,
+                'tipo_salida' => $nuevo_tipo_salida,
                 'msj' => 'El registro se realizó de forma correcta',
             ], 200);
         } catch (\Exception $e) {
@@ -51,7 +67,21 @@ class TipoSalidaController extends Controller
 
         DB::beginTransaction();
         try {
+            $datos_original =  implode("|", $tipo_salida->attributesToArray());
             $tipo_salida->update(array_map('mb_strtoupper', $request->all()));
+
+            $datos_nuevo =  implode("|", $tipo_salida->attributesToArray());
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'MODIFICACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' MODIFICÓ UN TIPO DE SALIDA',
+                'datos_original' => $datos_original,
+                'datos_nuevo' => $datos_nuevo,
+                'modulo' => 'TIPO DE SALIDAS',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON([
                 'sw' => true,
@@ -79,7 +109,24 @@ class TipoSalidaController extends Controller
     {
         DB::beginTransaction();
         try {
+            $existe = SalidaProducto::where("tipo_salida_id", $tipo_salida->id)->get();
+            if (count($existe) > 0) {
+                throw new Exception('No es posible eliminar el registro debido a que existen registros que lo utilizan');
+            }
+
+            $datos_original =  implode("|", $tipo_salida->attributesToArray());
             $tipo_salida->delete();
+
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'ELIMINACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' ELIMINÓ UN TIPO DE SALIDA',
+                'datos_original' => $datos_original,
+                'modulo' => 'TIPO DE SALIDAS',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON([
                 'sw' => true,

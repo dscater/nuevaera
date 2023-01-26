@@ -3,9 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Almacen;
+use App\Models\DetalleOrden;
+use App\Models\HistorialAccion;
+use App\Models\KardexProducto;
 use App\Models\Producto;
 use App\Models\SucursalStock;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ProductoController extends Controller
@@ -122,6 +127,17 @@ class ProductoController extends Controller
                 "stock_actual" => 0,
             ]);
 
+            $datos_original =  implode("|", $nuevo_producto->attributesToArray());
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'CREACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' REGISTRO UN PRODUCTO',
+                'datos_original' => $datos_original,
+                'modulo' => 'PRODUCTOS',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON([
                 'sw' => true,
@@ -143,7 +159,20 @@ class ProductoController extends Controller
 
         DB::beginTransaction();
         try {
+            $datos_original =  implode("|", $producto->attributesToArray());
             $producto->update(array_map('mb_strtoupper', $request->all()));
+            $datos_nuevo =  implode("|", $producto->attributesToArray());
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'MODIFICACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' MODIFICÓ UN PRODUCTO',
+                'datos_original' => $datos_original,
+                'datos_nuevo' => $datos_nuevo,
+                'modulo' => 'PRODUCTOS',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON([
                 'sw' => true,
@@ -179,7 +208,46 @@ class ProductoController extends Controller
     {
         DB::beginTransaction();
         try {
+            // validar que no exista en orden de ventas
+            $orden_ventas = DetalleOrden::where("producto_id", $producto->id)->get();
+            if (count($orden_ventas) > 0) {
+                throw new Exception('No es posible eliminar el registro debido a que se realizaron Orden de ventas con este producto');
+            }
+
+            if ($producto->almacen) {
+                $elimina_kardex = KardexProducto::where("lugar", "ALMACEN")
+                    ->where("producto_id", $producto->id)
+                    ->get()->first();
+                if ($elimina_kardex) {
+                    $elimina_kardex->delete();
+                }
+                $producto->almacen->delete();
+            }
+
+            if (count($producto->stock_sucursal) > 0) {
+                foreach ($producto->stock_sucursal as $value) {
+                    $elimina_kardex = KardexProducto::where("lugar", "SUCURSAL")
+                        ->where("lugar_id", $value->sucursal_id)
+                        ->where("producto_id", $producto->id)
+                        ->get()->first();
+                    if ($elimina_kardex) {
+                        $elimina_kardex->delete();
+                    }
+                    $value->delete();
+                }
+            }
+
+            $datos_original =  implode("|", $producto->attributesToArray());
             $producto->delete();
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'ELIMINACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' ELIMINO UN PRODUCTO',
+                'datos_original' => $datos_original,
+                'modulo' => 'PRODUCTOS',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
             DB::commit();
             return response()->JSON([
                 'sw' => true,

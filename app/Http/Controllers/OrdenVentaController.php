@@ -9,6 +9,7 @@ use App\library\numero_a_letras\src\NumeroALetras;
 use App\Models\DetalleOrden;
 use App\Models\Devolucion;
 use App\Models\DevolucionDetalle;
+use App\Models\HistorialAccion;
 use App\Models\KardexProducto;
 use App\Models\OrdenVenta;
 use App\Models\Producto;
@@ -64,6 +65,18 @@ class OrdenVentaController extends Controller
                 // registrar kardex
                 KardexProducto::registroEgreso("SUCURSAL", $orden_venta->sucursal_id, "VENTA", $dv->id, $dv->producto, $dv->cantidad, $dv->precio, "VENTA DE PRODUCTO");
             }
+
+            $datos_original =  implode("|", $orden_venta->attributesToArray());
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'CREACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' REGISTRO UNA ORDEN DE VENTA',
+                'datos_original' => $datos_original,
+                'modulo' => 'ORDEN DE VENTA',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON(["sw" => true, "orden_venta" => $orden_venta, "id" => $orden_venta->id, "msj" => "El registro se almacenó correctamente"]);
         } catch (\Exception $e) {
@@ -86,6 +99,8 @@ class OrdenVentaController extends Controller
 
         DB::beginTransaction();
         try {
+            $datos_original =  implode("|", $orden_venta->attributesToArray());
+
             $orden_venta->update(array_map("mb_strtoupper", $request->except("sucursal", "detalle_ordens", "eliminados", "cliente", "user")));
             $detalle_ordens = $request->detalle_ordens;
             foreach ($detalle_ordens as $value) {
@@ -186,6 +201,19 @@ class OrdenVentaController extends Controller
 
                 $dv->delete();
             }
+
+            $datos_nuevo =  implode("|", $orden_venta->attributesToArray());
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'MODIFICACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' MODIFICÓ UNA ORDEN DE VENTA',
+                'datos_original' => $datos_original,
+                'datos_nuevo' => $datos_nuevo,
+                'modulo' => 'ORDEN DE VENTA',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON(["sw" => true, "orden_venta" => $orden_venta, "id" => $orden_venta->id, "msj" => "El registro se actualizó correctamente"]);
         } catch (\Exception $e) {
@@ -247,7 +275,18 @@ class OrdenVentaController extends Controller
 
                 $dv->delete();
             }
+            $datos_original =  implode("|", $orden_venta->attributesToArray());
             $orden_venta->delete();
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'ELIMINACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' ELIMINÓ UNA ORDEN DE VENTA',
+                'datos_original' => $datos_original,
+                'modulo' => 'ORDEN DE VENTA',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON(["sw" => true, "msj" => "El registro se eliminó correctamente"]);
         } catch (\Exception $e) {

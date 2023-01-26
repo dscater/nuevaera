@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Grupo;
+use App\Models\HistorialAccion;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class GrupoController extends Controller
@@ -30,6 +32,17 @@ class GrupoController extends Controller
             $request["fecha_registro"] = date("Y-m-d");
             $nueva_grupo = Grupo::create(array_map('mb_strtoupper', $request->all()));
 
+            $datos_original =  implode("|", $nueva_grupo->attributesToArray());
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'CREACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' REGISTRO UN GRUPO',
+                'datos_original' => $datos_original,
+                'modulo' => 'GRUPOS',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON([
                 'sw' => true,
@@ -51,7 +64,22 @@ class GrupoController extends Controller
 
         DB::beginTransaction();
         try {
+            $datos_original =  implode("|", $grupo->attributesToArray());
+
             $grupo->update(array_map('mb_strtoupper', $request->all()));
+
+            $datos_nuevo =  implode("|", $grupo->attributesToArray());
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'MODIFICACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' MODIFICÓ UN GRUPO',
+                'datos_original' => $datos_original,
+                'datos_nuevo' => $datos_nuevo,
+                'modulo' => 'GRUPOS',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON([
                 'sw' => true,
@@ -79,7 +107,17 @@ class GrupoController extends Controller
     {
         DB::beginTransaction();
         try {
+            $datos_original =  implode("|", $grupo->attributesToArray());
             $grupo->delete();
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'ELIMINACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' ELIMINÓ UN GRUPO',
+                'datos_original' => $datos_original,
+                'modulo' => 'GRUPOS',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
             DB::commit();
             return response()->JSON([
                 'sw' => true,

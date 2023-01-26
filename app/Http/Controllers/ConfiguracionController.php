@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\Configuracion;
+use App\Models\HistorialAccion;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ConfiguracionController extends Controller
@@ -60,6 +62,9 @@ class ConfiguracionController extends Controller
         if ($configuracion) {
             DB::beginTransaction();
             try {
+
+                $datos_original =  implode("|", $configuracion->attributesToArray());
+
                 $configuracion->update(array_map('mb_strtoupper', $request->except('logo')));
                 if ($request->hasFile('logo')) {
                     $antiguo = $configuracion->logo;
@@ -70,6 +75,19 @@ class ConfiguracionController extends Controller
                     $configuracion->logo = $nombre;
                     $configuracion->save();
                 }
+
+                $datos_nuevo =  implode("|", $configuracion->attributesToArray());
+                HistorialAccion::create([
+                    'user_id' => Auth::user()->id,
+                    'accion' => 'MODIFICACIÓN',
+                    'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' MODIFICÓ LA CONFIGURACIÓN DEL SISTEMA',
+                    'datos_original' => $datos_original,
+                    'datos_nuevo' => $datos_nuevo,
+                    'modulo' => 'CONFIGURACIÓN',
+                    'fecha' => date('Y-m-d'),
+                    'hora' => date('H:i:s')
+                ]);
+
                 DB::commit();
                 return response()->JSON([
                     'sw' => true,

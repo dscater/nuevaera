@@ -196,6 +196,12 @@ export default new Router({
             component: require('./components/modulos/reportes/orden_ventas.vue').default,
             props: true
         },
+        {
+            path: '/reportes/stock_productos',
+            name: 'reportes.stock_productos',
+            component: require('./components/modulos/reportes/stock_productos.vue').default,
+            props: true
+        },
 
         // PÁGINA NO ENCONTRADA
         {

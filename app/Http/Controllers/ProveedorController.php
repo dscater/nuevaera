@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\HistorialAccion;
 use App\Models\Proveedor;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ProveedorController extends Controller
@@ -29,12 +31,23 @@ class ProveedorController extends Controller
         try {
             // crear Proveedor
             $request["fecha_registro"] = date("Y-m-d");
-            $nueva_proveedor = Proveedor::create(array_map('mb_strtoupper', $request->all()));
+            $nuevo_proveedor = Proveedor::create(array_map('mb_strtoupper', $request->all()));
+
+            $datos_original =  implode("|", $nuevo_proveedor->attributesToArray());
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'CREACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' REGISTRO UN PROVEEDOR',
+                'datos_original' => $datos_original,
+                'modulo' => 'PROVEEDORES',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
 
             DB::commit();
             return response()->JSON([
                 'sw' => true,
-                'proveedor' => $nueva_proveedor,
+                'proveedor' => $nuevo_proveedor,
                 'msj' => 'El registro se realizó de forma correcta',
             ], 200);
         } catch (\Exception $e) {
@@ -52,7 +65,21 @@ class ProveedorController extends Controller
 
         DB::beginTransaction();
         try {
+            $datos_original =  implode("|", $proveedor->attributesToArray());
             $proveedor->update(array_map('mb_strtoupper', $request->all()));
+
+            $datos_nuevo =  implode("|", $proveedor->attributesToArray());
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'MODIFICACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' MODIFICÓ UN PROVEEDOR',
+                'datos_original' => $datos_original,
+                'datos_nuevo' => $datos_nuevo,
+                'modulo' => 'PROVEEDORES',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON([
                 'sw' => true,
@@ -80,7 +107,17 @@ class ProveedorController extends Controller
     {
         DB::beginTransaction();
         try {
+            $datos_original =  implode("|", $proveedor->attributesToArray());
             $proveedor->delete();
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'ELIMINACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' ELIMINÓ UN PROVEEDOR',
+                'datos_original' => $datos_original,
+                'modulo' => 'PROVEEDORES',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
             DB::commit();
             return response()->JSON([
                 'sw' => true,

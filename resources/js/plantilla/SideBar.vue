@@ -271,7 +271,8 @@
                         v-if="
                             permisos.includes('reportes.usuarios') ||
                             permisos.includes('reportes.kardex') ||
-                            permisos.includes('reportes.orden_ventas')
+                            permisos.includes('reportes.orden_ventas') ||
+                            permisos.includes('reportes.stock_productos')
                         "
                     >
                         REPORTES
@@ -310,6 +311,18 @@
                         >
                             <i class="fas fa-file-pdf nav-icon"></i>
                             <p>Orden de ventas</p>
+                        </router-link>
+                    </li>
+                    <li
+                        class="nav-item"
+                        v-if="permisos.includes('reportes.stock_productos')"
+                    >
+                        <router-link
+                            :to="{ name: 'reportes.stock_productos' }"
+                            class="nav-link"
+                        >
+                            <i class="fas fa-file-pdf nav-icon"></i>
+                            <p>Stock de productos</p>
                         </router-link>
                     </li>
                     <li class="nav-header bg-navy">OTRAS OPCIONES</li>

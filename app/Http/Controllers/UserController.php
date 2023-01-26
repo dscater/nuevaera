@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Alerta;
 use App\Models\Cliente;
+use App\Models\HistorialAccion;
 use App\Models\MaestroRegistro;
 use App\Models\Nota;
 use App\Models\Notificacion;
@@ -134,6 +135,7 @@ class UserController extends Controller
             'reportes.usuarios',
             'reportes.kardex',
             'reportes.orden_ventas',
+            'reportes.stock_productos',
         ],
         'SUPERVISOR' => [
             'proveedors.index',
@@ -262,6 +264,18 @@ class UserController extends Controller
                 ]);
             }
 
+
+            $datos_original =  implode("|", $nuevo_usuario->attributesToArray());
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'CREACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' REGISTRO UN USUARIO',
+                'datos_original' => $datos_original,
+                'modulo' => 'USUARIOS',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON([
                 'sw' => true,
@@ -292,6 +306,7 @@ class UserController extends Controller
         $request->validate($this->validacion, $this->mensajes);
         DB::beginTransaction();
         try {
+            $datos_original =  implode("|", $usuario->attributesToArray());
             $usuario->update(array_map('mb_strtoupper', $request->except('foto')));
             if ($usuario->correo == "") {
                 $usuario->correo = NULL;
@@ -326,6 +341,19 @@ class UserController extends Controller
                 if ($usuario->sucursal)
                     $usuario->sucursal->delete();
             }
+
+
+            $datos_nuevo =  implode("|", $usuario->attributesToArray());
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'MODIFICACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' MODIFICÓ UN USUARIO',
+                'datos_original' => $datos_original,
+                'datos_nuevo' => $datos_nuevo,
+                'modulo' => 'USUARIOS',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
 
             DB::commit();
             return response()->JSON([
@@ -420,7 +448,19 @@ class UserController extends Controller
             if ($antiguo != 'default.png') {
                 \File::delete(public_path() . '/imgs/users/' . $antiguo);
             }
+            $datos_original =  implode("|", $usuario->attributesToArray());
             $usuario->delete();
+
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'ELIMINACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' ELIMINÓ UN USUARIO',
+                'datos_original' => $datos_original,
+                'modulo' => 'USUARIOS',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON([
                 'sw' => true,

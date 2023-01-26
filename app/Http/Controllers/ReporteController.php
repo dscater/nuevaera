@@ -203,6 +203,31 @@ class ReporteController extends Controller
         return $pdf->download('orden_ventas.pdf');
     }
 
+    public function stock_productos(Request $request)
+    {
+        $request->validate(['lugar_id' => 'required']);
+        $lugar_id =  $request->lugar_id;
+        $lugar = "ALMACEN";
+        if ($lugar_id == 'ALMACEN') {
+            $registros = Almacen::select("almacens.*")->join("productos", "productos.id", "=", "almacens.producto_id")->orderBy("productos.nombre")->get();
+        } else {
+            $registros = SucursalStock::select("sucursal_stocks.*")
+                ->join("productos", "productos.id", "=", "sucursal_stocks.producto_id")
+                ->where("sucursal_id", $lugar_id)->orderBy("productos.nombre")->get();
+            $lugar = Sucursal::find($lugar_id)->nombre;
+        }
+
+        $pdf = PDF::loadView('reportes.stock_productos', compact('registros', 'lugar'))->setPaper('legal', 'portrait');
+        // ENUMERAR LAS PÁGINAS USANDO CANVAS
+        $pdf->output();
+        $dom_pdf = $pdf->getDomPDF();
+        $canvas = $dom_pdf->get_canvas();
+        $alto = $canvas->get_height();
+        $ancho = $canvas->get_width();
+        $canvas->page_text($ancho - 90, $alto - 25, "Página {PAGE_NUM} de {PAGE_COUNT}", null, 10, array(0, 0, 0));
+        return $pdf->download('stock_productos.pdf');
+    }
+
     public function ingreso_productos(Request $request)
     {
         $request->validate(['sucursal_id' => 'required']);
@@ -238,22 +263,7 @@ class ReporteController extends Controller
         $canvas->page_text($ancho - 90, $alto - 25, "Página {PAGE_NUM} de {PAGE_COUNT}", null, 10, array(0, 0, 0));
         return $pdf->download('ingreso_productos.pdf');
     }
-    public function stock_productos(Request $request)
-    {
-        $request->validate(['sucursal_id' => 'required']);
-        $sucursal_id =  $request->sucursal_id;
-        $productos = Producto::where("sucursal_id", $sucursal_id)->get();
 
-        $pdf = PDF::loadView('reportes.stock_productos', compact('productos'))->setPaper('legal', 'portrait');
-        // ENUMERAR LAS PÁGINAS USANDO CANVAS
-        $pdf->output();
-        $dom_pdf = $pdf->getDomPDF();
-        $canvas = $dom_pdf->get_canvas();
-        $alto = $canvas->get_height();
-        $ancho = $canvas->get_width();
-        $canvas->page_text($ancho - 90, $alto - 25, "Página {PAGE_NUM} de {PAGE_COUNT}", null, 10, array(0, 0, 0));
-        return $pdf->download('stock_productos.pdf');
-    }
     public function venta_productos(Request $request)
     {
         $request->validate(['sucursal_id' => 'required']);

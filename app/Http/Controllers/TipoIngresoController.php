@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\HistorialAccion;
+use App\Models\IngresoProducto;
 use App\Models\TipoIngreso;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class TipoIngresoController extends Controller
@@ -27,12 +31,23 @@ class TipoIngresoController extends Controller
         DB::beginTransaction();
         try {
             // crear TipoIngreso
-            $nueva_tipo_ingreso = TipoIngreso::create(array_map('mb_strtoupper', $request->all()));
+            $nuevo_tipo_ingreso = TipoIngreso::create(array_map('mb_strtoupper', $request->all()));
+
+            $datos_original =  implode("|", $nuevo_tipo_ingreso->attributesToArray());
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'CREACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' REGISTRO UN TIPO DE INGRESO',
+                'datos_original' => $datos_original,
+                'modulo' => 'TIPO DE INGRESOS',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
 
             DB::commit();
             return response()->JSON([
                 'sw' => true,
-                'tipo_ingreso' => $nueva_tipo_ingreso,
+                'tipo_ingreso' => $nuevo_tipo_ingreso,
                 'msj' => 'El registro se realizó de forma correcta',
             ], 200);
         } catch (\Exception $e) {
@@ -50,7 +65,21 @@ class TipoIngresoController extends Controller
 
         DB::beginTransaction();
         try {
+            $datos_original =  implode("|", $tipo_ingreso->attributesToArray());
             $tipo_ingreso->update(array_map('mb_strtoupper', $request->all()));
+
+            $datos_nuevo =  implode("|", $tipo_ingreso->attributesToArray());
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'MODIFICACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' MODIFICÓ UN TIPO DE INGRESO',
+                'datos_original' => $datos_original,
+                'datos_nuevo' => $datos_nuevo,
+                'modulo' => 'TIPO DE INGRESOS',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON([
                 'sw' => true,
@@ -78,7 +107,22 @@ class TipoIngresoController extends Controller
     {
         DB::beginTransaction();
         try {
+            $existe = IngresoProducto::where("tipo_ingreso_id", $tipo_ingreso->id)->get();
+            if (count($existe) > 0) {
+                throw new Exception('No es posible eliminar el registro debido a que existen registros que lo utilizan');
+            }
+
+            $datos_original =  implode("|", $tipo_ingreso->attributesToArray());
             $tipo_ingreso->delete();
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'ELIMINACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' ELIMINÓ UN TIPO DE INGRESO',
+                'datos_original' => $datos_original,
+                'modulo' => 'TIPO DE INGRESOS',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
             DB::commit();
             return response()->JSON([
                 'sw' => true,

@@ -336,7 +336,7 @@ export default {
         eliminaProducto(id, descripcion) {
             Swal.fire({
                 title: "¿Quierés eliminar este registro?",
-                html: `<strong>${descripcion}</strong>`,
+                html: `Esta acción eliminara también los registros de Kardex tanto del Almacén y Sucursales; siempre y cuando no se hallan realizado Orden de ventas<br><strong>${descripcion}</strong>`,
                 showCancelButton: true,
                 confirmButtonColor: "#5398d8",
                 confirmButtonText: "Si, eliminar",
@@ -358,6 +358,29 @@ export default {
                                 showConfirmButton: false,
                                 timer: 1500,
                             });
+                        })
+                        .catch((error) => {
+                            if (error.response) {
+                                if (error.response.status === 422) {
+                                    this.errors = error.response.data.errors;
+                                }
+                                if (
+                                    error.response.status === 420 ||
+                                    error.response.status === 419 ||
+                                    error.response.status === 401
+                                ) {
+                                    window.location = "/";
+                                }
+                                if (error.response.status === 500) {
+                                    Swal.fire({
+                                        icon: "error",
+                                        title: "Error",
+                                        html: error.response.data.message,
+                                        showConfirmButton: false,
+                                        timer: 2000,
+                                    });
+                                }
+                            }
                         });
                 }
             });

@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\HistorialAccion;
 use App\Models\IngresoProducto;
 use App\Models\KardexProducto;
 use App\Models\Producto;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -40,6 +42,17 @@ class IngresoProductoController extends Controller
             // registrar kardex
             KardexProducto::registroIngreso("ALMACEN", 0, "INGRESO", $nuevo_ingreso_producto->id, $nuevo_ingreso_producto->producto, $nuevo_ingreso_producto->cantidad, $nuevo_ingreso_producto->producto->precio, $nuevo_ingreso_producto->descripcion);
 
+            $datos_original =  implode("|", $nuevo_ingreso_producto->attributesToArray());
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'CREACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' REGISTRO UN INGRESO DE PRODUCTO',
+                'datos_original' => $datos_original,
+                'modulo' => 'INGRESO DE PRODUCTOS',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON([
                 'sw' => true,
@@ -69,6 +82,7 @@ class IngresoProductoController extends Controller
                 // descontar el stock
                 Producto::decrementarStock($ingreso_producto->producto, $ingreso_producto->cantidad, "ALMACEN");
 
+                $datos_original =  implode("|", $ingreso_producto->attributesToArray());
                 $ingreso_producto->update(array_map('mb_strtoupper', $request->all()));
 
                 // INCREMENTAR STOCK
@@ -81,6 +95,19 @@ class IngresoProductoController extends Controller
                     ->where("registro_id", $ingreso_producto->id)
                     ->get()->first();
                 KardexProducto::actualizaRegistrosKardex($kardex->id, $kardex->producto_id, "ALMACEN");
+
+                $datos_nuevo =  implode("|", $ingreso_producto->attributesToArray());
+                HistorialAccion::create([
+                    'user_id' => Auth::user()->id,
+                    'accion' => 'MODIFICACIÓN',
+                    'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' MODIFICÓ UN INGRESO DE PRODUCTO',
+                    'datos_original' => $datos_original,
+                    'datos_nuevo' => $datos_nuevo,
+                    'modulo' => 'INGRESO DE PRODUCTOS',
+                    'fecha' => date('Y-m-d'),
+                    'hora' => date('H:i:s')
+                ]);
+
                 DB::commit();
 
                 return response()->JSON([
@@ -145,7 +172,18 @@ class IngresoProductoController extends Controller
 
             // descontar el stock
             Producto::decrementarStock($ingreso_producto->producto, $ingreso_producto->cantidad, "ALMACEN");
+            $datos_original =  implode("|", $ingreso_producto->attributesToArray());
             $ingreso_producto->delete();
+
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'ELIMINACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' ELIMINÓ UN INGRESO DE PRODUCTO',
+                'datos_original' => $datos_original,
+                'modulo' => 'INGRESO DE PRODUCTOS',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
 
             DB::commit();
             return response()->JSON([

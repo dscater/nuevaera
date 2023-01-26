@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Almacen;
 use App\Models\Grupo;
+use App\Models\HistorialAccion;
 use App\Models\ImportancionApertura;
 use App\Models\KardexProducto;
 use App\Models\Producto;
 use App\Models\SucursalStock;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ImportancionAperturaController extends Controller
@@ -50,6 +52,17 @@ class ImportancionAperturaController extends Controller
             }
 
             $nueva_importacion_apertura = ImportancionApertura::create($datos);
+
+            $datos_original =  implode("|", $nueva_importacion_apertura->attributesToArray());
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'IMPORTACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' REALIZÓ UNA IMPORTACIÓN DE APERTURA',
+                'datos_original' => $datos_original,
+                'modulo' => 'IMPORTACIÓN DE APERTURA',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
 
             DB::commit();
             return response()->JSON([
@@ -304,6 +317,17 @@ class ImportancionAperturaController extends Controller
 
                 $fila++;
             }
+
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'IMPORTACIÓN DE ARCHIVO',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . 'IMPORTO UN ARCHIVO',
+                'datos_original' => $fila-- . ' REGISTROS IMPORTADOS',
+                'modulo' => 'IMPORTACIÓN DE APERTURA',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON([
                 'sw' => true,

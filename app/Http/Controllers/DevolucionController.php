@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\DetalleOrden;
 use App\Models\Devolucion;
 use App\Models\DevolucionDetalle;
+use App\Models\HistorialAccion;
 use App\Models\KardexProducto;
 use App\Models\Producto;
 use App\Models\SucursalStock;
@@ -62,6 +63,18 @@ class DevolucionController extends Controller
                     KardexProducto::registroIngreso("SUCURSAL", $devolucion->orden->sucursal_id, "DEVOLUCION", $dv->id, $dv->producto, $dv->cantidad, $dv->detalle_orden->precio, "DEVOLUCIÓN DE PRODUCTO");
                 }
             }
+
+            $datos_original =  implode("|", $devolucion->attributesToArray());
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'CREACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' REGISTRO UNA DEVOLUCIÓN',
+                'datos_original' => $datos_original,
+                'modulo' => 'DEVOLUCIONES',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON(["sw" => true, "devolucion" => $devolucion, "id" => $devolucion->id, "msj" => "El registro se almacenó correctamente"]);
         } catch (\Exception $e) {
@@ -178,6 +191,19 @@ class DevolucionController extends Controller
                     }
                 }
             }
+
+
+            $datos_original =  implode("|", $devolucion->attributesToArray());
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'MODIFICACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' MODIFICÓ UNA DEVOLUCIÓN',
+                'datos_original' => $datos_original,
+                'modulo' => 'DEVOLUCIONES',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON(["sw" => true, "devolucion" => $devolucion, "id" => $devolucion->id, "msj" => "El registro se actualizó correctamente"]);
         } catch (\Exception $e) {
@@ -193,7 +219,7 @@ class DevolucionController extends Controller
     {
         DB::beginTransaction();
         try {
-
+            $datos_original =  implode("|", $devolucion->attributesToArray());
             foreach ($devolucion->devolucion_detalles as $dv) {
                 // eliminar
                 $d_orden = $dv->detalle_orden;
@@ -239,6 +265,17 @@ class DevolucionController extends Controller
                 $dv->delete();
             }
             $devolucion->delete();
+
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'ELIMINACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' ELIMINÓ UNA DEVOLUCIÓN',
+                'datos_original' => $datos_original,
+                'modulo' => 'DEVOLUCIONES',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON(["sw" => true, "msj" => "El registro se eliminó correctamente"]);
         } catch (\Exception $e) {

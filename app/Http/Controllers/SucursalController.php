@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\Caja;
+use App\Models\HistorialAccion;
 use App\Models\ImportancionApertura;
 use App\Models\Sucursal;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class SucursalController extends Controller
@@ -57,6 +59,17 @@ class SucursalController extends Controller
             $request["fecha_registro"] = date("Y-m-d");
             $nueva_sucursal = Sucursal::create(array_map('mb_strtoupper', $request->all()));
 
+            $datos_original =  implode("|", $nueva_sucursal->attributesToArray());
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'CREACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' REGISTRO UNA SUCURSAL',
+                'datos_original' => $datos_original,
+                'modulo' => 'SUCURSALES',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON([
                 'sw' => true,
@@ -78,7 +91,21 @@ class SucursalController extends Controller
 
         DB::beginTransaction();
         try {
+            $datos_original =  implode("|", $sucursal->attributesToArray());
             $sucursal->update(array_map('mb_strtoupper', $request->all()));
+
+            $datos_nuevo =  implode("|", $sucursal->attributesToArray());
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'MODIFICACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' MODIFICÓ UNA SUCURSAL',
+                'datos_original' => $datos_original,
+                'datos_nuevo' => $datos_nuevo,
+                'modulo' => 'SUCURSALES',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON([
                 'sw' => true,
@@ -106,7 +133,19 @@ class SucursalController extends Controller
     {
         DB::beginTransaction();
         try {
+            $datos_original =  implode("|", $sucursal->attributesToArray());
             $sucursal->delete();
+
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'ELIMINACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' ELIMINÓ UNA SUCURSAL',
+                'datos_original' => $datos_original,
+                'modulo' => 'SUCURSALES',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON([
                 'sw' => true,

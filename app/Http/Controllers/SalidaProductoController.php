@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Almacen;
+use App\Models\HistorialAccion;
 use App\Models\KardexProducto;
 use App\Models\Producto;
 use App\Models\SalidaProducto;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class SalidaProductoController extends Controller
@@ -48,6 +50,18 @@ class SalidaProductoController extends Controller
             // registrar kardex
             KardexProducto::registroEgreso("ALMACEN", 0, "SALIDA", $nueva_salida_producto->id, $nueva_salida_producto->producto, $nueva_salida_producto->cantidad, $nueva_salida_producto->producto->precio, $nueva_salida_producto->descripcion);
 
+
+            $datos_original =  implode("|", $nueva_salida_producto->attributesToArray());
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'CREACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' REGISTRO UNA SALIDA DE PRODUCTO',
+                'datos_original' => $datos_original,
+                'modulo' => 'SALIDA DE PRODUCTOS',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON([
                 'sw' => true,
@@ -87,6 +101,7 @@ class SalidaProductoController extends Controller
                     }
                 }
 
+                $datos_original =  implode("|", $salida_producto->attributesToArray());
                 $salida_producto->update(array_map('mb_strtoupper', $request->all()));
 
                 if ($salida_producto->producto->descontar_stock == 'SI') {
@@ -101,6 +116,18 @@ class SalidaProductoController extends Controller
                     ->where("registro_id", $salida_producto->id)
                     ->get()->first();
                 KardexProducto::actualizaRegistrosKardex($kardex->id, $kardex->producto_id, "ALMACEN");
+
+                $datos_nuevo =  implode("|", $salida_producto->attributesToArray());
+                HistorialAccion::create([
+                    'user_id' => Auth::user()->id,
+                    'accion' => 'MODIFICACIÓN',
+                    'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' MODIFICÓ UNA SALIDA DE PRODUCTO',
+                    'datos_original' => $datos_original,
+                    'datos_nuevo' => $datos_nuevo,
+                    'modulo' => 'SALIDA DE PRODUCTOS',
+                    'fecha' => date('Y-m-d'),
+                    'hora' => date('H:i:s')
+                ]);
 
                 DB::commit();
                 return response()->JSON([
@@ -168,7 +195,19 @@ class SalidaProductoController extends Controller
                 Producto::incrementarStock($salida_producto->producto, $salida_producto->cantidad, "ALMACEN");
             }
 
+            $datos_original =  implode("|", $salida_producto->attributesToArray());
             $salida_producto->delete();
+
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'ELIMINACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' ELIMINÓ UNA SALIDA DE PRODUCTO',
+                'datos_original' => $datos_original,
+                'modulo' => 'SALIDA DE PRODUCTOS',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON([
                 'sw' => true,

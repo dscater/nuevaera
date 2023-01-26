@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Almacen;
+use App\Models\HistorialAccion;
 use App\Models\KardexProducto;
 use App\Models\Producto;
 use App\Models\SucursalStock;
 use App\Models\TransferenciaProducto;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -71,6 +73,17 @@ class TransferenciaProductoController extends Controller
             // incrementar el stock del DESTINO
             KardexProducto::registroIngreso($nueva_transferencia_producto->destino, $nueva_transferencia_producto->destino_id, "TRANSFERENCIA", $nueva_transferencia_producto->id, $nueva_transferencia_producto->producto, $nueva_transferencia_producto->cantidad, $nueva_transferencia_producto->producto->precio, $nueva_transferencia_producto->descripcion);
 
+            $datos_original =  implode("|", $nueva_transferencia_producto->attributesToArray());
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'CREACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' REALIZÓ UNA TRANSFERENCIA DE PRODUCTOS',
+                'datos_original' => $datos_original,
+                'modulo' => 'TRANSFERENCIA DE PRODUCTOS',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON([
                 'sw' => true,
@@ -115,6 +128,7 @@ class TransferenciaProductoController extends Controller
                 Producto::decrementarStock($transferencia_producto->producto, $transferencia_producto->cantidad, $transferencia_producto->destino, $transferencia_producto->destino_id);
             }
 
+            $datos_original =  implode("|", $transferencia_producto->attributesToArray());
             $transferencia_producto->update(array_map('mb_strtoupper', $request->all()));
 
             /* ***********************************************
@@ -141,6 +155,18 @@ class TransferenciaProductoController extends Controller
                 ->where("registro_id", $transferencia_producto->id)
                 ->get()->first();
             KardexProducto::actualizaRegistrosKardex($kardex->id, $kardex->producto_id, $transferencia_producto->destino, $transferencia_producto->destino_id);
+
+            $datos_nuevo =  implode("|", $transferencia_producto->attributesToArray());
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'MODIFICACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' MODIFICÓ UNA TRANSFERENCIA DE PRODUCTOS',
+                'datos_original' => $datos_original,
+                'datos_nuevo' => $datos_nuevo,
+                'modulo' => 'TRANSFERENCIA DE PRODUCTOS',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
 
             DB::commit();
             return response()->JSON([
@@ -253,7 +279,18 @@ class TransferenciaProductoController extends Controller
             // descontar el stock
             Producto::decrementarStock($transferencia_producto->producto, $transferencia_producto->cantidad, $transferencia_producto->destino, $transferencia_producto->destino_id);
 
+            $datos_original =  implode("|", $transferencia_producto->attributesToArray());
             $transferencia_producto->delete();
+            HistorialAccion::create([
+                'user_id' => Auth::user()->id,
+                'accion' => 'MODIFICACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' MODIFICÓ UNA TRANSFERENCIA DE PRODUCTOS',
+                'datos_original' => $datos_original,
+                'modulo' => 'TRANSFERENCIA DE PRODUCTOS',
+                'fecha' => date('Y-m-d'),
+                'hora' => date('H:i:s')
+            ]);
+
             DB::commit();
             return response()->JSON([
                 'sw' => true,

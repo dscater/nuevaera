@@ -130,6 +130,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('reportes/usuarios', [ReporteController::class, 'usuarios']);
         Route::post('reportes/kardex', [ReporteController::class, 'kardex']);
         Route::post('reportes/orden_ventas', [ReporteController::class, 'orden_ventas']);
+        Route::post('reportes/stock_productos', [ReporteController::class, 'stock_productos']);
     });
 });
 
