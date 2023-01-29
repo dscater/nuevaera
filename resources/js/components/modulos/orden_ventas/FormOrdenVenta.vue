@@ -5,6 +5,12 @@
                 <div class="row">
                     <div class="col-md-12">
                         <div class="card">
+                            <div
+                                class="card-header bg-primary text-md font-weight-bold"
+                            >
+                                <i class="fa fa-info-circle"></i> INFORMACIÓN DE
+                                ORDEN DE VENTA
+                            </div>
                             <div class="card-body">
                                 <div class="row">
                                     <template v-if="user.tipo != 'CAJA'">
@@ -104,8 +110,17 @@
                                                 'text-danger':
                                                     errors.cliente_id,
                                             }"
-                                            >Seleccionar cliente</label
-                                        >
+                                            >Seleccionar cliente
+                                            <button
+                                                class="btn btn-xs btn-primary"
+                                                @click.prevent="
+                                                    abreModal('nuevo');
+                                                    limpiaCliente();
+                                                "
+                                            >
+                                                <i class="fa fa-plus"></i>
+                                            </button>
+                                        </label>
                                         <el-select
                                             class="w-full d-block"
                                             :class="{
@@ -113,6 +128,7 @@
                                             }"
                                             v-model="orden_venta.cliente_id"
                                             clearable
+                                            filterable
                                             @change="getCliente()"
                                         >
                                             <el-option
@@ -187,15 +203,49 @@
                                             </tbody>
                                         </table>
                                     </div>
-                                </div>
-
-                                <div class="row">
-                                    <div class="col-md-12 contenedor_tabla">
-                                        <h5 class="w-100 text-center">
-                                            AGREGAR PRODUCTOS
-                                        </h5>
+                                    <div class="form-group col-md-12">
+                                        <label
+                                            :class="{
+                                                'text-danger':
+                                                    errors.tipo_venta,
+                                            }"
+                                            >Tipo de venta</label
+                                        >
+                                        <el-select
+                                            class="w-full d-block"
+                                            :class="{
+                                                'is-invalid': errors.tipo_venta,
+                                            }"
+                                            v-model="orden_venta.tipo_venta"
+                                        >
+                                            <el-option
+                                                v-for="(
+                                                    item, index
+                                                ) in listTipos"
+                                                :key="index"
+                                                :value="item"
+                                                :label="item"
+                                            >
+                                            </el-option>
+                                        </el-select>
+                                        <span
+                                            class="error invalid-feedback"
+                                            v-if="errors.tipo_venta"
+                                            v-text="errors.tipo_venta[0]"
+                                        ></span>
                                     </div>
-
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card">
+                            <div
+                                class="card-header bg-primary text-md font-weight-bold"
+                            >
+                                <i class="fa fa-plus-circle"></i> AGREGAR
+                                PRODUCTOS
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
                                     <div class="form-group col-md-12">
                                         <label
                                             :class="{
@@ -367,20 +417,16 @@
         </div>
         <div class="col-md-6">
             <div class="card">
-                <div class="card-body">
+                <div class="card-header bg-primary text-md font-weight-bold">
+                    <i class="fa fa-list-alt"></i> DETALLE DE ORDEN DE VENTA
+                </div>
+                <div class="card-body p-0">
                     <div class="row">
                         <div class="col-md-12 contenedor_tabla">
-                            <table class="table table-striped tabla_responsive">
+                            <table
+                                class="table table-striped tabla_responsive mb-0"
+                            >
                                 <thead>
-                                    <tr>
-                                        <th
-                                            colspan="5"
-                                            class="bg-blue text-md text-center"
-                                        >
-                                            DETALLE DE LA VENTA
-                                            <i class="fa fa-list-alt"></i>
-                                        </th>
-                                    </tr>
                                     <tr>
                                         <th>Producto</th>
                                         <th>Precio Unitario</th>
@@ -499,11 +545,22 @@
                 </div>
             </div>
         </div>
+        <NuevoCliente
+            :muestra_modal="muestra_modal"
+            :accion="modal_accion"
+            :cliente="oClienteModal"
+            @close="muestra_modal = false"
+            @envioModal="getClientes"
+        ></NuevoCliente>
     </div>
 </template>
 
 <script>
+import NuevoCliente from "./NuevoCliente.vue";
 export default {
+    components: {
+        NuevoCliente,
+    },
     props: {
         accion: {
             type: String,
@@ -518,6 +575,7 @@ export default {
                     cliente_id: "",
                     nit: "",
                     total: "0.00",
+                    tipo_venta: "AL CONTADO",
                     detalle_ordens: [],
                     editable: true,
                 };
@@ -563,11 +621,30 @@ export default {
             listProductos: [],
             listSucursales: [],
             listCajas: [],
+            listTipos: ["AL CONTADO", "A CRÉDITO"],
             eliminados: [],
+            muestra_modal: false,
+            modal_accion: "nuevo",
             oCliente: {
+                id: 0,
                 nombre: "",
                 ci: "",
+                ci_exp: "",
                 full_ci: "",
+                nit: "",
+                fono_array: [],
+                fono: "",
+                dir: "",
+            },
+            oClienteModal: {
+                id: 0,
+                nombre: "",
+                ci: "",
+                ci_exp: "",
+                full_ci: "",
+                nit: "",
+                fono_array: [],
+                fono: "",
                 dir: "",
             },
             oProducto: null,
@@ -621,14 +698,20 @@ export default {
                     });
             } else {
                 this.oCliente = {
+                    id: 0,
                     nombre: "",
                     ci: "",
+                    ci_exp: "",
                     full_ci: "",
+                    nit: "",
+                    fono_array: [],
+                    fono: "",
                     dir: "",
                 };
             }
         },
         getClientes() {
+            this.muestra_modal = false;
             axios.get("/admin/clientes").then((response) => {
                 this.listClientes = response.data.clientes;
             });
@@ -880,6 +963,19 @@ export default {
             }
             this.orden_venta.detalle_ordens.splice(index, 1);
             this.sumaTotalOrdenVenta();
+        },
+        abreModal(tipo_accion = "nuevo") {
+            this.muestra_modal = true;
+            this.modal_accion = tipo_accion;
+        },
+        limpiaCliente() {
+            this.oClienteModal.nombre = "";
+            this.oClienteModal.ci = "";
+            this.oClienteModal.ci_exp = "";
+            this.oClienteModal.nit = "";
+            this.oClienteModal.fono_array = [];
+            this.oClienteModal.fono = "";
+            this.oClienteModal.dir = "";
         },
     },
 };
