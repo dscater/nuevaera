@@ -17,12 +17,9 @@ class CreateCajasTable extends Migration
             $table->id();
             $table->string("codigo", 255);
             $table->string("nombre", 255);
-            $table->unsignedBigInteger("sucursal_id");
             $table->text("descripcion");
             $table->date("fecha_registro");
             $table->timestamps();
-
-            $table->foreign("sucursal_id")->on("sucursals")->references("id");
         });
     }
 

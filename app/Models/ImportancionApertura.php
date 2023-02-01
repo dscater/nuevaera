@@ -11,22 +11,7 @@ class ImportancionApertura extends Model
 
     protected $fillable = [
         "lugar",
-        "registro_id",
         "total_registros",
         "cambio_stock",
     ];
-
-    protected $appends = ["texto_lugar"];
-
-    public function getTextoLugarAttribute()
-    {
-        $o_lugar = null;
-        $texto = 'ALMACÉN';
-        if ($this->lugar == 'SUCURSAL') {
-            $texto = 'SUCURSAL ';
-            $o_lugar = Sucursal::find($this->registro_id);
-            $texto .= $o_lugar->nombre;
-        }
-        return $texto;
-    }
 }

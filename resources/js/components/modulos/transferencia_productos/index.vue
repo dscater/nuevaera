@@ -23,7 +23,7 @@
                                                     'transferencia_productos.create'
                                                 )
                                             "
-                                            class="btn btn-outline-primary bg-primary btn-flat btn-block"
+                                            class="btn btn-warning btn-flat btn-block"
                                             @click="
                                                 abreModal('nuevo');
                                                 limpiaTransferenciaProducto();
@@ -84,13 +84,6 @@
                                                 empty-filtered-text="Sin resultados"
                                                 :filter="filter"
                                             >
-                                                <template
-                                                    #cell(sucursal_id)="row"
-                                                >
-                                                    {{
-                                                        row.item.sucursal.nombre
-                                                    }}
-                                                </template>
                                                 <template
                                                     #cell(fecha_registro)="row"
                                                 >
@@ -213,8 +206,8 @@ export default {
             listRegistros: [],
             showOverlay: false,
             fields: [
-                { key: "texto_origen", label: "Origen", sortable: true },
-                { key: "texto_destino", label: "Destino", sortable: true },
+                { key: "origen", label: "Origen", sortable: true },
+                { key: "destino", label: "Destino", sortable: true },
                 { key: "producto.nombre", label: "Producto", sortable: true },
                 { key: "cantidad", label: "Cantidad", sortable: true },
                 { key: "descripcion", label: "Descripción", sortable: true },
@@ -313,7 +306,7 @@ export default {
                 title: "¿Quierés eliminar este registro?",
                 html: `<strong>${descripcion}</strong>`,
                 showCancelButton: true,
-                confirmButtonColor: "#5398d8",
+                confirmButtonColor: "#ffc107",
                 confirmButtonText: "Si, eliminar",
                 cancelButtonText: "No, cancelar",
                 denyButtonText: `No, cancelar`,

@@ -15,6 +15,7 @@ class CreateSalidaProductosTable extends Migration
     {
         Schema::create('salida_productos', function (Blueprint $table) {
             $table->id();
+            $table->string("lugar");
             $table->unsignedBigInteger("producto_id");
             $table->integer("cantidad");
             $table->unsignedBigInteger("tipo_salida_id");

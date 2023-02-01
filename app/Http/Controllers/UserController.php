@@ -119,6 +119,11 @@ class UserController extends Controller
             'orden_ventas.edit',
             'orden_ventas.destroy',
 
+            'creditos.index',
+            'creditos.create',
+            'creditos.edit',
+            'creditos.destroy',
+
             'devolucions.index',
             'devolucions.create',
             'devolucions.edit',
@@ -188,6 +193,11 @@ class UserController extends Controller
             'orden_ventas.edit',
             'orden_ventas.destroy',
 
+            'creditos.index',
+            'creditos.create',
+            'creditos.edit',
+            'creditos.destroy',
+
             'devolucions.index',
             'devolucions.create',
             'devolucions.edit',
@@ -204,6 +214,11 @@ class UserController extends Controller
             'orden_ventas.edit',
             'orden_ventas.destroy',
 
+            'creditos.index',
+            'creditos.create',
+            'creditos.edit',
+            'creditos.destroy',
+
             'devolucions.index',
             'devolucions.create',
             'devolucions.edit',
@@ -213,7 +228,7 @@ class UserController extends Controller
 
     public function index(Request $request)
     {
-        $usuarios = User::with("sucursal.sucursal")->with("sucursal.caja")->where('id', '!=', 1)->get();
+        $usuarios = User::with("caja_usuario.caja")->where('id', '!=', 1)->get();
         return response()->JSON(['usuarios' => $usuarios, 'total' => count($usuarios)], 200);
     }
 
@@ -224,7 +239,6 @@ class UserController extends Controller
         }
 
         if ($request->tipo == 'CAJA') {
-            $this->validacion['sucursal_id'] = 'required';
             $this->validacion['caja_id'] = 'required';
         }
 
@@ -258,14 +272,12 @@ class UserController extends Controller
             $nuevo_usuario->save();
 
             if ($nuevo_usuario->tipo == 'CAJA') {
-                $nuevo_usuario->sucursal()->create([
-                    "sucursal_id" => $request->sucursal_id,
+                $nuevo_usuario->caja_usuario()->create([
                     "caja_id" => $request->caja_id,
                 ]);
             }
 
-
-            $datos_original =  implode("|", $nuevo_usuario->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($nuevo_usuario, "users");
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
                 'accion' => 'CREACIÓN',
@@ -299,14 +311,13 @@ class UserController extends Controller
             $this->validacion['foto'] = 'image|mimes:jpeg,jpg,png|max:2048';
         }
         if ($request->tipo == 'CAJA') {
-            $this->validacion['sucursal_id'] = 'required';
             $this->validacion['caja_id'] = 'required';
         }
 
         $request->validate($this->validacion, $this->mensajes);
         DB::beginTransaction();
         try {
-            $datos_original =  implode("|", $usuario->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($usuario, "users");
             $usuario->update(array_map('mb_strtoupper', $request->except('foto')));
             if ($usuario->correo == "") {
                 $usuario->correo = NULL;
@@ -326,24 +337,22 @@ class UserController extends Controller
             $usuario->save();
 
             if ($usuario->tipo == 'CAJA') {
-                if ($usuario->sucursal) {
-                    $usuario->sucursal->update([
-                        "sucursal_id" => $request->sucursal_id,
+                if ($usuario->caja_usuario) {
+                    $usuario->caja_usuario->update([
                         "caja_id" => $request->caja_id,
                     ]);
                 } else {
-                    $usuario->sucursal()->create([
-                        "sucursal_id" => $request->sucursal_id,
+                    $usuario->caja_usuario()->create([
                         "caja_id" => $request->caja_id,
                     ]);
                 }
             } else {
-                if ($usuario->sucursal)
-                    $usuario->sucursal->delete();
+                if ($usuario->caja_usuario)
+                    $usuario->caja_usuario->delete();
             }
 
 
-            $datos_nuevo =  implode("|", $usuario->attributesToArray());
+            $datos_nuevo = HistorialAccion::getDetalleRegistro($usuario, "users");
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
                 'accion' => 'MODIFICACIÓN',
@@ -444,11 +453,16 @@ class UserController extends Controller
     {
         DB::beginTransaction();
         try {
+
+            if ($usuario->caja_usuario) {
+                $usuario->caja_usuario->delete();
+            }
+
             $antiguo = $usuario->foto;
             if ($antiguo != 'default.png') {
                 \File::delete(public_path() . '/imgs/users/' . $antiguo);
             }
-            $datos_original =  implode("|", $usuario->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($usuario, "users");
             $usuario->delete();
 
             HistorialAccion::create([
@@ -505,7 +519,7 @@ class UserController extends Controller
         if (in_array('orden_ventas.index', $this->permisos[$tipo])) {
 
             if (Auth::user()->tipo == 'CAJA') {
-                $orden_ventas = OrdenVenta::where("sucursal_id", Auth::user()->sucursal->sucursal_id)->get();
+                $orden_ventas = OrdenVenta::where("caja_id", Auth::user()->caja_usuario->caja_id)->get();
             } else {
                 $orden_ventas = OrdenVenta::all();
             }

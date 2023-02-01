@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Grupo;
 use App\Models\HistorialAccion;
+use App\Models\Producto;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -32,7 +34,7 @@ class GrupoController extends Controller
             $request["fecha_registro"] = date("Y-m-d");
             $nueva_grupo = Grupo::create(array_map('mb_strtoupper', $request->all()));
 
-            $datos_original =  implode("|", $nueva_grupo->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($nueva_grupo, "grupos");
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
                 'accion' => 'CREACIÓN',
@@ -64,11 +66,11 @@ class GrupoController extends Controller
 
         DB::beginTransaction();
         try {
-            $datos_original =  implode("|", $grupo->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($grupo, "grupos");
 
             $grupo->update(array_map('mb_strtoupper', $request->all()));
 
-            $datos_nuevo =  implode("|", $grupo->attributesToArray());
+            $datos_nuevo = HistorialAccion::getDetalleRegistro($grupo, "grupos");
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
                 'accion' => 'MODIFICACIÓN',
@@ -107,7 +109,13 @@ class GrupoController extends Controller
     {
         DB::beginTransaction();
         try {
-            $datos_original =  implode("|", $grupo->attributesToArray());
+            // validar que no exista en orden de ventas
+            $productos = Producto::where("grupo_id", $grupo->id)->get();
+            if (count($productos) > 0) {
+                throw new Exception('No es posible eliminar el registro debido a que existen productos con este grupo');
+            }
+
+            $datos_original = HistorialAccion::getDetalleRegistro($grupo, "grupos");
             $grupo->delete();
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,

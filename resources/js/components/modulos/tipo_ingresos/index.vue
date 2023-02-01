@@ -23,7 +23,7 @@
                                                     'tipo_ingresos.create'
                                                 )
                                             "
-                                            class="btn btn-outline-primary bg-primary btn-flat btn-block"
+                                            class="btn btn-warning btn-flat btn-block"
                                             @click="
                                                 abreModal('nuevo');
                                                 limpiaTipoIngreso();
@@ -266,7 +266,7 @@ export default {
                 title: "¿Quierés eliminar este registro?",
                 html: `<strong>${descripcion}</strong>`,
                 showCancelButton: true,
-                confirmButtonColor: "#5398d8",
+                confirmButtonColor: "#ffc107",
                 confirmButtonText: "Si, eliminar",
                 cancelButtonText: "No, cancelar",
                 denyButtonText: `No, cancelar`,

@@ -8,7 +8,7 @@
     >
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header bg-primary">
+                <div class="modal-header bg-warning">
                     <h4 class="modal-title" v-text="tituloModal"></h4>
                     <button
                         type="button"
@@ -98,7 +98,7 @@
                                             >
                                             <div class="form-group clearfix">
                                                 <div
-                                                    class="icheck-primary d-inline"
+                                                    class="icheck-warning d-inline"
                                                 >
                                                     <input
                                                         type="radio"
@@ -122,7 +122,7 @@
                                                     </label>
                                                 </div>
                                                 <div
-                                                    class="icheck-primary d-inline"
+                                                    class="icheck-warning d-inline"
                                                 >
                                                     <input
                                                         type="radio"
@@ -151,50 +151,6 @@
                                                 v-text="errors.origen[0]"
                                             ></span>
                                         </div>
-
-                                        <div
-                                            class="form-group col-md-12"
-                                            v-if="
-                                                transferencia_producto.origen ==
-                                                'SUCURSAL'
-                                            "
-                                        >
-                                            <label
-                                                :class="{
-                                                    'text-danger':
-                                                        errors.origen_id,
-                                                }"
-                                                >Seleccionar Sucursal de
-                                                Origen*</label
-                                            >
-                                            <el-select
-                                                placeholder="Sucursal"
-                                                class="w-100"
-                                                :class="{
-                                                    'is-invalid':
-                                                        errors.origen_id,
-                                                }"
-                                                v-model="
-                                                    transferencia_producto.origen_id
-                                                "
-                                                filterable
-                                                @change="getStockProducto"
-                                                :disabled="accion == 'edit'"
-                                            >
-                                                <el-option
-                                                    v-for="item in listSucursals"
-                                                    :key="item.id"
-                                                    :label="item.nombre"
-                                                    :value="item.id"
-                                                >
-                                                </el-option>
-                                            </el-select>
-                                            <span
-                                                class="error invalid-feedback"
-                                                v-if="errors.origen_id"
-                                                v-text="errors.origen_id[0]"
-                                            ></span>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -211,7 +167,7 @@
                                             >
                                             <div class="form-group clearfix">
                                                 <div
-                                                    class="icheck-primary d-inline"
+                                                    class="icheck-warning d-inline"
                                                 >
                                                     <input
                                                         type="radio"
@@ -233,7 +189,7 @@
                                                     </label>
                                                 </div>
                                                 <div
-                                                    class="icheck-primary d-inline"
+                                                    class="icheck-warning d-inline"
                                                 >
                                                     <input
                                                         type="radio"
@@ -244,6 +200,8 @@
                                                             transferencia_producto.destino
                                                         "
                                                         :disabled="
+                                                            transferencia_producto.origen ==
+                                                                'SUCURSAL' ||
                                                             accion == 'edit'
                                                         "
                                                     />
@@ -258,50 +216,6 @@
                                                 v-text="errors.destino[0]"
                                             ></span>
                                         </div>
-
-                                        <div
-                                            class="form-group col-md-12"
-                                            v-if="
-                                                transferencia_producto.destino ==
-                                                'SUCURSAL'
-                                            "
-                                        >
-                                            <label
-                                                :class="{
-                                                    'text-danger':
-                                                        errors.destino_id,
-                                                }"
-                                                >Seleccionar Sucursal de
-                                                Destino*</label
-                                            >
-                                            <el-select
-                                                placeholder="Sucursal"
-                                                class="w-100"
-                                                :class="{
-                                                    'is-invalid':
-                                                        errors.destino_id,
-                                                }"
-                                                v-model="
-                                                    transferencia_producto.destino_id
-                                                "
-                                                filterable
-                                                :disabled="accion == 'edit'"
-                                                @change="validaIguales"
-                                            >
-                                                <el-option
-                                                    v-for="item in listSucursals"
-                                                    :key="item.id"
-                                                    :label="item.nombre"
-                                                    :value="item.id"
-                                                >
-                                                </el-option>
-                                            </el-select>
-                                            <span
-                                                class="error invalid-feedback"
-                                                v-if="errors.destino_id"
-                                                v-text="errors.destino_id[0]"
-                                            ></span>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -314,7 +228,7 @@
                                                     >Stock actual del Producto
                                                     (Origen):
                                                     <span
-                                                        class="badge badge-primary text-md"
+                                                        class="badge badge-warning text-md"
                                                         v-text="
                                                             aux_stock_actual
                                                         "
@@ -386,8 +300,8 @@
                         Cerrar
                     </button>
                     <el-button
-                        type="primary"
-                        class="bg-primary"
+                        type="warning"
+                        class="bg-warning"
                         :loading="enviando"
                         @click="setRegistroModal()"
                         >{{ textoBoton }}</el-button
@@ -458,7 +372,6 @@ export default {
             errors: [],
             listProductos: [],
             aux_lista_productos: [],
-            listSucursals: [],
             loading_buscador: false,
             stock_actual: 0,
             aux_stock_actual: 0,
@@ -467,34 +380,15 @@ export default {
     },
     mounted() {
         this.bModal = this.muestra_modal;
-        this.getSucursals();
     },
     methods: {
-        getSucursals() {
-            axios.get("/admin/sucursals").then((response) => {
-                this.listSucursals = response.data.sucursals;
-            });
-        },
         getStockProducto() {
-            let sw_envia = false;
-            if (this.transferencia_producto.origen == "SUCURSAL") {
-                if (this.transferencia_producto.origen_id != "") {
-                    sw_envia = true;
-                }
-            }
-            if (this.transferencia_producto.origen == "ALMACEN") {
-                sw_envia = true;
-            }
-            if (
-                this.transferencia_producto.producto_id != "" &&
-                this.transferencia_producto.origen != "" &&
-                sw_envia
-            ) {
+            let sw_envia = true;
+            if (this.transferencia_producto.origen != "" && sw_envia) {
                 axios
                     .get("/admin/productos/getStock", {
                         params: {
                             lugar: this.transferencia_producto.origen,
-                            lugar_id: this.transferencia_producto.origen_id,
                             producto_id:
                                 this.transferencia_producto.producto_id,
                         },
@@ -688,6 +582,8 @@ export default {
         detectarOrigen() {
             if (this.transferencia_producto.origen == "ALMACEN") {
                 this.transferencia_producto.destino = "SUCURSAL";
+            } else {
+                this.transferencia_producto.destino = "ALMACEN";
             }
         },
         validaIguales() {

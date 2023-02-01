@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use App\Models\Almacen;
 use App\Models\DetalleOrden;
 use App\Models\HistorialAccion;
+use App\Models\IngresoProducto;
 use App\Models\KardexProducto;
 use App\Models\Producto;
+use App\Models\SalidaProducto;
 use App\Models\SucursalStock;
+use App\Models\TransferenciaProducto;
 use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -30,7 +33,12 @@ class ProductoController extends Controller
 
     public function index(Request $request)
     {
-        $productos = Producto::with("grupo")->orderBy("nombre", "asc")->get();
+        $productos = Producto::with("grupo")->select("producto.*")
+            ->join("grupos", "grupos.id", "=", "productos.grupo_id")
+            ->get()
+            ->sortBy("grupos.nombre", SORT_NATURAL)
+            ->sortBy("productos.codigo", SORT_NATURAL)
+            ->sortBy("productos.medida", SORT_NATURAL);
         return response()->JSON(['productos' => $productos, 'total' => count($productos)], 200);
     }
 
@@ -42,26 +50,35 @@ class ProductoController extends Controller
 
         if (isset($request->importacion)) {
             $lugar = $request->lugar;
+            $productos = Producto::select("productos.*")->with("grupo")->join("grupos", "grupos.id", "=", "productos.grupo_id")->paginate();
+            $sortedResult = $productos->getCollection()
+                ->sortBy("grupos.nombre", SORT_NATURAL)
+                ->sortBy("productos.codigo", SORT_NATURAL)
+                ->sortBy("productos.medida", SORT_NATURAL)
+                ->values();
+            $productos->setCollection($sortedResult);
             if ($lugar == 'ALMACEN') {
-                $productos = Producto::select("productos.*")->with("grupo")->join("grupos", "grupos.id", "=", "productos.grupo_id")
-                    ->whereNotExists(function ($query) {
-                        $query->select(DB::raw(1))
-                            ->from('almacens')
-                            ->whereRaw('productos.id = almacens.producto_id');
-                    })->paginate();
+                // $productos = Producto::select("productos.*")->with("grupo")->join("grupos", "grupos.id", "=", "productos.grupo_id")
+                //     ->whereNotExists(function ($query) {
+                //         $query->select(DB::raw(1))
+                //             ->from('almacens')
+                //             ->whereRaw('productos.id = almacens.producto_id');
+                //     })->paginate();
             } else {
-                $productos = Producto::select("productos.*")->with("grupo")->join("grupos", "grupos.id", "=", "productos.grupo_id")
-                    ->whereNotExists(function ($query) use ($lugar) {
-                        $query->select(DB::raw(1))
-                            ->from('sucursal_stocks')
-                            ->whereRaw('productos.id = sucursal_stocks.producto_id')
-                            ->whereRaw('sucursal_stocks.sucursal_id = ' . $lugar);
-                    })->paginate();
+                // $productos = Producto::select("productos.*")->with("grupo")->join("grupos", "grupos.id", "=", "productos.grupo_id")
+                //     ->whereNotExists(function ($query) use ($lugar) {
+                //         $query->select(DB::raw(1))
+                //             ->from('sucursal_stocks')
+                //             ->whereRaw('productos.id = sucursal_stocks.producto_id')
+                //             ->whereRaw('sucursal_stocks.sucursal_id = ' . $lugar);
+                //     })->paginate();
             }
         } else {
             if (isset($request->value) && $request->value != "") {
                 $value = $request->value;
                 $productos = Producto::select("productos.*")->with("grupo")
+                    ->with("stock_almacen")
+                    ->with("stock_sucursal")
                     ->join("grupos", "grupos.id", "=", "productos.grupo_id")
                     ->orWhere("productos.id", "LIKE", "%$value%")
                     ->orWhere("productos.codigo", "LIKE", "%$value%")
@@ -74,18 +91,25 @@ class ProductoController extends Controller
             } else {
                 $productos = Producto::select("productos.*")->with("grupo")->join("grupos", "grupos.id", "=", "productos.grupo_id");
             }
-            if (isset($sortBy) && $sortBy != "") {
-                $asc_desc = "ASC";
-                if ($sortDesc == "true") {
-                    $asc_desc = "DESC";
-                }
-                if ($sortBy != "grupo.nombre") {
-                    $productos = $productos->orderBy("productos." . $sortBy, $asc_desc);
-                } else {
-                    $productos = $productos->orderBy("grupos.nombre", $asc_desc);
-                }
-            }
+            // if (isset($sortBy) && $sortBy != "") {
+            //     $asc_desc = "ASC";
+            //     if ($sortDesc == "true") {
+            //         $asc_desc = "DESC";
+            //     }
+            //     if ($sortBy != "grupo.nombre") {
+            //         $productos = $productos->orderBy("productos." . $sortBy, $asc_desc);
+            //     } else {
+            //         $productos = $productos->orderBy("grupos.nombre", $asc_desc);
+            //     }
+            // }
             $productos = $productos->paginate($request->per_page);
+
+            $sortedResult = $productos->getCollection()
+                ->sortBy("grupos.nombre", SORT_NATURAL)
+                ->sortBy("productos.codigo", SORT_NATURAL)
+                ->sortBy("productos.medida", SORT_NATURAL)
+                ->values();
+            $productos->setCollection($sortedResult);
         }
 
         return response()->JSON(['productos' => $productos, 'total' => count($productos)], 200);
@@ -108,7 +132,10 @@ class ProductoController extends Controller
             ->orWhere("productos.precio_mayor", "LIKE", "%$value%")
             ->orWhere("productos.fecha_registro", "LIKE", "%$value%")
             ->orWhere("grupos.nombre", "LIKE", "%$value%")
-            ->get()->take(100);
+            ->get()->take(100)
+            ->sortBy("grupos.nombre", SORT_NATURAL)
+            ->sortBy("productos.codigo", SORT_NATURAL)
+            ->sortBy("productos.medida", SORT_NATURAL);;
         return response()->JSON($productos);
     }
 
@@ -127,7 +154,12 @@ class ProductoController extends Controller
                 "stock_actual" => 0,
             ]);
 
-            $datos_original =  implode("|", $nuevo_producto->attributesToArray());
+            // registrar en sucursal
+            $nuevo_producto->stock_sucursal()->create([
+                "stock_actual" => 0,
+            ]);
+
+            $datos_original = HistorialAccion::getDetalleRegistro($nuevo_producto, "productos");
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
                 'accion' => 'CREACIÓN',
@@ -159,9 +191,9 @@ class ProductoController extends Controller
 
         DB::beginTransaction();
         try {
-            $datos_original =  implode("|", $producto->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($producto, "productos");
             $producto->update(array_map('mb_strtoupper', $request->all()));
-            $datos_nuevo =  implode("|", $producto->attributesToArray());
+            $datos_nuevo = HistorialAccion::getDetalleRegistro($producto, "productos");
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
                 'accion' => 'MODIFICACIÓN',
@@ -191,9 +223,8 @@ class ProductoController extends Controller
     public function show(Producto $producto, Request $request)
     {
         $stock_sucursal["stock_actual"] = 0;
-        if (isset($request->id)) {
-            $stock_sucursal = SucursalStock::where("producto_id", $producto->id)->where("sucursal_id", $request->id)->get()->first();
-        } else {
+        $stock_sucursal = SucursalStock::where("producto_id", $producto->id)->get()->first();
+        if (!$stock_sucursal) {
             $stock_sucursal["stock_actual"] = 0;
         }
 
@@ -237,7 +268,7 @@ class ProductoController extends Controller
                 }
             }
 
-            $datos_original =  implode("|", $producto->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($producto, "productos");
             $producto->delete();
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
@@ -265,23 +296,21 @@ class ProductoController extends Controller
     public function getStock(Request $request)
     {
         $lugar = $request->lugar;
-        $lugar_id = $request->lugar_id;
         $producto_id = $request->producto_id;
 
         $producto = Producto::find($producto_id);
         if ($lugar == 'SUCURSAL') {
-            $stock = SucursalStock::where("sucursal_id", $lugar_id)->where("producto_id", $producto_id)->get()->first();
-            if (!$stock) {
-                $stock = SucursalStock::create([
-                    "sucursal_id" => $lugar_id,
+            $producto_stock = SucursalStock::where("producto_id", $producto_id)->get()->first();
+            if (!$producto_stock) {
+                $producto_stock = SucursalStock::create([
                     "producto_id" => $producto_id,
                     "stock_actual" => 0,
                 ]);
             }
         } else {
-            $stock = Almacen::where("producto_id", $producto_id)->get()->first();
-            if (!$stock) {
-                $stock = Almacen::create([
+            $producto_stock = Almacen::where("producto_id", $producto_id)->get()->first();
+            if (!$producto_stock) {
+                $producto_stock = Almacen::create([
                     "producto_id" => $producto_id,
                     "stock_actual" => 0,
                 ]);
@@ -290,7 +319,7 @@ class ProductoController extends Controller
 
         return response()->JSON([
             "producto" => $producto,
-            "stock_actual" => $stock->stock_actual
+            "stock_actual" => $producto_stock->stock_actual
         ]);
     }
 
@@ -300,10 +329,9 @@ class ProductoController extends Controller
         if (isset($request->value)) {
             $value = $request->value;
             $productos = SucursalStock::select("sucursal_stocks.*")
-                ->with("sucursal")->with("producto.grupo")
+                ->with("producto.grupo")
                 ->join("productos", "productos.id", "=", "sucursal_stocks.producto_id")
                 ->join("grupos", "grupos.id", "=", "productos.grupo_id")
-                ->where("sucursal_stocks.sucursal_id", $request->id)
                 ->where(function ($query) use ($value) {
                     $query->where('productos.id', "%$value%")
                         ->orWhere('productos.id', "LIKE", "%$value%")
@@ -325,22 +353,66 @@ class ProductoController extends Controller
     public function valida_stock(Request $request)
     {
         $cantidad = $request->cantidad;
-        $sucursal_stock = SucursalStock::where("sucursal_id", $request->sucursal_id)->where("producto_id", $request->id)->get()->first();
+        $sucursal_stock = SucursalStock::where("producto_id", $request->id)->get()->first();
 
-        if ($sucursal_stock->stock_actual >= $cantidad) {
+        if ($sucursal_stock) {
+            if ($sucursal_stock->stock_actual >= $cantidad) {
+                return response()->JSON(
+                    [
+                        "sw" => true,
+                        "producto" => $sucursal_stock->producto,
+                        "sucursal_stock" => $sucursal_stock,
+                    ]
+                );
+            }
             return response()->JSON(
                 [
-                    "sw" => true,
-                    "producto" => $sucursal_stock->producto,
-                    "sucursal_stock" => $sucursal_stock,
+                    "sw" => false,
+                    "msj" => "La cantidad que desea ingresar supera al stock disponible del producto.<br/> Stock actual: <b>" . $sucursal_stock->stock_actual . " unidades</b>"
                 ]
             );
         }
         return response()->JSON(
             [
                 "sw" => false,
-                "msj" => "La cantidad que desea ingresar supera al stock disponible del producto.<br/> Stock actual: <b>" . $sucursal_stock->stock_actual . " unidades</b>"
+                "msj" => "La cantidad que desea ingresar supera al stock disponible del producto.<br/> Stock actual: <b>0 unidades</b>"
             ]
         );
+    }
+
+    public function verifica_ventas(Request $request)
+    {
+        $id = $request->id;
+        $lugar = $request->lugar;
+
+
+        $producto = Producto::find($id);
+        $ingresos = IngresoProducto::where("lugar", $lugar)
+            ->where("producto_id", $producto->id)
+            ->get();
+
+        $salidas = SalidaProducto::where("lugar", $lugar)
+            ->where("producto_id", $producto->id)
+            ->get();
+
+        $transferencia_origen = TransferenciaProducto::where("origen", $lugar)
+            ->where("producto_id", $producto->id)
+            ->get();
+
+        $transferencia_destino = TransferenciaProducto::where("origen", $lugar)
+            ->where("producto_id", $producto->id)
+            ->get();
+
+        if ($lugar == 'SUCURSAL') {
+            $existe = DetalleOrden::where("producto_id", $producto->id)->get();
+            if (count($existe) > 0 || count($transferencia_origen) > 0 || count($transferencia_destino) > 0 || count($ingresos) > 0 || count($salidas) > 0) {
+                return response()->JSON(true);
+            }
+        } else {
+            if (count($transferencia_origen) > 0 || count($transferencia_destino) > 0 || count($ingresos) > 0 || count($salidas) > 0) {
+                return response()->JSON(true);
+            }
+        }
+        return response()->JSON(false);
     }
 }

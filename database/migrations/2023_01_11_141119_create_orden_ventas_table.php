@@ -15,12 +15,13 @@ class CreateOrdenVentasTable extends Migration
     {
         Schema::create('orden_ventas', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger("sucursal_id");
             $table->unsignedBigInteger("user_id");
+            $table->unsignedBigInteger("caja_id");
             $table->unsignedBigInteger("cliente_id");
             $table->string("nit", 155);
-            $table->enum("venta_mayor", ["NO", "SI"]);
             $table->decimal("total", 24, 2);
+            $table->string("tipo_venta");
+            $table->string("estado");
             $table->date("fecha_registro");
             $table->timestamps();
 

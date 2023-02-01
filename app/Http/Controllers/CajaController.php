@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Caja;
 use App\Models\HistorialAccion;
+use App\Models\OrdenVenta;
+use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,14 +16,13 @@ class CajaController extends Controller
     public $validacion = [
         'codigo' => 'required|min:1',
         'nombre' => 'required|min:2',
-        'sucursal_id' => 'required',
     ];
 
     public $mensajes = [];
 
     public function index(Request $request)
     {
-        $cajas = Caja::with("sucursal")->get();
+        $cajas = Caja::all();
         return response()->JSON(['cajas' => $cajas, 'total' => count($cajas)], 200);
     }
 
@@ -35,7 +36,7 @@ class CajaController extends Controller
             $request["fecha_registro"] = date("Y-m-d");
             $nueva_caja = Caja::create(array_map('mb_strtoupper', $request->all()));
 
-            $datos_original =  implode("|", $nueva_caja->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($nueva_caja, "cajas");
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
                 'accion' => 'CREACIÓN',
@@ -68,11 +69,10 @@ class CajaController extends Controller
         DB::beginTransaction();
         try {
 
-            $datos_original =  implode("|", $caja->attributesToArray());
-
+            $datos_original = HistorialAccion::getDetalleRegistro($caja, "cajas");
             $caja->update(array_map('mb_strtoupper', $request->all()));
 
-            $datos_nuevo =  implode("|", $caja->attributesToArray());
+            $datos_nuevo = HistorialAccion::getDetalleRegistro($caja, "cajas");
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
                 'accion' => 'MODIFICACIÓN',
@@ -111,7 +111,13 @@ class CajaController extends Controller
     {
         DB::beginTransaction();
         try {
-            $datos_original =  implode("|", $caja->attributesToArray());
+            // validar que no exista en orden de ventas
+            $orden_ventas = OrdenVenta::where("caja_id", $caja->id)->get();
+            if (count($orden_ventas) > 0) {
+                throw new Exception('No es posible eliminar el registro debido a que se realizaron Orden de ventas en esta caja');
+            }
+
+            $datos_original = HistorialAccion::getDetalleRegistro($caja, "cajas");
             $caja->delete();
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,

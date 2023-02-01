@@ -45,7 +45,6 @@ window.EventBus = EventBus;
 // COMPONENTES
 Vue.component('App', require('./App.vue').default);
 Vue.component('Auth', require('./Auth.vue').default);
-Vue.component('InfiniteLoading', require('vue-infinite-loading').default);
 import router from './routes';
 const app = new Vue({
     el: '#app',

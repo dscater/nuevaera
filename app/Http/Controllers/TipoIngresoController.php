@@ -33,7 +33,7 @@ class TipoIngresoController extends Controller
             // crear TipoIngreso
             $nuevo_tipo_ingreso = TipoIngreso::create(array_map('mb_strtoupper', $request->all()));
 
-            $datos_original =  implode("|", $nuevo_tipo_ingreso->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($nuevo_tipo_ingreso, "tipo_ingresos");
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
                 'accion' => 'CREACIÓN',
@@ -65,10 +65,10 @@ class TipoIngresoController extends Controller
 
         DB::beginTransaction();
         try {
-            $datos_original =  implode("|", $tipo_ingreso->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($tipo_ingreso, "tipo_ingresos");
             $tipo_ingreso->update(array_map('mb_strtoupper', $request->all()));
 
-            $datos_nuevo =  implode("|", $tipo_ingreso->attributesToArray());
+            $datos_nuevo = HistorialAccion::getDetalleRegistro($tipo_ingreso, "tipo_ingresos");
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
                 'accion' => 'MODIFICACIÓN',
@@ -112,7 +112,7 @@ class TipoIngresoController extends Controller
                 throw new Exception('No es posible eliminar el registro debido a que existen registros que lo utilizan');
             }
 
-            $datos_original =  implode("|", $tipo_ingreso->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($tipo_ingreso, "tipo_ingresos");
             $tipo_ingreso->delete();
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,

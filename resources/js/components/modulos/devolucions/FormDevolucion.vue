@@ -113,8 +113,8 @@
         </div>
         <div class="modal-footer justify-content-between">
             <el-button
-                type="primary"
-                class="bg-lightblue"
+                type="warning"
+                class="btn-warning"
                 :loading="enviando"
                 @click="enviarFormulario()"
                 v-html="textoBoton"

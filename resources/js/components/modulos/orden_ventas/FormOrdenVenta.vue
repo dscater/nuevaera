@@ -13,67 +13,8 @@
                             </div>
                             <div class="card-body">
                                 <div class="row">
-                                    <template v-if="user.tipo != 'CAJA'">
-                                        <div
-                                            class="form-group col-md-6"
-                                            v-if="accion != 'edit'"
-                                        >
-                                            <label
-                                                :class="{
-                                                    'text-danger':
-                                                        errors.sucursal_id,
-                                                }"
-                                                >Seleccionar sucursal</label
-                                            >
-                                            <el-select
-                                                class="w-full d-block"
-                                                :class="{
-                                                    'is-invalid':
-                                                        errors.sucursal_id,
-                                                }"
-                                                v-model="
-                                                    orden_venta.sucursal_id
-                                                "
-                                                clearable
-                                                @change="getCajas()"
-                                            >
-                                                <el-option
-                                                    v-for="item in listSucursales"
-                                                    :key="item.id"
-                                                    :value="item.id"
-                                                    :label="item.nombre"
-                                                >
-                                                </el-option>
-                                            </el-select>
-                                            <span
-                                                class="error invalid-feedback"
-                                                v-if="errors.sucursal_id"
-                                                v-text="errors.sucursal_id[0]"
-                                            ></span>
-                                        </div>
-                                        <div class="form-group col-md-6" v-else>
-                                            <label
-                                                :class="{
-                                                    'text-danger':
-                                                        errors.sucursal_id,
-                                                }"
-                                                >Sucursal</label
-                                            >
-                                            <input
-                                                type="readonly"
-                                                class="form-control"
-                                                readonly
-                                                :value="getNombreSucursal"
-                                            />
-                                            <span
-                                                class="error invalid-feedback"
-                                                v-if="errors.sucursal_id"
-                                                v-text="errors.sucursal_id[0]"
-                                            ></span>
-                                        </div>
-                                    </template>
                                     <div
-                                        class="form-group col-md-6"
+                                        class="form-group col-md-12"
                                         v-if="user.tipo != 'CAJA'"
                                     >
                                         <label
@@ -396,7 +337,7 @@
                                     </div>
                                     <div class="col-md-12">
                                         <button
-                                            class="btn btn-primary btn-flat btn-block"
+                                            class="btn btn-warning btn-flat btn-block"
                                             :disabled="
                                                 cantidad <= 0 ||
                                                 cantidad == '' ||
@@ -508,8 +449,8 @@
             <div class="row">
                 <div class="col-md-12">
                     <el-button
-                        type="primary"
-                        class="bg-lightblue btn-block"
+                        type="warning"
+                        class="btn-warning bg-warning btn-block"
                         :loading="enviando"
                         @click="enviarFormulario()"
                         v-html="textoBoton"
@@ -594,18 +535,10 @@ export default {
     computed: {
         textoBoton() {
             if (this.accion == "nuevo") {
-                return '<i class="fa fa-save"></i> Registrar';
+                return '<i class="fa fa-save"></i> Registrar orden de venta';
             } else {
-                return '<i class="fa fa-edit"></i> Actualizar';
+                return '<i class="fa fa-edit"></i> Actualizar orden de venta';
             }
-        },
-        getNombreSucursal() {
-            if (this.orden_venta) {
-                if (this.orden_venta.sucursal) {
-                    return this.orden_venta.sucursal.nombre;
-                }
-            }
-            return "";
         },
     },
     data() {
@@ -619,7 +552,6 @@ export default {
             listClientes: [],
             aux_lista_productos: [],
             listProductos: [],
-            listSucursales: [],
             listCajas: [],
             listTipos: ["AL CONTADO", "A CRÉDITO"],
             eliminados: [],
@@ -653,38 +585,22 @@ export default {
         };
     },
     mounted() {
-        this.getSucursales();
         if (this.orden_venta.id == 0) {
             this.orden_venta.fecha = this.fechaActual();
         }
         if (this.user.tipo == "CAJA") {
-            this.orden_venta.sucursal_id = this.user.sucursal.sucursal_id;
-            this.orden_venta.caja_id = this.user.sucursal.caja_id;
+            this.orden_venta.caja_id = this.user.caja_usuario.caja_id;
         }
+        this.getCajas();
         this.getClientes();
         this.iniciaSeleccionFilas();
     },
     methods: {
         // OBTENER LISTADOS E INFORMACIÓN
-        getSucursales() {
-            axios.get("/admin/sucursals").then((response) => {
-                this.listSucursales = response.data.sucursals;
-            });
-        },
         getCajas() {
-            if (this.orden_venta.sucursal_id != "") {
-                axios
-                    .get("/admin/cajas/cajas_sucursal", {
-                        params: {
-                            id: this.orden_venta.sucursal_id,
-                        },
-                    })
-                    .then((response) => {
-                        this.listCajas = response.data;
-                    });
-            } else {
-                this.listCajas = [];
-            }
+            axios.get("/admin/cajas").then((response) => {
+                this.listCajas = response.data.cajas;
+            });
         },
         getCliente() {
             if (this.orden_venta.cliente_id != "") {
@@ -758,9 +674,9 @@ export default {
                             this.$emit("envioFormulario", res.data.id);
                             this.errors = [];
                             if (this.accion == "edit") {
-                                this.textoBtn = "Actualizar";
+                                this.textoBtn = "Actualizar orden de venta";
                             } else {
-                                this.textoBtn = "Registrar";
+                                this.textoBtn = "Registrar orden de venta";
                             }
                         } else {
                             Swal.fire({
@@ -775,9 +691,9 @@ export default {
                     .catch((error) => {
                         this.enviando = false;
                         if (this.accion == "edit") {
-                            this.textoBtn = "Actualizar";
+                            this.textoBtn = "Actualizar orden de venta";
                         } else {
-                            this.textoBtn = "Registrar";
+                            this.textoBtn = "Registrar orden de venta";
                         }
                         if (error.response) {
                             if (error.response.status === 422) {
@@ -853,7 +769,6 @@ export default {
                     .get("/admin/productos/productos_sucursal", {
                         params: {
                             value: query,
-                            id: this.orden_venta.sucursal_id,
                         },
                     })
                     .then((response) => {
@@ -903,7 +818,6 @@ export default {
                 .get("/admin/productos/valida_stock", {
                     params: {
                         id: this.producto_id,
-                        sucursal_id: this.orden_venta.sucursal_id,
                         cantidad: this.cantidad,
                     },
                 })

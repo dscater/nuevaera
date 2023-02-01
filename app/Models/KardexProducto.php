@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Exception;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
@@ -29,7 +30,7 @@ class KardexProducto extends Model
     }
 
     // REGISTRAR INGRESO
-    public static function registroIngreso($lugar, $lugar_id = 0, $tipo_registro, $registro_id = 0, Producto $producto, $cantidad, $precio, $detalle = "")
+    public static function registroIngreso($lugar, $tipo_registro, $registro_id = 0, Producto $producto, $cantidad, $precio, $detalle = "")
     {
         //buscar el ultimo registro y usar sus valores
         $ultimo = KardexProducto::where('producto_id', $producto->id)
@@ -44,7 +45,6 @@ class KardexProducto extends Model
             }
             KardexProducto::create([
                 'lugar' => $lugar,
-                'lugar_id' => $lugar_id,
                 'tipo_registro' => $tipo_registro, //INGRESO, EGRESO, VENTA, COMPRA,etc...
                 'registro_id' => $registro_id,
                 'producto_id' => $producto->id,
@@ -62,7 +62,6 @@ class KardexProducto extends Model
             $detalle = "VALOR INICIAL";
             KardexProducto::create([
                 'lugar' => $lugar,
-                'lugar_id' => $lugar_id,
                 'tipo_registro' => $tipo_registro, //INGRESO, EGRESO, VENTA,etc...
                 'registro_id' => $registro_id,
                 'producto_id' => $producto->id,
@@ -80,17 +79,18 @@ class KardexProducto extends Model
 
         // INCREMENTAR STOCK
         if ($producto->descontar_stock == 'SI') {
-            Producto::incrementarStock($producto, $cantidad, $lugar, $lugar_id);
+            Producto::incrementarStock($producto, $cantidad, $lugar);
         }
 
         return true;
     }
 
     // REGISTRAR EGRESO
-    public static function registroEgreso($lugar, $lugar_id = 0, $tipo_registro, $registro_id = 0, Producto $producto, $cantidad, $precio, $detalle = "")
+    public static function registroEgreso($lugar, $tipo_registro, $registro_id = 0, Producto $producto, $cantidad, $precio, $detalle = "")
     {
         //buscar el ultimo registro y usar sus valores
         $ultimo = KardexProducto::where('producto_id', $producto->id)
+            ->where("lugar", $lugar)
             ->orderBy('created_at', 'asc')
             ->get()
             ->last();
@@ -102,7 +102,6 @@ class KardexProducto extends Model
 
         KardexProducto::create([
             'lugar' => $lugar,
-            'lugar_id' => $lugar_id,
             'tipo_registro' => $tipo_registro,
             'registro_id' => $registro_id,
             'producto_id' => $producto->id,
@@ -118,7 +117,7 @@ class KardexProducto extends Model
         ]);
 
         if ($producto->descontar_stock == 'SI') {
-            Producto::decrementarStock($producto, $cantidad, $lugar, $lugar_id);
+            Producto::decrementarStock($producto, $cantidad, $lugar);
         }
 
         return true;
@@ -127,30 +126,21 @@ class KardexProducto extends Model
     // ACTUALIZA REGISTROS KARDEX
     // FUNCIÓN QUE ACTUALIZA LOS REGISTROS DEL KARDEX DE UN LUGAR
     // SOLO ACTUALIZARA LOS REGISTROS POSTERIORES AL REGISTRO ACTUALIZADO
-    public static function actualizaRegistrosKardex($id, $producto_id, $lugar, $lugar_id = 0)
+    public static function actualizaRegistrosKardex($id, $producto_id, $lugar)
     {
         $siguientes = KardexProducto::where("lugar", $lugar)
             ->where("producto_id", $producto_id)
             ->where("id", ">=", $id)
             ->get();
-        if ($lugar != 'ALMACEN') {
-            $siguientes = KardexProducto::where("lugar", $lugar)
-                ->where("lugar_id", $lugar_id)
-                ->where("producto_id", $producto_id)
-                ->where("id", ">=", $id)
-                ->get();
-        }
 
         foreach ($siguientes as $item) {
             $anterior = KardexProducto::where("lugar", $lugar)
-                ->where("lugar_id", $lugar_id)
                 ->where("producto_id", $producto_id)
                 ->where("id", "<", $item->id)->get()
                 ->last();
 
             $datos_actualizacion = [
                 "lugar" => $item->lugar,
-                "lugar_id" => $item->lugar_id,
                 "precio" => 0,
                 "cantidad_ingreso" => NULL,
                 "cantidad_salida" => NULL,

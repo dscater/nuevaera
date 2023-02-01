@@ -63,7 +63,7 @@ class ConfiguracionController extends Controller
             DB::beginTransaction();
             try {
 
-                $datos_original =  implode("|", $configuracion->attributesToArray());
+                $datos_original = HistorialAccion::getDetalleRegistro($configuracion, "configuracions");
 
                 $configuracion->update(array_map('mb_strtoupper', $request->except('logo')));
                 if ($request->hasFile('logo')) {
@@ -76,7 +76,7 @@ class ConfiguracionController extends Controller
                     $configuracion->save();
                 }
 
-                $datos_nuevo =  implode("|", $configuracion->attributesToArray());
+                $datos_nuevo = HistorialAccion::getDetalleRegistro($configuracion, "configuracions");
                 HistorialAccion::create([
                     'user_id' => Auth::user()->id,
                     'accion' => 'MODIFICACIÓN',

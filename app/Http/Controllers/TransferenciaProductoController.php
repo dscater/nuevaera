@@ -33,16 +33,6 @@ class TransferenciaProductoController extends Controller
         $this->validacion["producto_id"] = "required";
         $this->validacion["origen"] = "required";
         $this->validacion["destino"] = "required";
-        if ($request->origen == 'SUCURSAL') {
-            $this->validacion["origen_id"] = "required";
-        } else {
-            $request["origen_id"] = 0;
-        }
-        if ($request->destino == 'SUCURSAL') {
-            $this->validacion["destino_id"] = "required";
-        } else {
-            $request["destino_id"] = 0;
-        }
 
         $request->validate($this->validacion, $this->mensajes);
 
@@ -61,19 +51,19 @@ class TransferenciaProductoController extends Controller
                 // VALIDAR STOCK
                 $stock_producto = Almacen::where("producto_id", $request->producto_id)->get()->first();
             } else {
-                $stock_producto = SucursalStock::where("producto_id", $request->producto_id)->where("sucursal_id", $request->origen_id)->get()->first();
+                $stock_producto = SucursalStock::where("producto_id", $request->producto_id)->get()->first();
             }
             // VALIDAR STOCK
             if ($stock_producto->stock_actual < $request->cantidad) {
                 throw new Exception('No es posible realizar el registro debido a que la cantidad supera al stock disponible ' . $stock_producto->stock_actual);
             }
 
-            KardexProducto::registroEgreso($nueva_transferencia_producto->origen, $nueva_transferencia_producto->origen_id, "TRANSFERENCIA", $nueva_transferencia_producto->id, $nueva_transferencia_producto->producto, $nueva_transferencia_producto->cantidad, $nueva_transferencia_producto->producto->precio, $nueva_transferencia_producto->descripcion);
+            KardexProducto::registroEgreso($nueva_transferencia_producto->origen, "TRANSFERENCIA", $nueva_transferencia_producto->id, $nueva_transferencia_producto->producto, $nueva_transferencia_producto->cantidad, $nueva_transferencia_producto->producto->precio, $nueva_transferencia_producto->descripcion);
 
             // incrementar el stock del DESTINO
-            KardexProducto::registroIngreso($nueva_transferencia_producto->destino, $nueva_transferencia_producto->destino_id, "TRANSFERENCIA", $nueva_transferencia_producto->id, $nueva_transferencia_producto->producto, $nueva_transferencia_producto->cantidad, $nueva_transferencia_producto->producto->precio, $nueva_transferencia_producto->descripcion);
+            KardexProducto::registroIngreso($nueva_transferencia_producto->destino, "TRANSFERENCIA", $nueva_transferencia_producto->id, $nueva_transferencia_producto->producto, $nueva_transferencia_producto->cantidad, $nueva_transferencia_producto->producto->precio, $nueva_transferencia_producto->descripcion);
 
-            $datos_original =  implode("|", $nueva_transferencia_producto->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($nueva_transferencia_producto, "transferencia_productos");
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
                 'accion' => 'CREACIÓN',
@@ -110,14 +100,13 @@ class TransferenciaProductoController extends Controller
         try {
             if ($transferencia_producto->producto->descontar_stock == 'SI') {
                 // incrementar el stock del origen
-                Producto::incrementarStock($transferencia_producto->producto, $transferencia_producto->cantidad, $transferencia_producto->origen, $transferencia_producto->origen_id);
+                Producto::incrementarStock($transferencia_producto->producto, $transferencia_producto->cantidad, $transferencia_producto->origen);
                 $stock_producto = null;
                 if ($transferencia_producto->origen == 'ALMACEN') {
                     $stock_producto = Almacen::where("producto_id", $transferencia_producto->producto_id)
                         ->get()->first();
                 } else {
                     $stock_producto = SucursalStock::where("producto_id", $transferencia_producto->producto_id)
-                        ->where("sucursal_id", $transferencia_producto->origen_id)
                         ->get()->first();
                 }
                 if ($stock_producto->stock_actual < $request->cantidad) {
@@ -125,38 +114,36 @@ class TransferenciaProductoController extends Controller
                 }
 
                 // decrementar el stock del destino
-                Producto::decrementarStock($transferencia_producto->producto, $transferencia_producto->cantidad, $transferencia_producto->destino, $transferencia_producto->destino_id);
+                Producto::decrementarStock($transferencia_producto->producto, $transferencia_producto->cantidad, $transferencia_producto->destino);
             }
 
-            $datos_original =  implode("|", $transferencia_producto->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($transferencia_producto, "transferencia_productos");
             $transferencia_producto->update(array_map('mb_strtoupper', $request->all()));
 
             /* ***********************************************
                 * DECREMENTAR EL ORIGEN E INCREMENTAR EL DESTINO *
                 ************************************************ */
             // disminuir el stock del ORIGEN
-            Producto::decrementarStock($transferencia_producto->producto, $transferencia_producto->cantidad, $transferencia_producto->origen, $transferencia_producto->origen_id);
+            Producto::decrementarStock($transferencia_producto->producto, $transferencia_producto->cantidad, $transferencia_producto->origen);
             // actualizar kardex
             $kardex = KardexProducto::where("lugar", $transferencia_producto->origen)
-                ->where("lugar_id", $transferencia_producto->origen_id)
                 ->where("producto_id", $transferencia_producto->producto_id)
                 ->where("tipo_registro", "TRANSFERENCIA")
                 ->where("registro_id", $transferencia_producto->id)
                 ->get()->first();
-            KardexProducto::actualizaRegistrosKardex($kardex->id, $kardex->producto_id, $transferencia_producto->origen, $transferencia_producto->origen_id);
+            KardexProducto::actualizaRegistrosKardex($kardex->id, $kardex->producto_id, $transferencia_producto->origen);
 
             // incrementar el stock del DESTINO
-            Producto::incrementarStock($transferencia_producto->producto, $transferencia_producto->cantidad, $transferencia_producto->destino, $transferencia_producto->destino_id);
+            Producto::incrementarStock($transferencia_producto->producto, $transferencia_producto->cantidad, $transferencia_producto->destino);
             // actualizar kardex
             $kardex = KardexProducto::where("lugar", $transferencia_producto->destino)
-                ->where("lugar_id", $transferencia_producto->destino_id)
                 ->where("producto_id", $transferencia_producto->producto_id)
                 ->where("tipo_registro", "TRANSFERENCIA")
                 ->where("registro_id", $transferencia_producto->id)
                 ->get()->first();
-            KardexProducto::actualizaRegistrosKardex($kardex->id, $kardex->producto_id, $transferencia_producto->destino, $transferencia_producto->destino_id);
+            KardexProducto::actualizaRegistrosKardex($kardex->id, $kardex->producto_id, $transferencia_producto->destino);
 
-            $datos_nuevo =  implode("|", $transferencia_producto->attributesToArray());
+            $datos_nuevo = HistorialAccion::getDetalleRegistro($transferencia_producto, "transferencia_productos");
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
                 'accion' => 'MODIFICACIÓN',
@@ -199,7 +186,6 @@ class TransferenciaProductoController extends Controller
              * ORIGEN
              ******************/
             $eliminar_kardex = KardexProducto::where("lugar", $transferencia_producto->origen)
-                ->where("lugar_id", $transferencia_producto->origen_id)
                 ->where("tipo_registro", "TRANSFERENCIA")
                 ->where("registro_id", $transferencia_producto->id)
                 ->where("producto_id", $transferencia_producto->producto_id)
@@ -210,7 +196,6 @@ class TransferenciaProductoController extends Controller
             $eliminar_kardex->delete();
 
             $anterior = KardexProducto::where("lugar", $transferencia_producto->origen)
-                ->where("lugar_id", $transferencia_producto->origen_id)
                 ->where("producto_id", $id_producto)
                 ->where("id", "<", $id_kardex)
                 ->get()
@@ -221,7 +206,6 @@ class TransferenciaProductoController extends Controller
             } else {
                 // comprobar si existen registros posteriorres al actualizado
                 $siguiente = KardexProducto::where("lugar", $transferencia_producto->origen)
-                    ->where("lugar_id", $transferencia_producto->origen_id)
                     ->where("producto_id", $id_producto)
                     ->where("id", ">", $id_kardex)
                     ->get()
@@ -241,7 +225,6 @@ class TransferenciaProductoController extends Controller
              * DESTINO
              ******************/
             $eliminar_kardex = KardexProducto::where("lugar", $transferencia_producto->destino)
-                ->where("lugar_id", $transferencia_producto->destino_id)
                 ->where("tipo_registro", "TRANSFERENCIA")
                 ->where("registro_id", $transferencia_producto->id)
                 ->where("producto_id", $transferencia_producto->producto_id)
@@ -252,7 +235,6 @@ class TransferenciaProductoController extends Controller
             $eliminar_kardex->delete();
 
             $anterior = KardexProducto::where("lugar", $transferencia_producto->destino)
-                ->where("lugar_id", $transferencia_producto->destino_id)
                 ->where("producto_id", $id_producto)
                 ->where("id", "<", $id_kardex)
                 ->get()
@@ -263,7 +245,6 @@ class TransferenciaProductoController extends Controller
             } else {
                 // comprobar si existen registros posteriorres al actualizado
                 $siguiente = KardexProducto::where("lugar", $transferencia_producto->destino)
-                    ->where("lugar_id", $transferencia_producto->destino_id)
                     ->where("producto_id", $id_producto)
                     ->where("id", ">", $id_kardex)
                     ->get()
@@ -279,12 +260,12 @@ class TransferenciaProductoController extends Controller
             // descontar el stock
             Producto::decrementarStock($transferencia_producto->producto, $transferencia_producto->cantidad, $transferencia_producto->destino, $transferencia_producto->destino_id);
 
-            $datos_original =  implode("|", $transferencia_producto->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($transferencia_producto, "transferencia_productos");
             $transferencia_producto->delete();
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
-                'accion' => 'MODIFICACIÓN',
-                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' MODIFICÓ UNA TRANSFERENCIA DE PRODUCTOS',
+                'accion' => 'ELIMINACIÓN',
+                'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' ELIMINÓ UNA TRANSFERENCIA DE PRODUCTOS',
                 'datos_original' => $datos_original,
                 'modulo' => 'TRANSFERENCIA DE PRODUCTOS',
                 'fecha' => date('Y-m-d'),

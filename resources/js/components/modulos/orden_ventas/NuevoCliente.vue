@@ -208,7 +208,6 @@ export default {
         muestra_modal: function (newVal, oldVal) {
             this.errors = [];
             if (newVal) {
-                this.getSucursalCajas();
                 this.bModal = true;
             } else {
                 this.bModal = false;
@@ -248,30 +247,14 @@ export default {
                 { value: "BN", label: "Beni" },
             ],
             listTipos: ["ADMINISTRADOR", "SUPERVISOR", "CAJA"],
-            listSucursals: [],
             listCajas: [],
             errors: [],
         };
     },
     mounted() {
         this.bModal = this.muestra_modal;
-        this.getSucursals();
     },
     methods: {
-        getSucursals() {
-            axios.get("/admin/sucursals").then((response) => {
-                this.listSucursals = response.data.sucursals;
-            });
-        },
-        getSucursalCajas() {
-            axios
-                .get("/admin/sucursals/getCajas", {
-                    params: { id: this.cliente.sucursal_id },
-                })
-                .then((response) => {
-                    this.listCajas = response.data;
-                });
-        },
         setRegistroModal() {
             this.enviando = true;
             try {
@@ -298,7 +281,9 @@ export default {
                 );
                 formdata.append(
                     "fono",
-                    this.cliente.fono_array ? this.cliente.fono_array.join("; ") : ""
+                    this.cliente.fono_array
+                        ? this.cliente.fono_array.join("; ")
+                        : ""
                 );
                 formdata.append(
                     "dir",

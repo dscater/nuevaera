@@ -23,7 +23,7 @@
                                                     'productos.create'
                                                 )
                                             "
-                                            class="btn btn-outline-primary bg-primary btn-flat btn-block"
+                                            class="btn btn-warning btn-flat btn-block"
                                             @click="
                                                 abreModal('nuevo');
                                                 limpiaProducto();
@@ -86,6 +86,25 @@
                                                 empty-filtered-text="Sin resultados"
                                                 ref="table"
                                             >
+                                                <template
+                                                    #cell(stock_almacen.stock_actual)="row"
+                                                >
+                                                    {{
+                                                        row.item.stock_almacen
+                                                            ? row.item.stock_almacen.stock_actual
+                                                            : 0
+                                                    }}
+                                                </template>
+                                                <template
+                                                    #cell(stock_sucursal.stock_actual)="row"
+                                                >
+                                                    {{
+                                                        row.item.stock_sucursal
+                                                            ? row.item.stock_sucursal.stock_actual
+                                                            : 0
+                                                    }}
+                                                </template>
+
                                                 <template
                                                     #cell(fecha_registro)="row"
                                                 >
@@ -198,31 +217,18 @@ export default {
             listRegistros: [],
             showOverlay: false,
             fields: [
+                { key: "grupo.nombre", label: "Grupo" },
                 {
                     key: "codigo",
                     label: "Código",
-                    sortable: true,
                 },
-                { key: "nombre", label: "Nombre", sortable: true },
-                { key: "medida", label: "Medida", sortable: true },
-                { key: "grupo.nombre", label: "Grupo", sortable: true },
-                { key: "precio", label: "Precio de venta", sortable: true },
-                {
-                    key: "precio_mayor",
-                    label: "Previo de venta por mayor",
-                    sortable: true,
-                },
-                { key: "stock_min", label: "Stock mínimo", sortable: true },
-                {
-                    key: "descontar_stock",
-                    label: "Descontar de stock",
-                    sortable: true,
-                },
-                {
-                    key: "fecha_registro",
-                    label: "Fecha de registro",
-                    sortable: true,
-                },
+                { key: "medida", label: "Medida" },
+                { key: "nombre", label: "Nombre" },
+                { key: "precio", label: "Precio de venta" },
+                { key: "stock_almacen.stock_actual", label: "Stock almacén" },
+                { key: "stock_sucursal.stock_actual", label: "Stock sucursal" },
+                { key: "total_stock", label: "Total stock" },
+                { key: "precio", label: "Precio de venta" },
                 { key: "accion", label: "Acción" },
             ],
             isBusy: false,
@@ -338,7 +344,7 @@ export default {
                 title: "¿Quierés eliminar este registro?",
                 html: `Esta acción eliminara también los registros de Kardex tanto del Almacén y Sucursales; siempre y cuando no se hallan realizado Orden de ventas<br><strong>${descripcion}</strong>`,
                 showCancelButton: true,
-                confirmButtonColor: "#5398d8",
+                confirmButtonColor: "#ffc107",
                 confirmButtonText: "Si, eliminar",
                 cancelButtonText: "No, cancelar",
                 denyButtonText: `No, cancelar`,

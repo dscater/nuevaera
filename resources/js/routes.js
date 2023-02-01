@@ -32,13 +32,6 @@ export default new Router({
             component: require('./components/modulos/usuarios/index.vue').default
         },
 
-        // sucursales
-        {
-            path: '/sucursals',
-            name: 'sucursals.index',
-            component: require('./components/modulos/sucursals/index.vue').default,
-        },
-
         // cajas
         {
             path: '/cajas',
@@ -134,6 +127,13 @@ export default new Router({
             name: 'orden_ventas.ticket',
             props: true,
             component: require('./components/modulos/orden_ventas/Ticket.vue').default,
+        },
+
+        // Creditos
+        {
+            path: '/creditos',
+            name: 'creditos.index',
+            component: require('./components/modulos/creditos/index.vue').default,
         },
 
         // Devoluciones

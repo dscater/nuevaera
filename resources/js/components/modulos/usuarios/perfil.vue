@@ -14,7 +14,7 @@
             <div class="container-fluid">
                 <div class="row">
                     <div class="col-md-3">
-                        <div class="card card-primary card-outline">
+                        <div class="card card-warning card-outline">
                             <div class="card-body box-profile">
                                 <div class="text-center">
                                     <b-skeleton-wrapper :loading="loading_foto">
@@ -36,12 +36,12 @@
                                 <h3 class="profile-username text-center">
                                     {{ oUsuario.full_name }}
                                 </h3>
-                                <p class="text-primary text-center">
+                                <p class="text-warning text-center">
                                     {{ oUsuario.tipo }}
                                 </p>
                                 <label
                                     v-if="!imagen_cargada"
-                                    class="btn btn-primary bg-primary btn-block"
+                                    class="btn btn-warning bg-warning btn-block"
                                     for="file_foto"
                                     ><b>Cambiar foto</b
                                     ><input
@@ -54,7 +54,7 @@
                                 <template v-else>
                                     <el-button
                                         type="warning"
-                                        class="bg-primary w-full btn-flat mb-1"
+                                        class="bg-warning w-full btn-flat mb-1"
                                         :loading="enviandoFoto"
                                         @click="setFoto"
                                         >Enviar cambios</el-button
@@ -68,8 +68,8 @@
                                 </template>
                             </div>
                         </div>
-                        <div class="card card-primary" v-if="oUsuario.id != 1">
-                            <div class="card-header bg-primary">
+                        <div class="card card-warning" v-if="oUsuario.id != 1">
+                            <div class="card-header bg-warning">
                                 <h3 class="card-title">Información</h3>
                             </div>
 
@@ -81,7 +81,7 @@
                                     Correo</strong
                                 >
                                 <p
-                                    class="text-primary"
+                                    class="text-warning"
                                     v-text="oUsuario?.correo"
                                 ></p>
                                 <hr />
@@ -90,7 +90,7 @@
                                     C.I:</strong
                                 >
                                 <p
-                                    class="text-primary"
+                                    class="text-warning"
                                     v-text="oUsuario?.full_ci"
                                 ></p>
                                 <hr />
@@ -99,7 +99,7 @@
                                     >Teléfono/Celular:</strong
                                 >
                                 <p
-                                    class="text-primary"
+                                    class="text-warning"
                                     v-text="`${oUsuario ? oUsuario.fono : ''}`"
                                 ></p>
                                 <hr />
@@ -108,7 +108,7 @@
                                     Dirección:</strong
                                 >
                                 <p
-                                    class="text-primary"
+                                    class="text-warning"
                                     v-text="oUsuario?.dir"
                                 ></p>
                             </div>
@@ -116,7 +116,7 @@
                     </div>
                     <div class="col-md-9">
                         <div class="card">
-                            <div class="card-header p-2 bg-primary">
+                            <div class="card-header p-2 bg-warning">
                                 <div class="col-md-12">
                                     <h4>Actualizar contreña</h4>
                                 </div>
@@ -248,7 +248,7 @@
                                                 <div class="col-sm-12">
                                                     <el-button
                                                         type="success"
-                                                        class="bg-primary w-full"
+                                                        class="bg-warning w-full"
                                                         :loading="enviando"
                                                         @click="setPassword"
                                                         >Enviar

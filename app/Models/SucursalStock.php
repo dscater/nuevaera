@@ -10,7 +10,6 @@ class SucursalStock extends Model
     use HasFactory;
 
     protected $fillable = [
-        "sucursal_id",
         "producto_id",
         "stock_actual",
     ];

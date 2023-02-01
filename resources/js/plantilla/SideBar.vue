@@ -1,11 +1,11 @@
 <template>
     <!-- Main Sidebar Container -->
-    <aside class="main-sidebar sidebar-dark-primary elevation-4">
+    <aside class="main-sidebar sidebar-dark-warning elevation-4">
         <!-- Brand Logo -->
         <router-link
             exact
             :to="{ name: 'inicio' }"
-            class="brand-link bg-primary"
+            class="brand-link bg-warning"
         >
             <img
                 :src="configuracion.path_image"
@@ -80,9 +80,10 @@
                         </router-link>
                     </li>
                     <li
-                        class="nav-header bg-navy"
+                        class="nav-header bg-primary"
                         v-if="
                             permisos.includes('orden_ventas.index') ||
+                            permisos.includes('creditos.index') ||
                             permisos.includes('devolucions.index') ||
                             permisos.includes('ingreso_productos.index') ||
                             permisos.includes('salida_productos.index') ||
@@ -101,6 +102,18 @@
                         >
                             <i class="nav-icon fas fa-clipboard-list"></i>
                             <p>Orden de Ventas</p>
+                        </router-link>
+                    </li>
+                    <li
+                        class="nav-item"
+                        v-if="permisos.includes('creditos.index')"
+                    >
+                        <router-link
+                            :to="{ name: 'creditos.index' }"
+                            class="nav-link"
+                        >
+                            <i class="nav-icon fa fa-hand-holding-usd"></i>
+                            <p>Créditos</p>
                         </router-link>
                     </li>
                     <li
@@ -154,10 +167,9 @@
                         </router-link>
                     </li>
                     <li
-                        class="nav-header bg-navy"
+                        class="nav-header bg-primary"
                         v-if="
                             permisos.includes('users.index') ||
-                            permisos.includes('sucursals.index') ||
                             permisos.includes('cajas.index') ||
                             permisos.includes('proveedors.index') ||
                             permisos.includes('productos.index') ||
@@ -180,20 +192,6 @@
                         >
                             <i class="nav-icon fas fa-user-friends"></i>
                             <p>Clientes</p>
-                        </router-link>
-                    </li>
-                    <li
-                        class="nav-item"
-                        v-if="permisos.includes('sucursals.index')"
-                    >
-                        <router-link
-                            exact
-                            :to="{ name: 'sucursals.index' }"
-                            class="nav-link"
-                            v-loading.fullscreen.lock="fullscreenLoading"
-                        >
-                            <i class="nav-icon fas fa-building"></i>
-                            <p>Sucursales</p>
                         </router-link>
                     </li>
                     <li
@@ -267,7 +265,7 @@
                         </router-link>
                     </li>
                     <li
-                        class="nav-header bg-navy"
+                        class="nav-header bg-primary"
                         v-if="
                             permisos.includes('reportes.usuarios') ||
                             permisos.includes('reportes.kardex') ||
@@ -325,7 +323,7 @@
                             <p>Stock de productos</p>
                         </router-link>
                     </li>
-                    <li class="nav-header bg-navy">OTRAS OPCIONES</li>
+                    <li class="nav-header bg-primary">OTRAS OPCIONES</li>
                     <li
                         class="nav-item"
                         v-if="permisos.includes('tipo_ingresos.index')"

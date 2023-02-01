@@ -3,6 +3,7 @@
 use App\Http\Controllers\CajaController;
 use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\ConfiguracionController;
+use App\Http\Controllers\CreditoController;
 use App\Http\Controllers\DevolucionController;
 use App\Http\Controllers\GrupoController;
 use App\Http\Controllers\ImportancionAperturaController;
@@ -68,6 +69,7 @@ Route::middleware(['auth'])->group(function () {
 
         // Productos
         Route::get("productos/paginado", [ProductoController::class, 'paginado']);
+        Route::get("productos/verifica_ventas", [ProductoController::class, 'verifica_ventas']);
         Route::get("productos/valida_stock", [ProductoController::class, 'valida_stock']);
         Route::get("productos/productos_sucursal", [ProductoController::class, 'productos_sucursal']);
         Route::get("productos/getStock", [ProductoController::class, 'getStock']);
@@ -114,12 +116,18 @@ Route::middleware(['auth'])->group(function () {
             'index', 'store', 'update', 'destroy', 'show'
         ]);
 
+        // CREDITOS
+        Route::resource('creditos', CreditoController::class)->only([
+            'index', 'store', 'update', 'destroy', 'show'
+        ]);
+
         // Devoluciones
         Route::resource('devolucions', DevolucionController::class)->only([
             'index', 'store', 'update', 'destroy', 'show'
         ]);
 
-        // Devoluciones
+        // Importacion apertura
+        Route::get("importacion_aperturas/verifica_importacion", [ImportancionAperturaController::class, 'verifica_importacion']);
         Route::post("importacion_aperturas/importar_archivo", [ImportancionAperturaController::class, 'importar_archivo']);
         Route::post("importacion_aperturas/actualiza_stock", [ImportancionAperturaController::class, 'actualiza_stock']);
         Route::resource('importacion_aperturas', ImportancionAperturaController::class)->only([

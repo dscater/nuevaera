@@ -8,7 +8,7 @@
     >
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header bg-primary">
+                <div class="modal-header bg-warning">
                     <h4 class="modal-title" v-text="tituloModal"></h4>
                     <button
                         type="button"
@@ -66,36 +66,6 @@
                             <div class="form-group col-md-6">
                                 <label
                                     :class="{
-                                        'text-danger': errors.sucursal_id,
-                                    }"
-                                    >Sucursal*</label
-                                >
-                                <el-select
-                                    placeholder="Sucursal"
-                                    class="w-100"
-                                    :class="{
-                                        'is-invalid': errors.sucursal_id,
-                                    }"
-                                    v-model="caja.sucursal_id"
-                                    filterable
-                                >
-                                    <el-option
-                                        v-for="item in listSucursals"
-                                        :key="item.id"
-                                        :label="item.nombre"
-                                        :value="item.id"
-                                    >
-                                    </el-option>
-                                </el-select>
-                                <span
-                                    class="error invalid-feedback"
-                                    v-if="errors.sucursal_id"
-                                    v-text="errors.sucursal_id[0]"
-                                ></span>
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label
-                                    :class="{
                                         'text-danger': errors.descripcion,
                                     }"
                                     >Descripción</label
@@ -129,8 +99,8 @@
                         Cerrar
                     </button>
                     <el-button
-                        type="primary"
-                        class="bg-primary"
+                        type="warning"
+                        class="bg-warning"
                         :loading="enviando"
                         @click="setRegistroModal()"
                         >{{ textoBoton }}</el-button
@@ -195,19 +165,12 @@ export default {
             bModal: this.muestra_modal,
             enviando: false,
             errors: [],
-            listSucursals: [],
         };
     },
     mounted() {
         this.bModal = this.muestra_modal;
-        this.getSucursals();
     },
     methods: {
-        getSucursals() {
-            axios.get("/admin/sucursals").then((response) => {
-                this.listSucursals = response.data.sucursals;
-            });
-        },
         setRegistroModal() {
             this.enviando = true;
             try {

@@ -23,7 +23,7 @@
                                                     'orden_ventas.create'
                                                 )
                                             "
-                                            class="btn btn-outline-primary bg-lightblue btn-flat btn-block"
+                                            class="btn btn-warning btn-flat btn-block"
                                             :to="{
                                                 name: 'orden_ventas.create',
                                             }"
@@ -142,7 +142,7 @@
                                                                 eliminaOrdenVenta(
                                                                     row.item.id,
                                                                     row.item
-                                                                        .sucursal
+                                                                        .caja
                                                                         .nombre +
                                                                         ' - ' +
                                                                         row.item
@@ -214,11 +214,6 @@ export default {
             showOverlay: false,
             fields: [
                 {
-                    key: "sucursal.nombre",
-                    label: "Sucursal",
-                    sortable: true,
-                },
-                {
                     key: "caja.nombre",
                     label: "Caja",
                     sortable: true,
@@ -229,6 +224,16 @@ export default {
                     sortable: true,
                 },
                 { key: "total", label: "Total", sortable: true },
+                {
+                    key: "tipo_venta",
+                    label: "Tipo",
+                    sortable: true,
+                },
+                {
+                    key: "estado",
+                    label: "Estado",
+                    sortable: true,
+                },
                 {
                     key: "fecha_registro",
                     label: "Fecha de registro",
@@ -293,7 +298,7 @@ export default {
                 title: "¿Quierés eliminar este registro?",
                 html: `<strong>${descripcion}</strong>`,
                 showCancelButton: true,
-                confirmButtonColor: "#05568e",
+                confirmButtonColor: "#ffc107",
                 confirmButtonText: "Si, eliminar",
                 cancelButtonText: "No, cancelar",
                 denyButtonText: `No, cancelar`,

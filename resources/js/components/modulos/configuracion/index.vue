@@ -23,7 +23,7 @@
                                                     'configuracion.edit'
                                                 )
                                             "
-                                            class="btn btn-outline-primary bg-lightblue btn-flat btn-block"
+                                            class="btn btn-warning btn-flat btn-block"
                                             @click="muestra_modal = true"
                                         >
                                             <i class="el-icon-edit-outline"></i>
@@ -143,7 +143,7 @@
         >
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
-                    <div class="modal-header bg-lightblue">
+                    <div class="modal-header bg-warning">
                         <h4 class="modal-title" v-text="tituloModal"></h4>
                         <button
                             type="button"
@@ -400,8 +400,8 @@
                             Cerrar
                         </button>
                         <el-button
-                            type="primary"
-                            class="bg-lightblue"
+                            type="warning"
+                            class="bg-warning"
                             :loading="enviando"
                             @click="setRegistroModal()"
                             >{{ textoBtn }}</el-button
@@ -588,6 +588,6 @@ export default {
 
 <style>
 .el-descriptions-item__cell.el-descriptions-item__label.is-bordered-label {
-    background: var(--principal) !important;
+    background: var(--secundario) !important;
 }
 </style>

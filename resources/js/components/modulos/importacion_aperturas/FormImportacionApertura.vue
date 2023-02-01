@@ -8,7 +8,7 @@
                             :class="{
                                 'text-danger': errors.lugar,
                             }"
-                            >Seleccionar sucursal</label
+                            >Seleccionar lugar</label
                         >
                         <el-select
                             class="w-full d-block"
@@ -16,21 +16,14 @@
                                 'is-invalid': errors.lugar,
                             }"
                             v-model="importacion_apertura.lugar"
+                            @change="detectaImportacion"
                             clearable
-                            :disabled="muestra_importacion"
                         >
                             <el-option
-                                :key="'ALMACEN'"
-                                :value="'ALMACEN'"
-                                :label="'ALMACEN'"
-                                v-if="!existe_importacion_almacen"
-                            >
-                            </el-option>
-                            <el-option
-                                v-for="item in listSucursales"
-                                :key="item.id"
-                                :value="item.id"
-                                :label="item.nombre"
+                                v-for="(item, index) in ['ALMACEN', 'SUCURSAL']"
+                                :key="index"
+                                :value="item"
+                                :label="item"
                             >
                             </el-option>
                         </el-select>
@@ -41,65 +34,56 @@
                         ></span>
                     </div>
                 </div>
-                <div class="row" v-if="!muestra_importacion">
+                <div
+                    class="row"
+                    v-if="
+                        importacion_apertura.cambio_stock == 1 &&
+                        importacion_apertura.lugar != ''
+                    "
+                >
                     <div class="col-md-12">
                         <el-button
-                            type="primary"
-                            class="bg-lightblue btn-block btn-flat"
+                            type="warning"
+                            class="bg-warning btn-block btn-flat"
                             :loading="enviando"
-                            @click="iniciarImportación()"
-                            :disabled="this.importacion_apertura.lugar == ''"
-                            >INICIAR IMPORTACIÓN DE APERTURA</el-button
+                            @click="finalizarImportacion()"
+                            >FINALIZAR IMPORTACIÓN</el-button
                         >
                     </div>
                 </div>
+                <template v-else>
+                    <div
+                        class="row"
+                        v-if="importacion_apertura?.cambio_stock == 0"
+                    >
+                        <div
+                            class="col-md-12 text-center text-gray font-weight-bold text-lg"
+                        >
+                            IMPORTACIÓN FINALIZADA
+                        </div>
+                    </div>
+                </template>
+
                 <div class="row" v-if="muestra_importacion">
                     <div class="col-md-12 contenedor_tabla_productos">
                         <table class="table table-striped tabla_importacion">
                             <thead>
                                 <tr>
-                                    <th>PRODUCTO</th>
-                                    <th>MEDIDA</th>
                                     <th>GRUPO</th>
+                                    <th>MEDIDA</th>
+                                    <th>PRODUCTO</th>
                                     <th>STOCK</th>
                                 </tr>
                             </thead>
                             <tbody id="contenedor_productos">
-                                <tr
+                                <Fila
                                     v-for="(item, index) in listProductos"
                                     :key="index"
-                                >
-                                    <td data-col="Nombre: ">
-                                        {{ item.nombre }}
-                                    </td>
-                                    <td data-col="Medida: ">
-                                        {{ item.medida }}
-                                    </td>
-                                    <td data-col="Grupo: ">
-                                        {{ item.grupo.nombre }}
-                                    </td>
-                                    <td>
-                                        <input
-                                            type="number"
-                                            class="form-control input_stock_importacion"
-                                            v-model="item.cantidad"
-                                            @change="
-                                                enviaCantidad(
-                                                    $event,
-                                                    index,
-                                                    item.id
-                                                )
-                                            "
-                                            @keyup="
-                                                enviaCantidad(
-                                                    $event,
-                                                    index,
-                                                    item.id
-                                                )
-                                            "
-                                        />
-                                    </td>
-                                </tr>
+                                    :o_importacion_apertura="
+                                        importacion_apertura
+                                    "
+                                    :producto="item"
+                                ></Fila>
                             </tbody>
                         </table>
                     </div>
@@ -127,7 +111,11 @@
 </template>
 
 <script>
+import Fila from "./Fila.vue";
 export default {
+    components: {
+        Fila,
+    },
     props: {
         accion: {
             type: String,
@@ -150,13 +138,13 @@ export default {
             producto_id: "",
             cantidad: 1,
             errors: [],
-            listSucursales: [],
             importacion_apertura: {
+                id: 0,
                 lugar: "",
+                cambio_stock: 1,
             },
             listProductos: [],
             muestra_importacion: false,
-            setTimeEnvios: {},
             existe_importacion_almacen: false,
             page: 1,
             sw_scroll: true,
@@ -164,20 +152,29 @@ export default {
         };
     },
     mounted() {
-        this.getSucursales();
-        if (this.user.tipo != "ADMINISTRADOR") {
-            this.importacion_apertura.sucursal_id = this.user.sucursal_id;
-        }
         window.addEventListener("scroll", this.handleScroll);
     },
     methods: {
-        // OBTENER LISTADOS E INFORMACIÓN
-        getSucursales() {
-            axios.get("/admin/sucursals/sin_importacion").then((response) => {
-                this.listSucursales = response.data.sucursals;
-                this.existe_importacion_almacen = response.data.almacen;
-            });
+        detectaImportacion() {
+            window.addEventListener("scroll", this.handleScroll);
+            this.page = 1;
+            this.listProductos = [];
+            axios
+                .get("/admin/importacion_aperturas/verifica_importacion", {
+                    params: {
+                        lugar: this.importacion_apertura.lugar,
+                    },
+                })
+                .then((response) => {
+                    this.muestra_importacion = response.data.sw;
+                    this.importacion_apertura =
+                        response.data.importacion_apertura;
+                    if (this.muestra_importacion) {
+                        this.cargarProductos();
+                    }
+                });
         },
+        // OBTENER LISTADOS E INFORMACIÓN
         cargarProductos() {
             try {
                 axios
@@ -196,6 +193,10 @@ export default {
                             this.sw_scroll = false;
                             this.fin_registros = false;
                         } else {
+                            window.removeEventListener(
+                                "scroll",
+                                this.handleScroll
+                            );
                             this.fin_registros = true;
                         }
                     });
@@ -204,49 +205,23 @@ export default {
                 $state.complete();
             }
         },
-        infiniteHandler($state) {
-            try {
-                this.page = this.page + 1;
-                axios
-                    .get("/admin/productos/paginado", {
-                        params: { page: this.page },
-                    })
-                    .then((response) => {
-                        let nuevos_datos = response.data.productos.data;
-                        if (nuevos_datos.length) {
-                            this.listProductos =
-                                this.listProductos.concat(nuevos_datos);
-                            $state.loaded();
-                        } else {
-                            $state.complete();
-                        }
-                    });
-            } catch (e) {
-                console.error(e);
-                $state.complete();
-            }
-        },
-        iniciarImportación() {
-            let lugar = "ALMACEN";
-            if (this.importacion_apertura.lugar != "ALMACEN") {
-                lugar = this.listSucursales.filter((item) => {
-                    return item.id == this.importacion_apertura.lugar;
-                })[0].nombre;
-            }
-
+        finalizarImportacion() {
             Swal.fire({
-                title: "¿Iniciar importación de apertura?",
-                html: `<div class="alert alert-danger">Esta acción solo se podrá realizar esta única vez</div><div class="text-lg"><strong>Lugar: </strong> ${lugar}</div>`,
+                title: "¿Finalizar importación de apertura?",
+                html: `<strong>Lugar: </strong> ${this.importacion_apertura.lugar}`,
                 showCancelButton: true,
-                confirmButtonColor: "#05568e",
-                confirmButtonText: "Iniciar apertura",
+                confirmButtonColor: "#ffc107",
+                confirmButtonText: "Si, finalizar",
                 cancelButtonText: "Cancelar",
                 denyButtonText: `Cancelar`,
             }).then((result) => {
                 /* Read more about isConfirmed, isDenied below */
                 if (result.isConfirmed) {
                     try {
-                        let url = "/admin/importacion_aperturas";
+                        let url =
+                            "/admin/importacion_aperturas/" +
+                            this.importacion_apertura.id;
+                        this.importacion_apertura["_method"] = "put";
                         axios
                             .post(url, this.importacion_apertura)
                             .then((res) => {
@@ -258,10 +233,8 @@ export default {
                                         showConfirmButton: false,
                                         timer: 2000,
                                     });
-                                    this.cargarProductos();
-                                    setTimeout(() => {
-                                        this.muestra_importacion = true;
-                                    }, 500);
+                                    this.importacion_apertura =
+                                        res.data.importacion_apertura;
                                     this.errors = [];
                                 } else {
                                     Swal.fire({
@@ -304,91 +277,6 @@ export default {
                     }
                 }
             });
-        },
-        enviaCantidad(event, index, id) {
-            let cantidad = 0;
-            clearTimeout(this.setTimeEnvios[index]);
-            if (event.key == "Tab") return false;
-            if (event.target.value != "") {
-                cantidad = event.target.value;
-            }
-            let self = this;
-            this.setTimeEnvios[index] = setTimeout(function () {
-                self.actualizaStock(cantidad, id);
-            }, 700);
-        },
-        // ENVIAR REGISTRO
-        actualizaStock(cantidad, id) {
-            this.enviando = true;
-            try {
-                this.textoBtn = "Enviando...";
-                let url = "/admin/importacion_aperturas/actualiza_stock";
-                if (this.accion == "edit") {
-                    url =
-                        "/admin/importacion_aperturas/" +
-                        this.importacion_apertura.id;
-                    this.importacion_apertura["_method"] = "PUT";
-                    this.importacion_apertura.eliminados = this.eliminados;
-                }
-                axios
-                    .post(url, {
-                        id: id,
-                        lugar: this.importacion_apertura.lugar,
-                        cantidad: cantidad,
-                    })
-                    .then((res) => {
-                        this.enviando = false;
-                        if (res.data.sw) {
-                            // Swal.fire({
-                            //     icon: "success",
-                            //     title: res.data.msj,
-                            //     showConfirmButton: false,
-                            //     timer: 2000,
-                            // });
-                            this.errors = [];
-                        } else {
-                            Swal.fire({
-                                icon: "info",
-                                title: "Atención",
-                                html: res.data.msj,
-                                showConfirmButton: false,
-                                timer: 2000,
-                            });
-                        }
-                    })
-                    .catch((error) => {
-                        this.enviando = false;
-                        if (this.accion == "edit") {
-                            this.textoBtn = "Actualizar";
-                        } else {
-                            this.textoBtn = "Registrar";
-                        }
-                        if (error.response) {
-                            if (error.response.status === 422) {
-                                this.errors = error.response.data.errors;
-                            }
-                            if (
-                                error.response.status === 420 ||
-                                error.response.status === 419 ||
-                                error.response.status === 401
-                            ) {
-                                window.location = "/";
-                            }
-                            if (error.response.status === 500) {
-                                Swal.fire({
-                                    icon: "error",
-                                    title: "Error",
-                                    html: error.response.data.message,
-                                    showConfirmButton: false,
-                                    timer: 2000,
-                                });
-                            }
-                        }
-                    });
-            } catch (e) {
-                this.enviando = false;
-                console.log(e);
-            }
         },
         limpiaImportacionApertura() {
             this.errors = [];

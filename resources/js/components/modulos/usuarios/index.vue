@@ -23,7 +23,7 @@
                                                     'usuarios.create'
                                                 )
                                             "
-                                            class="btn btn-outline-primary bg-primary btn-flat btn-block"
+                                            class="btn btn-warning btn-flat btn-block"
                                             @click="
                                                 abreModal('nuevo');
                                                 limpiaUsuario();
@@ -185,21 +185,13 @@
                                                                 sm="3"
                                                                 class="text-sm-right"
                                                                 ><b
-                                                                    >Sucursal |
-                                                                    Caja:</b
+                                                                    >Caja:</b
                                                                 ></b-col
                                                             >
-                                                            <b-col
-                                                                >{{
-                                                                    row.item
-                                                                        .sucursal
-                                                                        .sucursal
-                                                                        .nombre
-                                                                }}
-                                                                |
+                                                            <b-col>
                                                                 {{
                                                                     row.item
-                                                                        .sucursal
+                                                                        .caja_usuario
                                                                         .caja
                                                                         .nombre
                                                                 }}</b-col
@@ -394,8 +386,7 @@ export default {
             this.oUsuario.tipo = item.tipo ? item.tipo : "";
             this.oUsuario.acceso = item.acceso ? "" + item.acceso : "0";
             if (item.tipo == "CAJA") {
-                this.oUsuario.sucursal_id = item.sucursal.sucursal_id;
-                this.oUsuario.caja_id = item.sucursal.caja_id;
+                this.oUsuario.caja_id = item.caja_usuario.caja_id;
             }
             this.modal_accion = "edit";
             this.muestra_modal = true;
@@ -424,7 +415,7 @@ export default {
                 title: "¿Quierés eliminar este registro?",
                 html: `<strong>${descripcion}</strong>`,
                 showCancelButton: true,
-                confirmButtonColor: "#5398d8",
+                confirmButtonColor: "#ffc107",
                 confirmButtonText: "Si, eliminar",
                 cancelButtonText: "No, cancelar",
                 denyButtonText: `No, cancelar`,

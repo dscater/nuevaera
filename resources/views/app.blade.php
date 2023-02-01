@@ -17,7 +17,7 @@
         @if (Auth::check())
             @if (Auth::user()->tipo == 'CAJA')
                 <App ruta="{{ route('base_path') }}" configuracion="{{ $configuracion->first() }}"
-                    user="{{ Auth::user()->load('sucursal') }}"></App>
+                    user="{{ Auth::user()->load('caja_usuario') }}"></App>
             @else
                 <App ruta="{{ route('base_path') }}" configuracion="{{ $configuracion->first() }}"
                     user="{{ Auth::user() }}"></App>

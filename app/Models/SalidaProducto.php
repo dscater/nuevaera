@@ -10,7 +10,7 @@ class SalidaProducto extends Model
     use HasFactory;
 
     protected $fillable = [
-        "producto_id", "cantidad", "tipo_salida_id", "descripcion",
+        "lugar", "producto_id", "cantidad", "tipo_salida_id", "descripcion",
         "fecha_registro",
     ];
 

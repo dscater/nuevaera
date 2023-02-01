@@ -15,6 +15,7 @@ class CreateIngresoProductosTable extends Migration
     {
         Schema::create('ingreso_productos', function (Blueprint $table) {
             $table->id();
+            $table->string("lugar");
             $table->unsignedBigInteger("producto_id");
             $table->unsignedBigInteger("proveedor_id");
             $table->decimal("precio_compra");

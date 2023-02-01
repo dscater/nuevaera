@@ -8,7 +8,7 @@
     >
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header bg-primary">
+                <div class="modal-header bg-warning">
                     <h4 class="modal-title" v-text="tituloModal"></h4>
                     <button
                         type="button"
@@ -224,8 +224,8 @@
                         Cerrar
                     </button>
                     <el-button
-                        type="primary"
-                        class="bg-primary"
+                        type="warning"
+                        class="bg-warning"
                         :loading="enviando"
                         @click="setRegistroModal()"
                         >{{ textoBoton }}</el-button

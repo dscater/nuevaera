@@ -23,7 +23,7 @@
                                                     'importacion_aperturas.create'
                                                 )
                                             "
-                                            class="btn btn-outline-primary bg-lightblue btn-flat btn-block"
+                                            class="btn btn-warning btn-flat btn-block"
                                             :to="{
                                                 name: 'importacion_aperturas.create',
                                             }"
@@ -98,6 +98,16 @@
                                                 :filter="filter"
                                             >
                                                 <template
+                                                    #cell(cambio_stock)="row"
+                                                >
+                                                    {{
+                                                        row.item.cambio_stock ==
+                                                        1
+                                                            ? "EN PROCESO"
+                                                            : "FINALIZADO"
+                                                    }}
+                                                </template>
+                                                <template
                                                     #cell(fecha_registro)="row"
                                                 >
                                                     {{
@@ -167,8 +177,13 @@ export default {
             showOverlay: false,
             fields: [
                 {
-                    key: "texto_lugar",
+                    key: "lugar",
                     label: "Lugar",
+                    sortable: true,
+                },
+                {
+                    key: "cambio_stock",
+                    label: "Estado",
                     sortable: true,
                 },
                 {

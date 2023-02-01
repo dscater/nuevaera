@@ -54,6 +54,9 @@
                                             <br />
                                             CI/NIT: {{ oOrdenVenta.nit }}
                                             <br />
+                                            Tipo:
+                                            {{ oOrdenVenta.tipo_venta }}
+                                            <br />
                                             Caja:
                                             {{ oOrdenVenta.user?.usuario }}
                                             <br />
@@ -106,7 +109,16 @@
                                                 </tr>
                                             </table>
                                         </div>
-                                        <div class="elemento" v-if="devolucion">
+                                        <div
+                                            class="elemento"
+                                            style="
+                                                border-top: dashed 1px;
+                                                padding-top: 7px;
+                                                marigin-top: 5px;
+                                                font-weight: bold;
+                                            "
+                                            v-if="devolucion"
+                                        >
                                             DEVOLUCIONES
                                         </div>
                                         <div class="cobro" v-if="devolucion">
@@ -148,7 +160,7 @@
                                 <div class="row">
                                     <div class="col-md-12">
                                         <button
-                                            class="btn btn-primary btn-block btn-flat"
+                                            class="btn btn-warning btn-block btn-flat"
                                             id="btnImprimir"
                                             @click="imrpimirContenedor"
                                         >
@@ -157,7 +169,7 @@
                                     </div>
                                     <div class="col-md-12">
                                         <router-link
-                                            class="btn btn-outline-primary mt-2 btn-flat mb-1 btn-block"
+                                            class="btn btn-outline-warning mt-2 btn-flat mb-1 btn-block"
                                             :to="{
                                                 name: 'orden_ventas.edit',
                                                 params: {

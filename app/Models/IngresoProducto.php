@@ -10,7 +10,7 @@ class IngresoProducto extends Model
     use HasFactory;
 
     protected $fillable = [
-        "producto_id", "proveedor_id", "precio_compra", "cantidad", "tipo_ingreso_id", "descripcion", "fecha_registro",
+        "lugar", "producto_id", "proveedor_id", "precio_compra", "cantidad", "tipo_ingreso_id", "descripcion", "fecha_registro",
     ];
 
     protected $appends = ["nombre_producto"];

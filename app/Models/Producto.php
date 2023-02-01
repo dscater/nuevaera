@@ -15,6 +15,8 @@ class Producto extends Model
         "fecha_registro",
     ];
 
+    protected $appends = ["total_stock"];
+
     public function grupo()
     {
         return $this->belongsTo(Grupo::class, 'grupo_id');
@@ -32,11 +34,31 @@ class Producto extends Model
 
     public function stock_sucursal()
     {
-        return $this->hasMany(SucursalStock::class, 'producto_id');
+        return $this->hasOne(SucursalStock::class, 'producto_id');
+    }
+
+    public function getTotalStockAttribute()
+    {
+        $stock_almacen = $this->stock_almacen;
+        $stock_sucursal = $this->stock_sucursal;
+
+        if (!$stock_almacen) {
+            $stock_almacen = $this->stock_almacen()->create([
+                "stock_actual" => 0,
+            ]);
+        }
+        if (!$stock_sucursal) {
+            $stock_sucursal = $this->stock_sucursal()->create([
+                "stock_actual" => 0,
+            ]);
+        }
+
+        $total_stock = (float)$stock_almacen->stock_actual + (float)$stock_sucursal->stock_actual;
+        return $total_stock;
     }
 
     // FUNCIONES PARA INCREMETAR Y DECREMENTAR EL STOCK
-    public static function incrementarStock($producto, $cantidad, $lugar, $lugar_id = 0)
+    public static function incrementarStock($producto, $cantidad, $lugar)
     {
         if ($lugar == 'ALMACEN') {
             if (!$producto->almacen) {
@@ -48,10 +70,9 @@ class Producto extends Model
                 $producto->almacen->save();
             }
         } else {
-            $stock_sucursal = SucursalStock::where("producto_id", $producto->id)->where("sucursal_id", $lugar_id)->get()->first();
+            $stock_sucursal = $producto->stock_sucursal;
             if (!$stock_sucursal) {
                 $producto->stock_sucursal()->create([
-                    "sucursal_id" => $lugar_id,
                     "stock_actual" => $cantidad
                 ]);
             } else {
@@ -61,14 +82,14 @@ class Producto extends Model
         }
         return true;
     }
-    public static function decrementarStock($producto, $cantidad, $lugar, $lugar_id = 0)
+    public static function decrementarStock($producto, $cantidad, $lugar)
     {
         if ($producto->descontar_stock == 'SI') {
             if ($lugar == 'ALMACEN') {
                 $producto->almacen->stock_actual = (float)$producto->almacen->stock_actual - $cantidad;
                 $producto->almacen->save();
             } else {
-                $stock_sucursal = $producto->stock_sucursal()->where("sucursal_id", $lugar_id)->get()->first();
+                $stock_sucursal = $producto->stock_sucursal;
                 $stock_sucursal->stock_actual = (float)$stock_sucursal->stock_actual - $cantidad;
                 $stock_sucursal->save();
             }

@@ -23,7 +23,7 @@
                                                     'cajas.create'
                                                 )
                                             "
-                                            class="btn btn-outline-primary bg-primary btn-flat btn-block"
+                                            class="btn btn-warning btn-flat btn-block"
                                             @click="
                                                 abreModal('nuevo');
                                                 limpiaCaja();
@@ -84,13 +84,6 @@
                                                 empty-filtered-text="Sin resultados"
                                                 :filter="filter"
                                             >
-                                                <template
-                                                    #cell(sucursal_id)="row"
-                                                >
-                                                    {{
-                                                        row.item.sucursal.nombre
-                                                    }}
-                                                </template>
                                                 <template
                                                     #cell(fecha_registro)="row"
                                                 >
@@ -209,7 +202,6 @@ export default {
                     sortable: true,
                 },
                 { key: "nombre", label: "Nombre", sortable: true },
-                { key: "sucursal_id", label: "Sucursal", sortable: true },
                 { key: "descripcion", label: "Descripción", sortable: true },
                 {
                     key: "fecha_registro",
@@ -286,7 +278,7 @@ export default {
                 title: "¿Quierés eliminar este registro?",
                 html: `<strong>${descripcion}</strong>`,
                 showCancelButton: true,
-                confirmButtonColor: "#5398d8",
+                confirmButtonColor: "#ffc107",
                 confirmButtonText: "Si, eliminar",
                 cancelButtonText: "No, cancelar",
                 denyButtonText: `No, cancelar`,

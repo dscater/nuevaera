@@ -61,8 +61,8 @@ class User extends Authenticatable
         return asset('imgs/users/default.png');
     }
 
-    public function sucursal()
+    public function caja_usuario()
     {
-        return $this->hasOne(SucursalUsuario::class, 'user_id');
+        return $this->hasOne(CajaUsuario::class, 'user_id');
     }
 }

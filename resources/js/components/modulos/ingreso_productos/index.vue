@@ -23,7 +23,7 @@
                                                     'ingreso_productos.create'
                                                 )
                                             "
-                                            class="btn btn-outline-primary bg-primary btn-flat btn-block"
+                                            class="btn btn-warning btn-flat btn-block"
                                             @click="
                                                 abreModal('nuevo');
                                                 limpiaIngresoProducto();
@@ -84,13 +84,6 @@
                                                 empty-filtered-text="Sin resultados"
                                                 :filter="filter"
                                             >
-                                                <template
-                                                    #cell(sucursal_id)="row"
-                                                >
-                                                    {{
-                                                        row.item.sucursal.nombre
-                                                    }}
-                                                </template>
                                                 <template
                                                     #cell(fecha_registro)="row"
                                                 >
@@ -211,6 +204,7 @@ export default {
             listRegistros: [],
             showOverlay: false,
             fields: [
+                { key: "lugar", label: "Lugar", sortable: true },
                 { key: "producto.nombre", label: "Producto", sortable: true },
                 { key: "proveedor.nombre", label: "Proveedor", sortable: true },
                 { key: "precio_compra", label: "Precio", sortable: true },
@@ -237,6 +231,7 @@ export default {
             modal_accion: "nuevo",
             oIngresoProducto: {
                 id: 0,
+                lugar: "",
                 producto_id: "",
                 proveedor_id: "",
                 precio_compra: "",
@@ -266,6 +261,7 @@ export default {
         // Seleccionar Opciones de Tabla
         editarRegistro(item) {
             this.oIngresoProducto.id = item.id;
+            this.oIngresoProducto.lugar = item.lugar ? item.lugar : "";
             this.oIngresoProducto.producto_id = item.producto_id
                 ? item.producto_id
                 : "";
@@ -313,7 +309,7 @@ export default {
                 title: "¿Quierés eliminar este registro?",
                 html: `<strong>${descripcion}</strong>`,
                 showCancelButton: true,
-                confirmButtonColor: "#5398d8",
+                confirmButtonColor: "#ffc107",
                 confirmButtonText: "Si, eliminar",
                 cancelButtonText: "No, cancelar",
                 denyButtonText: `No, cancelar`,
@@ -373,6 +369,7 @@ export default {
             this.currentPage = 1;
         },
         limpiaIngresoProducto() {
+            this.oIngresoProducto.lugar = "";
             this.oIngresoProducto.producto_id = "";
             this.oIngresoProducto.proveedor_id = "";
             this.oIngresoProducto.precio_compra = "";

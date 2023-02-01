@@ -23,7 +23,7 @@
                                                     'devolucions.create'
                                                 )
                                             "
-                                            class="btn btn-outline-primary bg-lightblue btn-flat btn-block"
+                                            class="btn btn-warning btn-flat btn-block"
                                             :to="{
                                                 name: 'devolucions.create',
                                             }"
@@ -288,7 +288,7 @@ export default {
                 title: "¿Quierés eliminar este registro?",
                 html: `<strong>${descripcion}</strong>`,
                 showCancelButton: true,
-                confirmButtonColor: "#05568e",
+                confirmButtonColor: "#ffc107",
                 confirmButtonText: "Si, eliminar",
                 cancelButtonText: "No, cancelar",
                 denyButtonText: `No, cancelar`,

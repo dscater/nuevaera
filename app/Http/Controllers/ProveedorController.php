@@ -33,7 +33,7 @@ class ProveedorController extends Controller
             $request["fecha_registro"] = date("Y-m-d");
             $nuevo_proveedor = Proveedor::create(array_map('mb_strtoupper', $request->all()));
 
-            $datos_original =  implode("|", $nuevo_proveedor->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($nuevo_proveedor, "proveedors");
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
                 'accion' => 'CREACIÓN',
@@ -65,10 +65,10 @@ class ProveedorController extends Controller
 
         DB::beginTransaction();
         try {
-            $datos_original =  implode("|", $proveedor->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($proveedor, "proveedors");
             $proveedor->update(array_map('mb_strtoupper', $request->all()));
 
-            $datos_nuevo =  implode("|", $proveedor->attributesToArray());
+            $datos_nuevo = HistorialAccion::getDetalleRegistro($proveedor, "proveedors");
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
                 'accion' => 'MODIFICACIÓN',
@@ -107,7 +107,7 @@ class ProveedorController extends Controller
     {
         DB::beginTransaction();
         try {
-            $datos_original =  implode("|", $proveedor->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($proveedor, "proveedors");
             $proveedor->delete();
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,

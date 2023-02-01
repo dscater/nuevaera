@@ -35,7 +35,7 @@ class ClienteController extends Controller
             $request["fecha_registro"] = date("Y-m-d");
             $nuevo_cliente = Cliente::create(array_map('mb_strtoupper', $request->all()));
 
-            $datos_original =  implode("|", $nuevo_cliente->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($nuevo_cliente, "clientes");
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
                 'accion' => 'CREACIÓN',
@@ -67,10 +67,10 @@ class ClienteController extends Controller
 
         DB::beginTransaction();
         try {
-            $datos_original =  implode("|", $cliente->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($cliente, "clientes");
             $cliente->update(array_map('mb_strtoupper', $request->all()));
 
-            $datos_nuevo =  implode("|", $cliente->attributesToArray());
+            $datos_nuevo = HistorialAccion::getDetalleRegistro($cliente, "clientes");
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
                 'accion' => 'MODIFICACIÓN',
@@ -109,7 +109,7 @@ class ClienteController extends Controller
     {
         DB::beginTransaction();
         try {
-            $datos_original =  implode("|", $cliente->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($cliente, "clientes");
             $cliente->delete();
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,

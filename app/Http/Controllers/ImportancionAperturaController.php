@@ -38,14 +38,12 @@ class ImportancionAperturaController extends Controller
             if ($request->lugar == 'ALMACEN') {
                 $datos = [
                     "lugar" => "ALMACEN",
-                    "registro_id" => 0,
                     "total_registros" => 0,
                     "cambio_stock" => 1,
                 ];
             } else {
                 $datos = [
                     "lugar" => "SUCURSAL",
-                    "registro_id" => $request->lugar,
                     "total_registros" => 0,
                     "cambio_stock" => 1,
                 ];
@@ -53,7 +51,7 @@ class ImportancionAperturaController extends Controller
 
             $nueva_importacion_apertura = ImportancionApertura::create($datos);
 
-            $datos_original =  implode("|", $nueva_importacion_apertura->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($nueva_importacion_apertura, "importancion_aperturas");
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
                 'accion' => 'IMPORTACIÓN',
@@ -86,6 +84,33 @@ class ImportancionAperturaController extends Controller
         ], 200);
     }
 
+
+    public function update(ImportancionApertura $importacion_apertura)
+    {
+        $importacion_apertura->update(["cambio_stock" => 0]);
+        return response()->JSON([
+            'sw' => true,
+            'importacion_apertura' => $importacion_apertura,
+            'msj' => 'Importación finalizada con éxito',
+        ], 200);
+    }
+
+    public function verifica_importacion(Request $request)
+    {
+        $existe = ImportancionApertura::where("lugar", $request->lugar)->get()->first();
+        if (!$existe) {
+            $existe = ImportancionApertura::create([
+                "lugar" => $request->lugar,
+                "total_registros" => count(Producto::all()),
+                "cambio_stock" => 1,
+            ]);
+        }
+        return response()->JSON([
+            "sw" => true,
+            "importacion_apertura" => $existe
+        ]);
+    }
+
     public function actualiza_stock(Request $request)
     {
         DB::beginTransaction();
@@ -103,7 +128,6 @@ class ImportancionAperturaController extends Controller
                     $monto = (float)$cantidad * (float)$producto->precio;
                     KardexProducto::create([
                         'lugar' => "ALMACEN",
-                        'lugar_id' => 0,
                         'tipo_registro' => "APERTURA ALMACEN", //INGRESO, EGRESO, VENTA, COMPRA,etc...
                         'registro_id' => $existe->id,
                         'producto_id' => $producto->id,
@@ -123,14 +147,12 @@ class ImportancionAperturaController extends Controller
                     ]);
                     $monto = (float)$cantidad * (float)$producto->precio;
                     $kardex = KardexProducto::where("lugar", "ALMACEN")
-                        ->where("lugar_id", 0)
                         ->where("producto_id", $producto->id)
                         ->where("tipo_registro", "APERTURA ALMACEN")
                         ->get()->first();
                     if ($kardex) {
                         $kardex->update([
                             'lugar' => "ALMACEN",
-                            'lugar_id' => 0,
                             'tipo_registro' => "APERTURA ALMACEN", //INGRESO, EGRESO, VENTA, COMPRA,etc...
                             'registro_id' => $existe->id,
                             'producto_id' => $producto->id,
@@ -147,7 +169,6 @@ class ImportancionAperturaController extends Controller
                     } else {
                         KardexProducto::create([
                             'lugar' => "ALMACEN",
-                            'lugar_id' => 0,
                             'tipo_registro' => "APERTURA ALMACEN", //INGRESO, EGRESO, VENTA, COMPRA,etc...
                             'registro_id' => $existe->id,
                             'producto_id' => $producto->id,
@@ -164,17 +185,15 @@ class ImportancionAperturaController extends Controller
                     }
                 }
             } else {
-                $existe = SucursalStock::where("producto_id", $producto->id)->where("sucursal_id", $request->lugar)->get()->first();
+                $existe = SucursalStock::where("producto_id", $producto->id)->get()->first();
                 if (!$existe) {
                     $existe = SucursalStock::create([
                         "producto_id" => $producto->id,
-                        "sucursal_id" => $request->lugar,
                         "stock_actual" => $cantidad,
                     ]);
                     $monto = (float)$cantidad * (float)$producto->precio;
                     KardexProducto::create([
                         'lugar' => "SUCURSAL",
-                        'lugar_id' => $request->lugar,
                         'tipo_registro' => "APERTURA SUCURSAL", //INGRESO, EGRESO, VENTA, COMPRA,etc...
                         'registro_id' => $existe->id,
                         'producto_id' => $producto->id,
@@ -194,14 +213,12 @@ class ImportancionAperturaController extends Controller
                     ]);
                     $monto = (float)$cantidad * (float)$producto->precio;
                     $kardex = KardexProducto::where("lugar", "SUCURSAL")
-                        ->where("lugar_id", $request->lugar)
                         ->where("producto_id", $producto->id)
                         ->where("tipo_registro", "APERTURA SUCURSAL")
                         ->get()->first();
                     if ($kardex) {
                         $kardex->update([
                             'lugar' => "SUCURSAL",
-                            'lugar_id' => $request->lugar,
                             'tipo_registro' => "APERTURA SUCURSAL", //INGRESO, EGRESO, VENTA, COMPRA,etc...
                             'registro_id' => $existe->id,
                             'producto_id' => $producto->id,
@@ -218,7 +235,6 @@ class ImportancionAperturaController extends Controller
                     } else {
                         KardexProducto::create([
                             'lugar' => "SUCURSAL",
-                            'lugar_id' => $request->lugar,
                             'tipo_registro' => "APERTURA SUCURSAL", //INGRESO, EGRESO, VENTA, COMPRA,etc...
                             'registro_id' => $existe->id,
                             'producto_id' => $producto->id,
@@ -304,7 +320,7 @@ class ImportancionAperturaController extends Controller
                     ]);
                 }
                 Producto::create([
-                    "codigo" => $spreadsheet->getSheet(0)->getCell('A' . $fila)->getValue() != "" ? $spreadsheet->getSheet(0)->getCell('A' . $fila)->getValue() : "",
+                    "codigo" => $spreadsheet->getSheet(0)->getCell('C' . $fila)->getValue() != "" ? $spreadsheet->getSheet(0)->getCell('C' . $fila)->getValue() : "0",
                     "nombre" => $spreadsheet->getSheet(0)->getCell('E' . $fila)->getValue() != "" ? $spreadsheet->getSheet(0)->getCell('E' . $fila)->getValue() : "",
                     "medida" => $spreadsheet->getSheet(0)->getCell('F' . $fila)->getValue() != "" ? $spreadsheet->getSheet(0)->getCell('F' . $fila)->getValue() : "",
                     "grupo_id" => $existe_grupo->id,

@@ -8,7 +8,7 @@
     >
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header bg-primary">
+                <div class="modal-header bg-warning">
                     <h4 class="modal-title" v-text="tituloModal"></h4>
                     <button
                         type="button"
@@ -230,43 +230,6 @@
                             >
                                 <label
                                     :class="{
-                                        'text-danger': errors.sucursal_id,
-                                    }"
-                                    >Sucursal*</label
-                                >
-                                <el-select
-                                    class="w-100 d-block"
-                                    :class="{
-                                        'is-invalid': errors.sucursal_id,
-                                    }"
-                                    v-model="usuario.sucursal_id"
-                                    clearable
-                                    @change="
-                                        listCajas = [];
-                                        usuario.caja_id = '';
-                                        getSucursalCajas();
-                                    "
-                                >
-                                    <el-option
-                                        v-for="(item, index) in listSucursals"
-                                        :key="index"
-                                        :value="item.id"
-                                        :label="item.nombre"
-                                    >
-                                    </el-option>
-                                </el-select>
-                                <span
-                                    class="error invalid-feedback"
-                                    v-if="errors.sucursal_id"
-                                    v-text="errors.sucursal_id[0]"
-                                ></span>
-                            </div>
-                            <div
-                                class="form-group col-md-6"
-                                v-if="usuario.tipo == 'CAJA'"
-                            >
-                                <label
-                                    :class="{
                                         'text-danger': errors.caja_id,
                                     }"
                                     >Caja*</label
@@ -355,8 +318,8 @@
                         Cerrar
                     </button>
                     <el-button
-                        type="primary"
-                        class="bg-primary"
+                        type="warning"
+                        class="bg-warning"
                         :loading="enviando"
                         @click="setRegistroModal()"
                         >{{ textoBoton }}</el-button
@@ -403,7 +366,6 @@ export default {
             this.errors = [];
             if (newVal) {
                 this.$refs.input_file.value = null;
-                this.getSucursalCajas();
                 this.bModal = true;
             } else {
                 this.bModal = false;
@@ -443,29 +405,19 @@ export default {
                 { value: "BN", label: "Beni" },
             ],
             listTipos: ["ADMINISTRADOR", "SUPERVISOR", "CAJA"],
-            listSucursals: [],
             listCajas: [],
             errors: [],
         };
     },
     mounted() {
         this.bModal = this.muestra_modal;
-        this.getSucursals();
+        this.getCajas();
     },
     methods: {
-        getSucursals() {
-            axios.get("/admin/sucursals").then((response) => {
-                this.listSucursals = response.data.sucursals;
+        getCajas() {
+            axios.get("/admin/cajas").then((response) => {
+                this.listCajas = response.data.cajas;
             });
-        },
-        getSucursalCajas() {
-            axios
-                .get("/admin/sucursals/getCajas", {
-                    params: { id: this.usuario.sucursal_id },
-                })
-                .then((response) => {
-                    this.listCajas = response.data;
-                });
         },
         setRegistroModal() {
             this.enviando = true;
@@ -518,10 +470,6 @@ export default {
                 formdata.append(
                     "tipo",
                     this.usuario.tipo ? this.usuario.tipo : ""
-                );
-                formdata.append(
-                    "sucursal_id",
-                    this.usuario.sucursal_id ? this.usuario.sucursal_id : ""
                 );
                 formdata.append(
                     "caja_id",

@@ -2,7 +2,7 @@
     <div class="login-page">
         <div class="login-box">
             <!-- /.login-logo -->
-            <div class="card border border-primary">
+            <div class="card border border-warning">
                 <div class="card-header text-center">
                     <img :src="logo" alt="Logo" />
                     <router-link :to="{ name: 'login' }" class="h1 text-white"
@@ -25,7 +25,7 @@
                                 autofocus
                             />
                             <div class="input-group-append">
-                                <div class="input-group-text bg-primary">
+                                <div class="input-group-text bg-warning">
                                     <span class="fas fa-user"></span>
                                 </div>
                             </div>
@@ -39,7 +39,7 @@
                                 @keypress.enter="login()"
                             />
                             <div class="input-group-append">
-                                <div class="input-group-text bg-primary">
+                                <div class="input-group-text bg-warning">
                                     <span class="fas fa-lock"></span>
                                 </div>
                             </div>
@@ -59,7 +59,7 @@
                             <div class="col-12">
                                 <button
                                     type="button"
-                                    class="btn btn-primary btn-block btn-flat font-weight-bold"
+                                    class="btn btn-warning btn-block btn-flat font-weight-bold"
                                     @click.prevent="login()"
                                     v-loading.fullscreen.lock="
                                         fullscreenLoading
@@ -144,10 +144,10 @@ export default {
 
 .login-page .card {
     border-radius: 0px;
-    box-shadow: 0px 0px 1px 1px var(--principal);
+    box-shadow: 0px 0px 1px 1px var(--secundario);
     background: var(--transparente);
 }
 .login-page .card-header {
-    border-bottom: solid 1px var(--principal);
+    border-bottom: solid 1px var(--secundario);
 }
 </style>

@@ -8,7 +8,7 @@
     >
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
-                <div class="modal-header bg-primary">
+                <div class="modal-header bg-warning">
                     <h4 class="modal-title" v-text="tituloModal"></h4>
                     <button
                         type="button"
@@ -23,6 +23,56 @@
                 <div class="modal-body">
                     <form>
                         <div class="row">
+                            <div
+                                class="form-group col-md-6"
+                                v-if="accion != 'edit'"
+                            >
+                                <label
+                                    :class="{
+                                        'text-danger': errors.lugar,
+                                    }"
+                                    >Seleccionar lugar*</label
+                                >
+                                <el-select
+                                    placeholder="Proveedor"
+                                    class="w-100"
+                                    :class="{
+                                        'is-invalid': errors.lugar,
+                                    }"
+                                    v-model="ingreso_producto.lugar"
+                                    filterable
+                                >
+                                    <el-option
+                                        v-for="(item, index) in [
+                                            'ALMACEN',
+                                            'SUCURSAL',
+                                        ]"
+                                        :key="index"
+                                        :label="item"
+                                        :value="item"
+                                    >
+                                    </el-option>
+                                </el-select>
+                                <span
+                                    class="error invalid-feedback"
+                                    v-if="errors.lugar"
+                                    v-text="errors.lugar[0]"
+                                ></span>
+                            </div>
+                            <div class="form-group col-md-6" v-else>
+                                <label
+                                    :class="{
+                                        'text-danger': errors.lugar,
+                                    }"
+                                    >Lugar*</label
+                                >
+                                <input
+                                    type="readonly"
+                                    class="form-control"
+                                    readonly
+                                    v-model="ingreso_producto.lugar"
+                                />
+                            </div>
                             <div
                                 class="form-group col-md-6"
                                 v-if="accion != 'edit'"
@@ -223,8 +273,8 @@
                         Cerrar
                     </button>
                     <el-button
-                        type="primary"
-                        class="bg-primary"
+                        type="warning"
+                        class="bg-warning"
                         :loading="enviando"
                         @click="setRegistroModal()"
                         >{{ textoBoton }}</el-button
@@ -250,6 +300,7 @@ export default {
             type: Object,
             default: {
                 id: 0,
+                lugar: "",
                 producto_id: "",
                 proveedor_id: "",
                 precio_compra: "",
@@ -326,6 +377,12 @@ export default {
                     },
                 };
                 let formdata = new FormData();
+                formdata.append(
+                    "lugar",
+                    this.ingreso_producto.lugar
+                        ? this.ingreso_producto.lugar
+                        : ""
+                );
                 formdata.append(
                     "producto_id",
                     this.ingreso_producto.producto_id
@@ -437,6 +494,7 @@ export default {
         },
         limpiaIngresoProducto() {
             this.errors = [];
+            this.ingreso_producto.lugar = "";
             this.ingreso_producto.producto_id = "";
             this.ingreso_producto.proveedor_id = "";
             this.ingreso_producto.precio_compra = "";

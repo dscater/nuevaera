@@ -10,12 +10,7 @@ class Caja extends Model
     use HasFactory;
 
     protected $fillable = [
-        "codigo", "nombre", "sucursal_id", "descripcion",
+        "codigo", "nombre", "descripcion",
         "fecha_registro",
     ];
-
-    public function sucursal()
-    {
-        return $this->belongsTo(Sucursal::class, 'sucursal_id');
-    }
 }

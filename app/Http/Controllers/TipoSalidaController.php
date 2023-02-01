@@ -35,7 +35,7 @@ class TipoSalidaController extends Controller
             $request["fecha_registro"] = date("Y-m-d");
             $nuevo_tipo_salida = TipoSalida::create(array_map('mb_strtoupper', $request->all()));
 
-            $datos_original =  implode("|", $nuevo_tipo_salida->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($nuevo_tipo_salida, "tipo_salidas");
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
                 'accion' => 'CREACIÓN',
@@ -67,10 +67,10 @@ class TipoSalidaController extends Controller
 
         DB::beginTransaction();
         try {
-            $datos_original =  implode("|", $tipo_salida->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($tipo_salida, "tipo_salidas");
             $tipo_salida->update(array_map('mb_strtoupper', $request->all()));
 
-            $datos_nuevo =  implode("|", $tipo_salida->attributesToArray());
+            $datos_nuevo = HistorialAccion::getDetalleRegistro($tipo_salida, "tipo_salidas");
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
                 'accion' => 'MODIFICACIÓN',
@@ -114,7 +114,7 @@ class TipoSalidaController extends Controller
                 throw new Exception('No es posible eliminar el registro debido a que existen registros que lo utilizan');
             }
 
-            $datos_original =  implode("|", $tipo_salida->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($tipo_salida, "tipo_salidas");
             $tipo_salida->delete();
 
             HistorialAccion::create([

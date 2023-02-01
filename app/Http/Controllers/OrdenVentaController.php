@@ -21,24 +21,24 @@ use Illuminate\Support\Facades\Log;
 class OrdenVentaController extends Controller
 {
     public $validacion = [
-        "sucursal_id" => "required",
         "caja_id" => "required",
         "cliente_id" => "required",
+        "tipo_venta" => "required",
     ];
 
     public function index()
     {
-        $orden_ventas = OrdenVenta::with("sucursal")->with("caja")->with("cliente")->get();
+        $orden_ventas = OrdenVenta::with("caja")->with("cliente")->get();
         if (Auth::user()->tipo == 'CAJA') {
-            $orden_ventas = OrdenVenta::with("sucursal")->with("caja")->with("cliente")->where("sucursal_id", Auth::user()->sucursal->sucursal_id)->get();
+            $orden_ventas = OrdenVenta::with("caja")->with("cliente")->where("caja_id", Auth::user()->caja_usuario->caja_id)->get();
         }
 
         return response()->JSON(["orden_ventas" => $orden_ventas, "total" => count($orden_ventas)]);
     }
 
-    public function orden_ventas_sucursal(Request $request)
+    public function orden_ventas_caja(Request $request)
     {
-        $orden_ventas = OrdenVenta::with("sucursal")->where("sucursal_id", $request->id)->get();
+        $orden_ventas = OrdenVenta::where("caja_id", $request->id)->get();
         return response()->JSON($orden_ventas);
     }
 
@@ -49,8 +49,9 @@ class OrdenVentaController extends Controller
         DB::beginTransaction();
         try {
             $request["fecha_registro"] = date("Y-m-d");
+            $request["estado"] = "CANCELADO";
             $request["user_id"] = Auth::user()->id;
-            $orden_venta = OrdenVenta::create(array_map("mb_strtoupper", $request->except("detalle_ordens", "cliente", "sucursal", "user")));
+            $orden_venta = OrdenVenta::create(array_map("mb_strtoupper", $request->except("caja", "detalle_ordens", "cliente", "user")));
 
             $detalle_ordens = $request->detalle_ordens;
             foreach ($detalle_ordens as $value) {
@@ -63,10 +64,11 @@ class OrdenVentaController extends Controller
                     "subtotal" => $value["subtotal"],
                 ]);
                 // registrar kardex
-                KardexProducto::registroEgreso("SUCURSAL", $orden_venta->sucursal_id, "VENTA", $dv->id, $dv->producto, $dv->cantidad, $dv->precio, "VENTA DE PRODUCTO");
+                KardexProducto::registroEgreso("SUCURSAL", "VENTA", $dv->id, $dv->producto, $dv->cantidad, $dv->precio, "VENTA DE PRODUCTO");
             }
 
-            $datos_original =  implode("|", $orden_venta->attributesToArray());
+
+            $datos_original = HistorialAccion::getDetalleRegistro($orden_venta, "orden_ventas");
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
                 'accion' => 'CREACIÓN',
@@ -76,6 +78,13 @@ class OrdenVentaController extends Controller
                 'fecha' => date('Y-m-d'),
                 'hora' => date('H:i:s')
             ]);
+
+
+            if ($orden_venta->tipo_venta == 'A CRÉDITO') {
+                $orden_venta->credito()->create(["estado" => "PENDIENTE"]);
+                $orden_venta->estado = "PENDIENTE";
+                $orden_venta->save();
+            }
 
             DB::commit();
             return response()->JSON(["sw" => true, "orden_venta" => $orden_venta, "id" => $orden_venta->id, "msj" => "El registro se almacenó correctamente"]);
@@ -90,7 +99,7 @@ class OrdenVentaController extends Controller
 
     public function show(OrdenVenta $orden_venta)
     {
-        return response()->JSON($orden_venta->load("user")->load("sucursal")->load("cliente")->load("detalle_ordens.producto"));
+        return response()->JSON($orden_venta->load("user")->load("caja")->load("cliente")->load("detalle_ordens.producto"));
     }
 
     public function update(OrdenVenta $orden_venta, Request $request)
@@ -99,9 +108,10 @@ class OrdenVentaController extends Controller
 
         DB::beginTransaction();
         try {
-            $datos_original =  implode("|", $orden_venta->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($orden_venta, "orden_ventas");
 
-            $orden_venta->update(array_map("mb_strtoupper", $request->except("sucursal", "detalle_ordens", "eliminados", "cliente", "user")));
+            $request["estado"] = "CANCELADO";
+            $orden_venta->update(array_map("mb_strtoupper", $request->except("caja", "detalle_ordens", "eliminados", "cliente", "user")));
             $detalle_ordens = $request->detalle_ordens;
             foreach ($detalle_ordens as $value) {
                 if ($value["id"] == 0) {
@@ -114,17 +124,17 @@ class OrdenVentaController extends Controller
                         "subtotal" => $value["subtotal"],
                     ]);
                     // registrar kardex
-                    KardexProducto::registroEgreso("SUCURSAL", $orden_venta->sucursal_id, "VENTA", $dv->id, $dv->producto, $dv->cantidad, $dv->precio, "VENTA DE PRODUCTO");
+                    KardexProducto::registroEgreso("SUCURSAL", "VENTA", $dv->id, $dv->producto, $dv->cantidad, $dv->precio, "VENTA DE PRODUCTO");
                 } else {
                     $dv = DetalleOrden::find($value["id"]);
 
                     if ($dv->producto->descontar_stock == 'SI') {
                         // incrementar el stock
-                        Producto::incrementarStock($dv->producto, $dv->cantidad, "SUCURSAL", $dv->orden->sucursal_id);
+                        Producto::incrementarStock($dv->producto, $dv->cantidad, "SUCURSAL");
                     }
 
                     // VALIDAR STOCK
-                    $sucursal_stock = SucursalStock::where("sucursal_id", $dv->orden->sucursal_id)->where("producto_id", $dv->producto_id)->get()->first();
+                    $sucursal_stock = SucursalStock::where("producto_id", $dv->producto_id)->get()->first();
                     if ($sucursal_stock->stock_actual < $dv->cantidad) {
                         throw new Exception('No es posible realizar el registro debido a que la cantidad supera al stock disponible ' . $sucursal_stock->stock_actual);
                     }
@@ -139,17 +149,16 @@ class OrdenVentaController extends Controller
                     ]);
 
                     if ($dv->producto->descontar_stock == 'SI') {
-                        Producto::decrementarStock($dv->producto, $dv->cantidad, "SUCURSAL", $dv->orden->sucursal_id);
+                        Producto::decrementarStock($dv->producto, $dv->cantidad, "SUCURSAL");
                     }
                     // actualizar kardex
                     $kardex = KardexProducto::where("lugar", "SUCURSAL")
-                        ->where("lugar_id", $orden_venta->sucursal_id)
                         ->where("producto_id", $dv->producto_id)
                         ->where("tipo_registro", "VENTA")
                         ->where("registro_id", $dv->id)
                         ->get()->first();
 
-                    KardexProducto::actualizaRegistrosKardex($kardex->id, $kardex->producto_id, "SUCURSAL", $orden_venta->sucursal_id);
+                    KardexProducto::actualizaRegistrosKardex($kardex->id, $kardex->producto_id, "SUCURSAL");
                 }
             }
 
@@ -159,7 +168,6 @@ class OrdenVentaController extends Controller
                 $producto = Producto::find($dv->producto_id);
                 // ACTUALIZAR KARDEX
                 $eliminar_kardex = KardexProducto::where("lugar", "SUCURSAL")
-                    ->where("lugar_id", $dv->orden->sucursal_id)
                     ->where("tipo_registro", "VENTA")
                     ->where("registro_id", $dv->id)
                     ->where("producto_id", $dv->producto_id)
@@ -170,7 +178,6 @@ class OrdenVentaController extends Controller
                 $eliminar_kardex->delete();
 
                 $anterior = KardexProducto::where("lugar", "SUCURSAL")
-                    ->where("lugar_id", $dv->orden->sucursal_id)
                     ->where("producto_id", $id_producto)
                     ->where("id", "<", $id_kardex)
                     ->get()
@@ -181,7 +188,6 @@ class OrdenVentaController extends Controller
                 } else {
                     // comprobar si existen registros posteriorres al actualizado
                     $siguiente = KardexProducto::where("lugar", "SUCURSAL")
-                        ->where("lugar_id", $dv->orden->sucursal_id)
                         ->where("producto_id", $id_producto)
                         ->where("id", ">", $id_kardex)
                         ->get()->first();
@@ -191,18 +197,18 @@ class OrdenVentaController extends Controller
 
                 if ($actualiza_desde) {
                     // actualizar a partir de este registro los sgtes. registros
-                    KardexProducto::actualizaRegistrosKardex($actualiza_desde->id, $actualiza_desde->producto_id, "SUCURSAL", $dv->orden->sucursal_id);
+                    KardexProducto::actualizaRegistrosKardex($actualiza_desde->id, $actualiza_desde->producto_id, "SUCURSAL");
                 }
 
                 // incrementar el stock
                 if ($dv->producto->descontar_stock == 'SI') {
-                    Producto::incrementarStock($producto, $dv->cantidad, "SUCURSAL", $dv->orden->sucursal_id);
+                    Producto::incrementarStock($producto, $dv->cantidad, "SUCURSAL");
                 }
 
                 $dv->delete();
             }
 
-            $datos_nuevo =  implode("|", $orden_venta->attributesToArray());
+            $datos_nuevo = HistorialAccion::getDetalleRegistro($orden_venta, "orden_ventas");
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
                 'accion' => 'MODIFICACIÓN',
@@ -213,6 +219,16 @@ class OrdenVentaController extends Controller
                 'fecha' => date('Y-m-d'),
                 'hora' => date('H:i:s')
             ]);
+
+            if ($orden_venta->tipo_venta == 'A CRÉDITO') {
+                $orden_venta->estado = "PENDIENTE";
+                $orden_venta->save();
+                if (!$orden_venta->credito) {
+                    $orden_venta->credito()->create(["estado" => "PENDIENTE"]);
+                } else {
+                    $orden_venta->credito->update(["estado" => "PENDIENTE"]);
+                }
+            }
 
             DB::commit();
             return response()->JSON(["sw" => true, "orden_venta" => $orden_venta, "id" => $orden_venta->id, "msj" => "El registro se actualizó correctamente"]);
@@ -244,7 +260,6 @@ class OrdenVentaController extends Controller
                 $eliminar_kardex->delete();
 
                 $anterior = KardexProducto::where("lugar", "SUCURSAL")
-                    ->where("lugar_id", $dv->orden->sucursal_id)
                     ->where("producto_id", $id_producto)
                     ->where("id", "<", $id_kardex)
                     ->get()
@@ -255,7 +270,6 @@ class OrdenVentaController extends Controller
                 } else {
                     // comprobar si existen registros posteriorres al actualizado
                     $siguiente = KardexProducto::where("lugar", "SUCURSAL")
-                        ->where("lugar_id", $dv->orden->sucursal_id)
                         ->where("producto_id", $id_producto)
                         ->where("id", ">", $id_kardex)
                         ->get()->first();
@@ -265,17 +279,21 @@ class OrdenVentaController extends Controller
 
                 if ($actualiza_desde) {
                     // actualizar a partir de este registro los sgtes. registros
-                    KardexProducto::actualizaRegistrosKardex($actualiza_desde->id, $actualiza_desde->producto_id, "SUCURSAL", $dv->orden->sucursal_id);
+                    KardexProducto::actualizaRegistrosKardex($actualiza_desde->id, $actualiza_desde->producto_id, "SUCURSAL");
                 }
 
                 // incrementar el stock
                 if ($dv->producto->descontar_stock == 'SI') {
-                    Producto::incrementarStock($producto, $dv->cantidad, "SUCURSAL", $dv->orden->sucursal_id);
+                    Producto::incrementarStock($producto, $dv->cantidad, "SUCURSAL");
                 }
 
                 $dv->delete();
             }
-            $datos_original =  implode("|", $orden_venta->attributesToArray());
+            if ($orden_venta->credito) {
+                $orden_venta->credito->delete();
+            }
+
+            $datos_original = HistorialAccion::getDetalleRegistro($orden_venta, "orden_ventas");
             $orden_venta->delete();
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,

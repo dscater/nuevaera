@@ -27,18 +27,18 @@ class DevolucionController extends Controller
             $devolucions = Devolucion::select("devolucions.*")
                 ->with("orden.cliente")
                 ->join("orden_ventas", "orden_ventas.id", "=", "devolucions.orden_id")
-                ->where("orden_ventas.sucursal_id", Auth::user()->sucursal->sucursal_id)
+                ->where("orden_ventas.caja_id", Auth::user()->caja_usuario->caja_id)
                 ->get();
         }
 
         return response()->JSON(["devolucions" => $devolucions, "total" => count($devolucions)]);
     }
 
-    public function devolucions_sucursal(Request $request)
-    {
-        $devolucions = Devolucion::with("sucursal")->where("sucursal_id", $request->id)->get();
-        return response()->JSON($devolucions);
-    }
+    // public function devolucions_caja(Request $request)
+    // {
+    //     $devolucions = Devolucion::with("caja")->where("caja_id", $request->id)->get();
+    //     return response()->JSON($devolucions);
+    // }
 
     public function store(Request $request)
     {
@@ -60,11 +60,11 @@ class DevolucionController extends Controller
                 ]);
                 if ($value["cantidad"] > 0) {
                     // registrar kardex
-                    KardexProducto::registroIngreso("SUCURSAL", $devolucion->orden->sucursal_id, "DEVOLUCION", $dv->id, $dv->producto, $dv->cantidad, $dv->detalle_orden->precio, "DEVOLUCIÓN DE PRODUCTO");
+                    KardexProducto::registroIngreso("SUCURSAL", "DEVOLUCION", $dv->id, $dv->producto, $dv->cantidad, $dv->detalle_orden->precio, "DEVOLUCIÓN DE PRODUCTO");
                 }
             }
 
-            $datos_original =  implode("|", $devolucion->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($devolucion, "devolucions");
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
                 'accion' => 'CREACIÓN',
@@ -97,7 +97,8 @@ class DevolucionController extends Controller
 
         DB::beginTransaction();
         try {
-            $devolucion->update(array_map("mb_strtoupper", $request->except("sucursal", "orden", "devolucion_detalles", "eliminados")));
+            $datos_original = HistorialAccion::getDetalleRegistro($devolucion, "devolucions");
+            $devolucion->update(array_map("mb_strtoupper", $request->except("caja", "orden", "devolucion_detalles", "eliminados")));
             $devolucion_detalles = $request->devolucion_detalles;
             foreach ($devolucion_detalles as $value) {
                 if ($value["id"] == 0) {
@@ -109,7 +110,7 @@ class DevolucionController extends Controller
                     ]);
                     if ($value["cantidad"] > 0) {
                         // registrar kardex
-                        KardexProducto::registroIngreso("SUCURSAL", $devolucion->orden->sucursal_id, "DEVOLUCION", $dv->id, $dv->producto, $dv->cantidad, $dv->detalle_orden->precio, "DEVOLUCIÓN DE PRODUCTO");
+                        KardexProducto::registroIngreso("SUCURSAL", "DEVOLUCION", $dv->id, $dv->producto, $dv->cantidad, $dv->detalle_orden->precio, "DEVOLUCIÓN DE PRODUCTO");
                     }
                 } else {
                     $dv = DevolucionDetalle::find($value["id"]);
@@ -120,13 +121,12 @@ class DevolucionController extends Controller
                         $d_orden = $dv->detalle_orden;
                         if ($d_orden->producto->descontar_stock == 'SI') {
                             // incrementar el stock
-                            Producto::decrementarStock($dv->detalle_orden->producto, $dv->cantidad, "SUCURSAL", $dv->detalle_orden->orden->sucursal_id);
+                            Producto::decrementarStock($dv->detalle_orden->producto, $dv->cantidad, "SUCURSAL");
                         }
                         $dv->update([
                             "cantidad" => $value["cantidad"]
                         ]);
                         $eliminar_kardex = KardexProducto::where("lugar", "SUCURSAL")
-                            ->where("lugar_id", $d_orden->orden->sucursal_id)
                             ->where("tipo_registro", "DEVOLUCION")
                             ->where("registro_id", $dv->id)
                             ->where("producto_id", $d_orden->producto_id)
@@ -137,7 +137,6 @@ class DevolucionController extends Controller
                             $id_producto = $eliminar_kardex->producto_id;
                             $eliminar_kardex->delete();
                             $anterior = KardexProducto::where("lugar", "SUCURSAL")
-                                ->where("lugar_id", $d_orden->orden->sucursal_id)
                                 ->where("producto_id", $id_producto)
                                 ->where("id", "<", $id_kardex)
                                 ->get()
@@ -148,7 +147,6 @@ class DevolucionController extends Controller
                             } else {
                                 // comprobar si existen registros posteriorres al actualizado
                                 $siguiente = KardexProducto::where("lugar", "SUCURSAL")
-                                    ->where("lugar_id", $d_orden->orden->sucursal_id)
                                     ->where("producto_id", $id_producto)
                                     ->where("id", ">", $id_kardex)
                                     ->get()->first();
@@ -157,7 +155,7 @@ class DevolucionController extends Controller
                             }
                             if ($actualiza_desde) {
                                 // actualizar a partir de este registro los sgtes. registros
-                                KardexProducto::actualizaRegistrosKardex($actualiza_desde->id, $actualiza_desde->producto_id, "SUCURSAL", $d_orden->orden->sucursal_id);
+                                KardexProducto::actualizaRegistrosKardex($actualiza_desde->id, $actualiza_desde->producto_id, "SUCURSAL");
                             }
                         }
                     } else {
@@ -166,7 +164,7 @@ class DevolucionController extends Controller
                         $d_orden = $dv->detalle_orden;
                         if ($d_orden->producto->descontar_stock == 'SI') {
                             // incrementar el stock
-                            Producto::decrementarStock($dv->producto, $dv->cantidad, "SUCURSAL", $dv->detalle_orden->orden->sucursal_id);
+                            Producto::decrementarStock($dv->producto, $dv->cantidad, "SUCURSAL");
                         }
 
                         $dv->update([
@@ -174,31 +172,31 @@ class DevolucionController extends Controller
                         ]);
 
                         $kardex_devolucion = KardexProducto::where("lugar", "SUCURSAL")
-                            ->where("lugar_id", $d_orden->orden->sucursal_id)
                             ->where("producto_id", $d_orden->producto_id)
                             ->where("tipo_registro", "DEVOLUCION")
                             ->where("registro_id", $dv->id)
                             ->get()->first();
                         if (!$kardex_devolucion) {
                             // registrar kardex
-                            KardexProducto::registroIngreso("SUCURSAL", $devolucion->orden->sucursal_id, "DEVOLUCION", $dv->id, $dv->producto, $dv->cantidad, $dv->detalle_orden->precio, "DEVOLUCIÓN DE PRODUCTO");
+                            KardexProducto::registroIngreso("SUCURSAL", "DEVOLUCION", $dv->id, $dv->producto, $dv->cantidad, $dv->detalle_orden->precio, "DEVOLUCIÓN DE PRODUCTO");
                         } else {
                             if ($d_orden->producto->descontar_stock == 'SI') {
-                                Producto::incrementarStock($d_orden->producto, $value["cantidad"], "SUCURSAL", $d_orden->orden->sucursal_id);
+                                Producto::incrementarStock($d_orden->producto, $value["cantidad"], "SUCURSAL");
                             }
-                            KardexProducto::actualizaRegistrosKardex($kardex_devolucion->id, $kardex_devolucion->producto_id, "SUCURSAL", $d_orden->orden->sucursal_id);
+                            KardexProducto::actualizaRegistrosKardex($kardex_devolucion->id, $kardex_devolucion->producto_id, "SUCURSAL");
                         }
                     }
                 }
             }
 
 
-            $datos_original =  implode("|", $devolucion->attributesToArray());
+            $datos_nuevo = HistorialAccion::getDetalleRegistro($devolucion, "devolucions");
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
                 'accion' => 'MODIFICACIÓN',
                 'descripcion' => 'EL USUARIO ' . Auth::user()->usuario . ' MODIFICÓ UNA DEVOLUCIÓN',
                 'datos_original' => $datos_original,
+                'datos_nuevo' => $datos_nuevo,
                 'modulo' => 'DEVOLUCIONES',
                 'fecha' => date('Y-m-d'),
                 'hora' => date('H:i:s')
@@ -219,16 +217,15 @@ class DevolucionController extends Controller
     {
         DB::beginTransaction();
         try {
-            $datos_original =  implode("|", $devolucion->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($devolucion, "devolucions");
             foreach ($devolucion->devolucion_detalles as $dv) {
                 // eliminar
                 $d_orden = $dv->detalle_orden;
                 if ($dv->producto->descontar_stock == 'SI') {
-                    Producto::decrementarStock($dv->producto, $dv->cantidad, "SUCURSAL", $dv->detalle_orden->orden->sucursal_id);
+                    Producto::decrementarStock($dv->producto, $dv->cantidad, "SUCURSAL");
                 }
                 // actualizar kardex
                 $eliminar_kardex = KardexProducto::where("lugar", "SUCURSAL")
-                    ->where("lugar_id", $d_orden->orden->sucursal_id)
                     ->where("tipo_registro", "DEVOLUCION")
                     ->where("registro_id", $dv->id)
                     ->where("producto_id", $d_orden->producto_id)
@@ -239,7 +236,6 @@ class DevolucionController extends Controller
                     $id_producto = $eliminar_kardex->producto_id;
                     $eliminar_kardex->delete();
                     $anterior = KardexProducto::where("lugar", "SUCURSAL")
-                        ->where("lugar_id", $d_orden->orden->sucursal_id)
                         ->where("producto_id", $id_producto)
                         ->where("id", "<", $id_kardex)
                         ->get()
@@ -250,7 +246,6 @@ class DevolucionController extends Controller
                     } else {
                         // comprobar si existen registros posteriorres al actualizado
                         $siguiente = KardexProducto::where("lugar", "SUCURSAL")
-                            ->where("lugar_id", $d_orden->orden->sucursal_id)
                             ->where("producto_id", $id_producto)
                             ->where("id", ">", $id_kardex)
                             ->get()->first();
@@ -259,7 +254,7 @@ class DevolucionController extends Controller
                     }
                     if ($actualiza_desde) {
                         // actualizar a partir de este registro los sgtes. registros
-                        KardexProducto::actualizaRegistrosKardex($actualiza_desde->id, $actualiza_desde->producto_id, "SUCURSAL", $d_orden->orden->sucursal_id);
+                        KardexProducto::actualizaRegistrosKardex($actualiza_desde->id, $actualiza_desde->producto_id, "SUCURSAL");
                     }
                 }
                 $dv->delete();

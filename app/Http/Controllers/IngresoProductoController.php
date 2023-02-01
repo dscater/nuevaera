@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Log;
 class IngresoProductoController extends Controller
 {
     public $validacion = [
+        'lugar' => 'required',
         'producto_id' => 'required',
         'proveedor_id' => 'required',
         'precio_compra' => 'required|numeric',
@@ -40,9 +41,9 @@ class IngresoProductoController extends Controller
             $nuevo_ingreso_producto = IngresoProducto::create(array_map('mb_strtoupper', $request->all()));
 
             // registrar kardex
-            KardexProducto::registroIngreso("ALMACEN", 0, "INGRESO", $nuevo_ingreso_producto->id, $nuevo_ingreso_producto->producto, $nuevo_ingreso_producto->cantidad, $nuevo_ingreso_producto->producto->precio, $nuevo_ingreso_producto->descripcion);
+            KardexProducto::registroIngreso($nuevo_ingreso_producto->lugar, "INGRESO", $nuevo_ingreso_producto->id, $nuevo_ingreso_producto->producto, $nuevo_ingreso_producto->cantidad, $nuevo_ingreso_producto->producto->precio, $nuevo_ingreso_producto->descripcion);
 
-            $datos_original =  implode("|", $nuevo_ingreso_producto->attributesToArray());
+            $datos_original = HistorialAccion::getDetalleRegistro($nuevo_ingreso_producto, "ingreso_productos");
             HistorialAccion::create([
                 'user_id' => Auth::user()->id,
                 'accion' => 'CREACIÓN',
@@ -80,23 +81,23 @@ class IngresoProductoController extends Controller
             DB::beginTransaction();
             try {
                 // descontar el stock
-                Producto::decrementarStock($ingreso_producto->producto, $ingreso_producto->cantidad, "ALMACEN");
+                Producto::decrementarStock($ingreso_producto->producto, $ingreso_producto->cantidad, $ingreso_producto->lugar);
 
-                $datos_original =  implode("|", $ingreso_producto->attributesToArray());
+                $datos_original = HistorialAccion::getDetalleRegistro($ingreso_producto, "ingreso_productos");
                 $ingreso_producto->update(array_map('mb_strtoupper', $request->all()));
 
                 // INCREMENTAR STOCK
-                Producto::incrementarStock($ingreso_producto->producto, $ingreso_producto->cantidad, "ALMACEN");
+                Producto::incrementarStock($ingreso_producto->producto, $ingreso_producto->cantidad, $ingreso_producto->lugar);
 
                 // actualizar kardex
-                $kardex = KardexProducto::where("lugar", "ALMACEN")
+                $kardex = KardexProducto::where("lugar", $ingreso_producto->lugar)
                     ->where("producto_id", $ingreso_producto->producto_id)
                     ->where("tipo_registro", "INGRESO")
                     ->where("registro_id", $ingreso_producto->id)
                     ->get()->first();
-                KardexProducto::actualizaRegistrosKardex($kardex->id, $kardex->producto_id, "ALMACEN");
+                KardexProducto::actualizaRegistrosKardex($kardex->id, $kardex->producto_id, $ingreso_producto->lugar);
 
-                $datos_nuevo =  implode("|", $ingreso_producto->attributesToArray());
+                $datos_nuevo = HistorialAccion::getDetalleRegistro($ingreso_producto, "ingreso_productos");
                 HistorialAccion::create([
                     'user_id' => Auth::user()->id,
                     'accion' => 'MODIFICACIÓN',
@@ -137,7 +138,7 @@ class IngresoProductoController extends Controller
     {
         DB::beginTransaction();
         try {
-            $eliminar_kardex = KardexProducto::where("lugar", "ALMACEN")
+            $eliminar_kardex = KardexProducto::where("lugar", $ingreso_producto->lugar)
                 ->where("tipo_registro", "INGRESO")
                 ->where("registro_id", $ingreso_producto->id)
                 ->where("producto_id", $ingreso_producto->producto_id)
@@ -147,7 +148,7 @@ class IngresoProductoController extends Controller
             $id_producto = $eliminar_kardex->producto_id;
             $eliminar_kardex->delete();
 
-            $anterior = KardexProducto::where("lugar", "ALMACEN")
+            $anterior = KardexProducto::where("lugar", $ingreso_producto->lugar)
                 ->where("producto_id", $id_producto)
                 ->where("id", "<", $id_kardex)
                 ->get()
@@ -157,7 +158,7 @@ class IngresoProductoController extends Controller
                 $actualiza_desde = $anterior;
             } else {
                 // comprobar si existen registros posteriorres al actualizado
-                $siguiente = KardexProducto::where("lugar", "ALMACEN")
+                $siguiente = KardexProducto::where("lugar", $ingreso_producto->lugar)
                     ->where("producto_id", $id_producto)
                     ->where("id", ">", $id_kardex)
                     ->get()->first();
@@ -167,12 +168,12 @@ class IngresoProductoController extends Controller
 
             if ($actualiza_desde) {
                 // actualizar a partir de este registro los sgtes. registros
-                KardexProducto::actualizaRegistrosKardex($actualiza_desde->id, $actualiza_desde->producto_id, "ALMACEN");
+                KardexProducto::actualizaRegistrosKardex($actualiza_desde->id, $actualiza_desde->producto_id, $ingreso_producto->lugar);
             }
 
             // descontar el stock
-            Producto::decrementarStock($ingreso_producto->producto, $ingreso_producto->cantidad, "ALMACEN");
-            $datos_original =  implode("|", $ingreso_producto->attributesToArray());
+            Producto::decrementarStock($ingreso_producto->producto, $ingreso_producto->cantidad, $ingreso_producto->lugar);
+            $datos_original = HistorialAccion::getDetalleRegistro($ingreso_producto, "ingreso_productos");
             $ingreso_producto->delete();
 
             HistorialAccion::create([

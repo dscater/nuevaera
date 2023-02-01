@@ -19,6 +19,7 @@ class CreateDetalleOrdensTable extends Migration
             $table->unsignedBigInteger("producto_id");
             $table->unsignedBigInteger("sucursal_stock_id");
             $table->integer("cantidad");
+            $table->enum("venta_mayor", ["NO", "SI"]);
             $table->decimal("precio", 24, 2);
             $table->decimal("subtotal", 24, 2);
             $table->timestamps();
