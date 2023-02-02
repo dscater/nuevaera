@@ -37,16 +37,15 @@
                                                     }"
                                                 >
                                                     <el-option
-                                                        :key="0 + 'a'"
-                                                        :label="'ALMACEN'"
-                                                        :value="'ALMACEN'"
-                                                    >
-                                                    </el-option>
-                                                    <el-option
-                                                        v-for="item in listSucursals"
-                                                        :key="item.id"
-                                                        :label="item.nombre"
-                                                        :value="item.id"
+                                                        v-for="(
+                                                            item, index
+                                                        ) in [
+                                                            'ALMACEN',
+                                                            'SUCURSAL',
+                                                        ]"
+                                                        :key="index"
+                                                        :label="item"
+                                                        :value="item"
                                                     >
                                                     </el-option>
                                                 </el-select>
@@ -61,8 +60,8 @@
                                     <div class="row">
                                         <div class="col-md-12">
                                             <el-button
-                                                type="primary"
-                                                class="bg-lightblue w-full"
+                                                type="warning"
+                                                class="bg-warning w-full"
                                                 :loading="enviando"
                                                 @click="generaReporte()"
                                                 >{{ textoBtn }}</el-button
@@ -108,14 +107,8 @@ export default {
     },
     mounted() {
         this.loadingWindow.close();
-        this.getSucursals();
     },
     methods: {
-        getSucursals() {
-            axios.get("/admin/sucursals").then((response) => {
-                this.listSucursals = response.data.sucursals;
-            });
-        },
         limpiarFormulario() {
             this.oReporte.filtro = "Todos";
         },

@@ -85,18 +85,20 @@
 
         table thead tr th {
             padding: 3px;
-            font-size: 0.7em;
+            font-size: 0.85em;
         }
 
         table tbody tr td {
             padding: 3px;
-            font-size: 0.55em;
+            font-size: 0.75em;
         }
 
         table tbody tr td.franco {
             background: red;
             color: white;
         }
+
+        tr { page-break-inside: avoid !important; }
 
         .centreado {
             padding-left: 0px;
@@ -142,8 +144,8 @@
         }
 
         .green {
-            background: #5398d8;
-            color: white;
+            background: #ffc107;
+            color: black;
         }
 
         .derecha {

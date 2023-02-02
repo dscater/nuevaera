@@ -94,8 +94,10 @@
 
         table tbody tr td {
             padding: 3px;
-            font-size: 0.55em;
+            font-size: 0.75em;
         }
+
+        tr { page-break-inside: avoid !important; }
 
         table tbody tr td.franco {
             background: red;
@@ -183,16 +185,11 @@
     </div>
     @foreach ($productos as $registro)
         <br><br>
-        <table class="producto" border="1">
-            <tbody>
-                <tr>
-                    <td width="15%"><strong>Producto:</strong></td>
-                    <td class="info2">{{ $registro->producto->nombre }}</td>
-                </tr>
-            </tbody>
-        </table>
         <table border="1">
             <thead>
+                <tr>
+                    <td class="centreado" colspan="9"><strong>{{ $registro->producto->nombre }}</strong></td>
+                </tr>
                 <tr>
                     <th rowspan="2">FECHA</th>
                     <th rowspan="2">DETALLE</th>
@@ -220,12 +217,14 @@
                             <td>SALDO ANTERIOR</td>
                             <td></td>
                             <td></td>
-                            <td>{{ $array_saldo_anterior[$registro->producto_id]['saldo_anterior']['cantidad_saldo'] }}
+                            <td class="centreado">
+                                {{ $array_saldo_anterior[$registro->producto_id]['saldo_anterior']['cantidad_saldo'] }}
                             </td>
-                            <td>{{ $registro->producto->precio }}</td>
+                            <td class="centreado">{{ $registro->producto->precio }}</td>
                             <td></td>
                             <td></td>
-                            <td>{{ number_format($array_saldo_anterior[$registro->producto_id]['saldo_anterior']['monto_saldo'], 2, '.', ',') }}
+                            <td class="centreado">
+                                {{ number_format($array_saldo_anterior[$registro->producto_id]['saldo_anterior']['monto_saldo'], 2, '.', ',') }}
                             </td>
                         </tr>
                     @endif
@@ -233,18 +232,18 @@
                         <tr>
                             <td>{{ date('d-m-Y', strtotime($value['fecha'])) }}</td>
                             <td>{{ $value['detalle'] }}</td>
-                            <td>{{ $value['cantidad_ignreso'] }}</td>
-                            <td>{{ $value['cantidad_salida'] }}</td>
-                            <td>{{ $value['cantidad_saldo'] }}</td>
-                            <td>{{ number_format($value['cu'], 2, '.', ',') }}</td>
-                            <td>{{ $value['monto_ingreso'] }}</td>
-                            <td>{{ $value['monto_salida'] }}</td>
-                            <td>{{ number_format($value['monto_saldo'], 2, '.', ',') }}</td>
+                            <td class="centreado">{{ $value['cantidad_ingreso'] }}</td>
+                            <td class="centreado">{{ $value['cantidad_salida'] }}</td>
+                            <td class="centreado">{{ $value['cantidad_saldo'] }}</td>
+                            <td class="centreado">{{ number_format($value['cu'], 2, '.', ',') }}</td>
+                            <td class="centreado">{{ $value['monto_ingreso'] }}</td>
+                            <td class="centreado">{{ $value['monto_salida'] }}</td>
+                            <td class="centreado">{{ number_format($value['monto_saldo'], 2, '.', ',') }}</td>
                         </tr>
                     @endforeach
                 @else
                     <tr>
-                        <td colspan="10">NO SE ENCONTRARON REGISTROS</td>
+                        <td colspan="9" class="centreado">NO SE ENCONTRARON REGISTROS</td>
                     </tr>
                 @endif
             </tbody>

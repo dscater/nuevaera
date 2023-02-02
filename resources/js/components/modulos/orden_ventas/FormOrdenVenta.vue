@@ -53,7 +53,7 @@
                                             }"
                                             >Seleccionar cliente
                                             <button
-                                                class="btn btn-xs btn-primary"
+                                                class="btn btn-xs btn-warning"
                                                 @click.prevent="
                                                     abreModal('nuevo');
                                                     limpiaCliente();

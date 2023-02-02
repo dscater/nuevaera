@@ -8,6 +8,13 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $configuracion->first()->alias }}</title>
+    <style>
+        #app {
+            background-color: none;
+            background-image: url("/imgs/login.webp");
+        }
+    </style>
+
     <link rel="stylesheet" href="{{ mix('css/app.css') }}">
     <link rel="stylesheet" href="{{ mix('css/plantilla.css') }}">
 </head>

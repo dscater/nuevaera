@@ -39,22 +39,26 @@ class Producto extends Model
 
     public function getTotalStockAttribute()
     {
-        $stock_almacen = $this->stock_almacen;
-        $stock_sucursal = $this->stock_sucursal;
+        try {
+            $stock_almacen = $this->stock_almacen;
+            $stock_sucursal = $this->stock_sucursal;
 
-        if (!$stock_almacen) {
-            $stock_almacen = $this->stock_almacen()->create([
-                "stock_actual" => 0,
-            ]);
-        }
-        if (!$stock_sucursal) {
-            $stock_sucursal = $this->stock_sucursal()->create([
-                "stock_actual" => 0,
-            ]);
-        }
+            if (!$stock_almacen) {
+                $stock_almacen = $this->stock_almacen()->create([
+                    "stock_actual" => 0,
+                ]);
+            }
+            if (!$stock_sucursal) {
+                $stock_sucursal = $this->stock_sucursal()->create([
+                    "stock_actual" => 0,
+                ]);
+            }
 
-        $total_stock = (float)$stock_almacen->stock_actual + (float)$stock_sucursal->stock_actual;
-        return $total_stock;
+            $total_stock = (float)$stock_almacen->stock_actual + (float)$stock_sucursal->stock_actual;
+            return $total_stock;
+        } catch (\Exception $e) {
+            return 0;
+        }
     }
 
     // FUNCIONES PARA INCREMETAR Y DECREMENTAR EL STOCK

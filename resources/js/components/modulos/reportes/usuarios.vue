@@ -139,8 +139,8 @@
                                     <div class="row">
                                         <div class="col-md-12">
                                             <el-button
-                                                type="primary"
-                                                class="bg-lightblue w-full"
+                                                type="warning"
+                                                class="bg-warning w-full"
                                                 :loading="enviando"
                                                 @click="generaReporte()"
                                                 >{{ textoBtn }}</el-button

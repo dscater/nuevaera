@@ -2,27 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Acceso;
 use App\Models\Almacen;
-use App\Models\Cliente;
-use App\Models\Cobro;
+use App\Models\DetalleOrden;
 use App\Models\DetalleVenta;
-use App\Models\Empleado;
-use App\Models\IngresoProducto;
-use App\Models\Inscripcion;
+use App\Models\HistorialAccion;
 use App\Models\KardexProducto;
-use App\Models\MantenimientoMaquina;
-use App\Models\Maquina;
 use App\Models\OrdenVenta;
-use App\Models\Plan;
 use App\Models\Producto;
 use App\Models\Sucursal;
 use App\Models\SucursalStock;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use PDF;
-use Dompdf\Dompdf;
-use Dompdf\Options;
 
 class ReporteController extends Controller
 {
@@ -38,15 +30,10 @@ class ReporteController extends Controller
             $usuarios = User::where('id', '!=', 1)->where('tipo', $request->tipo)->orderBy("paterno", "ASC")->get();
         }
 
-        $pdf = PDF::loadView('reportes.usuarios', compact('usuarios'))->setOption("public_path", public_path())->setPaper('legal', 'landscape');
+        $pdf = PDF::loadView('reportes.usuarios', compact('usuarios'))->setPaper('legal', 'landscape');
 
-        // ENUMERAR LAS PÁGINAS USANDO CANVAS
-        $pdf->output();
-        $dom_pdf = $pdf->getDomPDF();
-        $canvas = $dom_pdf->get_canvas();
-        $alto = $canvas->get_height();
-        $ancho = $canvas->get_width();
-        $canvas->page_text($ancho - 90, $alto - 25, "Página {PAGE_NUM} de {PAGE_COUNT}", null, 10, array(0, 0, 0));
+        // ENUMERAR LAS PÁGINAS
+        $pdf->setOption('footer-right', '[page]');
 
         return $pdf->download('Usuarios.pdf');
     }
@@ -84,11 +71,10 @@ class ReporteController extends Controller
                 }
             }
         } else {
-            $productos = SucursalStock::where("sucursal_id", $lugar_id)->get();
+            $productos = SucursalStock::all();
             if ($filtro != 'todos') {
                 if ($filtro == 'Producto') {
-                    $productos = SucursalStock::where("sucursal_id", $lugar_id)
-                        ->where("producto_id", $producto_id)
+                    $productos = SucursalStock::where("producto_id", $producto_id)
                         ->get();
                 }
             }
@@ -96,15 +82,9 @@ class ReporteController extends Controller
 
         $array_kardex = [];
         $array_saldo_anterior = [];
-        $sw_lugar = "ALMACEN";
-        if ($lugar_id == 'ALMACEN') {
-            $lugar_id = 0;
-        } else {
-            $sw_lugar = 'SUCURSAL';
-        }
+        $sw_lugar = $lugar_id;
         foreach ($productos as $registro) {
             $kardex = KardexProducto::where("lugar", $sw_lugar)
-                ->where("lugar_id", $lugar_id)
                 ->where('producto_id', $registro->producto_id)->get();
             $array_saldo_anterior[$registro->producto_id] = [
                 'sw' => false,
@@ -112,12 +92,10 @@ class ReporteController extends Controller
             ];
             if ($filtro == 'Rango de fechas') {
                 $kardex = KardexProducto::where("lugar", $sw_lugar)
-                    ->where("lugar_id", $lugar_id)
                     ->where('producto_id', $registro->producto_id)
                     ->whereBetween('fecha', [$fecha_ini, $fecha_fin])->get();
                 // buscar saldo anterior si existe
                 $saldo_anterior = KardexProducto::where("lugar", $sw_lugar)
-                    ->where("lugar_id", $lugar_id)
                     ->where('producto_id', $registro->producto_id)
                     ->where('fecha', '<', $fecha_ini)
                     ->orderBy('created_at', 'asc')->get()->last();
@@ -136,19 +114,12 @@ class ReporteController extends Controller
             $array_kardex[$registro->producto_id] = $kardex;
         }
 
-        $lugar = "ALMACEN";
-        if ($lugar_id != "ALMACEN") {
-            $lugar = Sucursal::find($lugar_id)->nombre;
-        }
+        $lugar = $lugar_id;
 
         $pdf = PDF::loadView('reportes.kardex', compact('productos', 'array_kardex', 'array_saldo_anterior', 'lugar'))->setPaper('letter', 'portrait');
-        // ENUMERAR LAS PÁGINAS USANDO CANVAS
-        $pdf->output();
-        $dom_pdf = $pdf->getDomPDF();
-        $canvas = $dom_pdf->get_canvas();
-        $alto = $canvas->get_height();
-        $ancho = $canvas->get_width();
-        $canvas->page_text($ancho - 90, $alto - 25, "Página {PAGE_NUM} de {PAGE_COUNT}", null, 10, array(0, 0, 0));
+
+        // ENUMERAR LAS PÁGINAS
+        $pdf->setOption('footer-right', '[page]');
 
         return $pdf->stream('kardex.pdf');
     }
@@ -156,13 +127,9 @@ class ReporteController extends Controller
     public function orden_ventas(Request $request)
     {
         $filtro = $request->filtro;
-        $lugar_id = $request->lugar_id;
         $producto_id = $request->producto_id;
         $fecha_ini = $request->fecha_ini;
         $fecha_fin = $request->fecha_fin;
-        $request->validate([
-            'lugar_id' => 'required',
-        ]);
 
         if ($filtro == 'Producto') {
             $request->validate([
@@ -176,29 +143,22 @@ class ReporteController extends Controller
             ]);
         }
 
-        $orden_ventas = OrdenVenta::where("sucursal_id", $lugar_id)->get();
+        $orden_ventas = OrdenVenta::all();
         if ($filtro != 'todos') {
             if ($filtro == 'Producto') {
                 $orden_ventas = OrdenVenta::select("orden_ventas.*")
                     ->join("detalle_ordens", "detalle_ordens.orden_id", "=", "orden_ventas.id")
                     ->where("detalle_ordens.producto_id", $producto_id)
-                    ->where("orden_ventas.sucursal_id", $lugar_id)
                     ->get();
             }
             if ($filtro == 'Rango de fechas') {
-                $orden_ventas = OrdenVenta::where("sucursal_id", $lugar_id)
-                    ->whereBetween("fecha_registro", [$fecha_ini, $fecha_fin])->get();
+                $orden_ventas = OrdenVenta::whereBetween("fecha_registro", [$fecha_ini, $fecha_fin])->get();
             }
         }
-        $pdf = PDF::loadView('reportes.orden_ventas', compact('orden_ventas'))->setOption("public_path", public_path())->setPaper('legal', 'portrait');
+        $pdf = PDF::loadView('reportes.orden_ventas', compact('orden_ventas'))->setPaper('legal', 'portrait');
 
-        // ENUMERAR LAS PÁGINAS USANDO CANVAS
-        $pdf->output();
-        $dom_pdf = $pdf->getDomPDF();
-        $canvas = $dom_pdf->get_canvas();
-        $alto = $canvas->get_height();
-        $ancho = $canvas->get_width();
-        $canvas->page_text($ancho - 90, $alto - 25, "Página {PAGE_NUM} de {PAGE_COUNT}", null, 10, array(0, 0, 0));
+        // ENUMERAR LAS PÁGINAS
+        $pdf->setOption('footer-right', '[page]');
 
         return $pdf->download('orden_ventas.pdf');
     }
@@ -213,126 +173,68 @@ class ReporteController extends Controller
         } else {
             $registros = SucursalStock::select("sucursal_stocks.*")
                 ->join("productos", "productos.id", "=", "sucursal_stocks.producto_id")
-                ->where("sucursal_id", $lugar_id)->orderBy("productos.nombre")->get();
+                ->orderBy("productos.nombre")->get();
             $lugar = Sucursal::find($lugar_id)->nombre;
         }
 
         $pdf = PDF::loadView('reportes.stock_productos', compact('registros', 'lugar'))->setPaper('legal', 'portrait');
-        // ENUMERAR LAS PÁGINAS USANDO CANVAS
-        $pdf->output();
-        $dom_pdf = $pdf->getDomPDF();
-        $canvas = $dom_pdf->get_canvas();
-        $alto = $canvas->get_height();
-        $ancho = $canvas->get_width();
-        $canvas->page_text($ancho - 90, $alto - 25, "Página {PAGE_NUM} de {PAGE_COUNT}", null, 10, array(0, 0, 0));
+
+        // ENUMERAR LAS PÁGINAS
+        $pdf->setOption('footer-right', '[page]');
         return $pdf->download('stock_productos.pdf');
     }
 
-    public function ingreso_productos(Request $request)
+    public function historial_accion(Request $request)
     {
-        $request->validate(['sucursal_id' => 'required']);
-        $sucursal_id =  $request->sucursal_id;
-        $producto_id =  $request->producto_id;
-        $categoria_id =  $request->categoria_id;
-        $filtro =  $request->filtro;
-        $ingreso_productos = IngresoProducto::where("sucursal_id", $sucursal_id)->get();
+        $historial_accions = HistorialAccion::orderBy("created_at", "desc")->get();
 
-        if ($filtro == 'Categoría' && $categoria_id != 'todos') {
-            $request->validate(['categoria_id' => 'required']);
-            $ingreso_productos = IngresoProducto::select("ingreso_productos.*")
-                ->join("productos", "productos.id", "=", "ingreso_productos.producto_id")
-                ->where("ingreso_productos.sucursal_id", $sucursal_id)
-                ->where('productos.categoria_id', $categoria_id)
-                ->get();
+        if (isset($request->fecha_ini) && isset($request->fecha_fin)) {
+            $historial_accions = HistorialAccion::with("user")->whereBetween("fecha", [$request->fecha_ini, $request->fecha_fin])->orderBy("created_at", "desc")->get();
         }
 
-        if ($filtro == 'Producto' && $producto_id != 'todos') {
-            $request->validate(['producto_id' => 'required']);
-            $ingreso_productos = IngresoProducto::where("sucursal_id", $sucursal_id)
-                ->where('producto_id', $producto_id)
-                ->get();
-        }
+        $pdf = PDF::loadView('reportes.historial_accion', compact('historial_accions'))->setPaper('legal', 'portrait');
 
-        $pdf = PDF::loadView('reportes.ingreso_productos', compact('ingreso_productos'))->setPaper('legal', 'portrait');
-        // ENUMERAR LAS PÁGINAS USANDO CANVAS
-        $pdf->output();
-        $dom_pdf = $pdf->getDomPDF();
-        $canvas = $dom_pdf->get_canvas();
-        $alto = $canvas->get_height();
-        $ancho = $canvas->get_width();
-        $canvas->page_text($ancho - 90, $alto - 25, "Página {PAGE_NUM} de {PAGE_COUNT}", null, 10, array(0, 0, 0));
-        return $pdf->download('ingreso_productos.pdf');
+        // ENUMERAR LAS PÁGINAS
+        $pdf->setOption('footer-right', '[page]');
+        return $pdf->download('historial_accions.pdf');
     }
 
-    public function venta_productos(Request $request)
+
+    public function grafico_ingresos(Request $request)
     {
-        $request->validate(['sucursal_id' => 'required']);
-        $sucursal_id =  $request->sucursal_id;
-        $producto_id =  $request->producto_id;
-        $categoria_id =  $request->categoria_id;
         $fecha_ini =  $request->fecha_ini;
         $fecha_fin =  $request->fecha_fin;
         $filtro =  $request->filtro;
+        $producto_id =  $request->producto_id;
 
-        $detalle_ventas = DetalleVenta::select("detalle_ventas.*")
-            ->join("ventas", "ventas.id", "=", "detalle_ventas.venta_id")
-            ->where("ventas.sucursal_id", $sucursal_id)->get();
-
-
-        if ($filtro == 'Categoría' && $categoria_id != 'todos') {
-            $detalle_ventas = DetalleVenta::select("detalle_ventas.*")
-                ->join("ventas", "ventas.id", "=", "detalle_ventas.venta_id")
-                ->join("productos", "productos.id", "=", "detalle_ventas.producto_id")
-                ->where("productos.categoria_id", $categoria_id)
-                ->where("ventas.sucursal_id", $sucursal_id)
+        if ($filtro == 'Producto') {
+            $productos = Producto::select("productos.*")
+                ->where("id", $producto_id)
+                ->get();
+        } else {
+            $productos = Producto::select("productos.*")
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('detalle_ordens')
+                        ->whereRaw('productos.id = detalle_ordens.producto_id');
+                })
                 ->get();
         }
-
-        if ($filtro == 'Producto' && $producto_id != 'todos') {
-            $detalle_ventas = DetalleVenta::select("detalle_ventas.*")
-                ->join("ventas", "ventas.id", "=", "detalle_ventas.venta_id")
-                ->where("detalle_ventas.producto_id", $producto_id)
-                ->where("ventas.sucursal_id", $sucursal_id)
-                ->get();
-        }
-
-        if ($filtro == 'Rango de fechas') {
-            $detalle_ventas = DetalleVenta::select("detalle_ventas.*")
-                ->join("ventas", "ventas.id", "=", "detalle_ventas.venta_id")
-                ->whereBetween("ventas.fecha", [$fecha_ini, $fecha_fin])
-                ->get();
-        }
-
-        $pdf = PDF::loadView('reportes.venta_productos', compact('detalle_ventas'))->setPaper('legal', 'portrait');
-        // ENUMERAR LAS PÁGINAS USANDO CANVAS
-        $pdf->output();
-        $dom_pdf = $pdf->getDomPDF();
-        $canvas = $dom_pdf->get_canvas();
-        $alto = $canvas->get_height();
-        $ancho = $canvas->get_width();
-        $canvas->page_text($ancho - 90, $alto - 25, "Página {PAGE_NUM} de {PAGE_COUNT}", null, 10, array(0, 0, 0));
-        return $pdf->download('venta_productos.pdf');
-    }
-    public function grafico_ventas(Request $request)
-    {
-        $request->validate(['sucursal_id' => 'required']);
-        $sucursal_id =  $request->sucursal_id;
-        $fecha_ini =  $request->fecha_ini;
-        $fecha_fin =  $request->fecha_fin;
-        $filtro =  $request->filtro;
-
-        $productos = Producto::where("sucursal_id", $sucursal_id)->get();
         $data = [];
         foreach ($productos as $producto) {
             $cantidad = 0;
             if ($filtro == 'Rango de fechas') {
-                $cantidad = DetalleVenta::select("detalle_ventas")
-                    ->join("ventas", "ventas.id", "=", "detalle_ventas.venta_id")
-                    ->where("producto_id", $producto->id)
-                    ->whereBetween("fecha", [$fecha_ini, $fecha_fin])
-                    ->sum("detalle_ventas.subtotal");
+                $cantidad = DetalleOrden::select("detalle_ordens")
+                    ->join("orden_ventas", "orden_ventas.id", "=", "detalle_ordens.orden_id")
+                    ->where("orden_ventas.estado", "CANCELADO")
+                    ->where("detalle_ordens.producto_id", $producto->id)
+                    ->whereBetween("fecha_registro", [$fecha_ini, $fecha_fin])
+                    ->sum("detalle_ordens.subtotal");
             } else {
-                $cantidad = DetalleVenta::where("producto_id", $producto->id)->sum("subtotal");
+                $cantidad = DetalleOrden::where("producto_id", $producto->id)
+                    ->join("orden_ventas", "orden_ventas.id", "=", "detalle_ordens.orden_id")
+                    ->where("orden_ventas.estado", "CANCELADO")
+                    ->sum("subtotal");
             }
             $data[] = [$producto->nombre, $cantidad ? (float)$cantidad : 0];
         }
@@ -344,33 +246,40 @@ class ReporteController extends Controller
             "fecha" => $fecha
         ]);
     }
-    public function grafico_cobros(Request $request)
+
+    public function grafico_orden(Request $request)
     {
-        $request->validate(['sucursal_id' => 'required']);
-        $sucursal_id =  $request->sucursal_id;
         $fecha_ini =  $request->fecha_ini;
         $fecha_fin =  $request->fecha_fin;
         $filtro =  $request->filtro;
+        $producto_id =  $request->producto_id;
 
-        $plans = Plan::where("sucursal_id", $sucursal_id)->get();
+        if ($filtro == 'Producto') {
+            $productos = Producto::select("productos.*")
+                ->where("id", $producto_id)
+                ->get();
+        } else {
+            $productos = Producto::select("productos.*")
+                ->whereExists(function ($query) {
+                    $query->select(DB::raw(1))
+                        ->from('detalle_ordens')
+                        ->whereRaw('productos.id = detalle_ordens.producto_id');
+                })
+                ->get();
+        }
         $data = [];
-        foreach ($plans as $plan) {
+        foreach ($productos as $producto) {
             $cantidad = 0;
             if ($filtro == 'Rango de fechas') {
-                $cantidad = Cobro::select("cobros")
-                    ->join("inscripcions", "inscripcions.id", "=", "cobros.inscripcion_id")
-                    ->join("plans", "plans.id", "=", "inscripcions.plan_id")
-                    ->where("inscripcions.plan_id", $plan->id)
-                    ->whereBetween("fecha_cobro", [$fecha_ini, $fecha_fin])
-                    ->sum("plans.costo");
+                $cantidad = count(DetalleOrden::select("detalle_ordens")
+                    ->join("orden_ventas", "orden_ventas.id", "=", "detalle_ordens.orden_id")
+                    ->where("detalle_ordens.producto_id", $producto->id)
+                    ->whereBetween("fecha_registro", [$fecha_ini, $fecha_fin])
+                    ->get());
             } else {
-                $cantidad = Cobro::select("cobros")
-                    ->join("inscripcions", "inscripcions.id", "=", "cobros.inscripcion_id")
-                    ->join("plans", "plans.id", "=", "inscripcions.plan_id")
-                    ->where("inscripcions.plan_id", $plan->id)
-                    ->sum("plans.costo");
+                $cantidad = count(DetalleOrden::where("producto_id", $producto->id)->get());
             }
-            $data[] = [$plan->nombre, $cantidad ? (float)$cantidad : 0];
+            $data[] = [$producto->nombre, $cantidad ? (float)$cantidad : 0];
         }
 
         $fecha = date("d/m/Y");

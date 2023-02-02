@@ -90,8 +90,9 @@
 
         table tbody tr td {
             padding: 3px;
-            font-size: 0.55em;
+            font-size: 0.75em;
         }
+        tr { page-break-inside: avoid !important; }
 
         table tbody tr td.franco {
             background: red;
@@ -142,8 +143,8 @@
         }
 
         .green {
-            background: #5398d8;
-            color: white;
+            background: #ffc107;
+            color: black;
         }
 
         .txt_rojo {}
@@ -179,7 +180,7 @@
                 <th>DIRECCIÓN</th>
                 <th>TELEFÓNO(S)</th>
                 <th>TIPO DE USUARIO</th>
-                <th>SUCURSAL</th>
+                <th>CAJA</th>
                 <th width="9%">FECHA DE REGISTRO</th>
             </tr>
         </thead>
@@ -199,7 +200,7 @@
                     <td class="centreado">{{ $user->dir }}</td>
                     <td class="centreado">{{ $user->fono }}</td>
                     <td class="centreado">{{ $user->tipo }}</td>
-                    <td class="centreado">{{ $user->tipo == 'CAJA' ? $user->sucursal->sucursal->nombre : '' }}</td>
+                    <td class="centreado">{{ $user->tipo == 'CAJA' ? $user->caja_usuario->caja->nombre : '' }}</td>
                     <td class="centreado">{{ $user->fecha_registro }}</td>
                 </tr>
             @endforeach

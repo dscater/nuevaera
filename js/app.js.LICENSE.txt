@@ -35,12 +35,6 @@
  * Date: 2022-12-20T21:28Z
  */
 
-/*!
- * vue-infinite-loading v2.4.3
- * (c) 2016-2018 PeachScript
- * MIT License
- */
-
 /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/facebook/regenerator/blob/main/LICENSE */
 
 /**

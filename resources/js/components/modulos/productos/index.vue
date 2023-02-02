@@ -33,6 +33,16 @@
                                             Nuevo
                                         </button>
                                     </div>
+                                    <div class="col-md-3">
+                                        <el-button
+                                            type="success"
+                                            class="btn btn-outline-success btn-flat btn-block"
+                                            @click="descargarExcel"
+                                            :loading="descargando"
+                                        >
+                                            Exportar
+                                        </el-button>
+                                    </div>
                                 </div>
                             </div>
                             <div class="card-body">
@@ -60,7 +70,10 @@
                                                         class="bg-primary"
                                                         variant="primary"
                                                         :disabled="!filter"
-                                                        @click="filter = ''"
+                                                        @click="
+                                                            filter = '';
+                                                            listaProductos();
+                                                        "
                                                         >Borrar</b-button
                                                     >
                                                 </b-input-group-append>
@@ -91,7 +104,9 @@
                                                 >
                                                     {{
                                                         row.item.stock_almacen
-                                                            ? row.item.stock_almacen.stock_actual
+                                                            ? row.item
+                                                                  .stock_almacen
+                                                                  .stock_actual
                                                             : 0
                                                     }}
                                                 </template>
@@ -100,7 +115,9 @@
                                                 >
                                                     {{
                                                         row.item.stock_sucursal
-                                                            ? row.item.stock_sucursal.stock_actual
+                                                            ? row.item
+                                                                  .stock_sucursal
+                                                                  .stock_actual
                                                             : 0
                                                     }}
                                                 </template>
@@ -228,7 +245,6 @@ export default {
                 { key: "stock_almacen.stock_actual", label: "Stock almacén" },
                 { key: "stock_sucursal.stock_actual", label: "Stock sucursal" },
                 { key: "total_stock", label: "Total stock" },
-                { key: "precio", label: "Precio de venta" },
                 { key: "accion", label: "Acción" },
             ],
             isBusy: false,
@@ -266,6 +282,7 @@ export default {
             sortBy: null,
             sortDesc: null,
             links: null,
+            descargando: false,
         };
     },
     watch: {
@@ -410,6 +427,41 @@ export default {
         },
         formatoFecha(date) {
             return this.$moment(String(date)).format("DD/MM/YYYY");
+        },
+        descargarExcel() {
+            this.descargando = true;
+            let config = {
+                responseType: "blob",
+            };
+            axios
+                .post(
+                    "/admin/productos/excel",
+                    {
+                        value: this.filter,
+                    },
+                    config
+                )
+                .then((response) => {
+                    var fileURL = window.URL.createObjectURL(
+                        new Blob([response.data])
+                    );
+                    var fileLink = document.createElement("a");
+                    fileLink.href = fileURL;
+                    fileLink.setAttribute("download", "productos.xlsx");
+                    document.body.appendChild(fileLink);
+
+                    fileLink.click();
+                    this.descargando = false;
+                })
+                .catch(async (error) => {
+                    console.log(error);
+                    let responseObj = await error.response.data.text();
+                    responseObj = JSON.parse(responseObj);
+                    this.enviando = false;
+                    if (error.response) {
+                    }
+                    this.descargando = false;
+                });
         },
     },
 };

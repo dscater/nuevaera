@@ -96,6 +96,11 @@
                                                             ></i>
                                                         </router-link> -->
                                                         <b-button
+                                                            v-if="
+                                                                row.item
+                                                                    .estado ==
+                                                                'PENDIENTE'
+                                                            "
                                                             size="sm"
                                                             pill
                                                             variant="outline-success"
@@ -130,6 +135,12 @@
                                                                 class="fa fa-check"
                                                             ></i>
                                                         </b-button>
+                                                        <button
+                                                            v-else
+                                                            class="btn btn-success btn-xs"
+                                                        >
+                                                            CANCELADO
+                                                        </button>
                                                     </div>
                                                 </template>
                                             </b-table>

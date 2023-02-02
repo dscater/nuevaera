@@ -22,7 +22,7 @@
             border-collapse: collapse;
             table-layout: fixed;
             margin-top: 20px;
-            page-break-before: avoid;
+            page-break-inside: avoid;
         }
 
         table thead tr th,
@@ -30,6 +30,8 @@
             font-size: 0.63em;
             word-wrap: break-word;
         }
+
+        tr { page-break-inside: avoid !important; }
 
         .encabezado {
             width: 100%;
@@ -87,7 +89,7 @@
 
         table tbody tr td {
             padding: 3px;
-            font-size: 0.55em;
+            font-size: 0.75em;
         }
 
         table tbody tr td.franco {
@@ -139,8 +141,8 @@
         }
 
         .green {
-            background: #5398d8;
-            color: white;
+            background: #ffc107;
+            color: black;
         }
 
         .iquierda {
@@ -168,17 +170,16 @@
         <h4 class="fecha">Expedido: {{ date('d-m-Y') }}</h4>
     </div>
     <table border="1">
-        <thead class="green">
-            <tr>
-                <th width="5%">N°</th>
-                <th>PRODUCTO</th>
-                <th width="15%">STOCK ACTUAL</th>
-            </tr>
-        </thead>
+
         <tbody>
             @php
                 $cont = 1;
             @endphp
+            <tr class="green">
+                <th class="bold" width="5%">N°</th>
+                <th class="bold">PRODUCTO</th>
+                <th class="bold" width="15%">STOCK ACTUAL</th>
+            </tr>
             @foreach ($registros as $stock)
                 <tr>
                     <td class="centreado">{{ $cont++ }}</td>

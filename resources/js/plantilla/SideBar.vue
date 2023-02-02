@@ -270,7 +270,10 @@
                             permisos.includes('reportes.usuarios') ||
                             permisos.includes('reportes.kardex') ||
                             permisos.includes('reportes.orden_ventas') ||
-                            permisos.includes('reportes.stock_productos')
+                            permisos.includes('reportes.stock_productos') ||
+                            permisos.includes('reportes.historial_acciones') ||
+                            permisos.includes('reportes.grafico_ingresos') ||
+                            permisos.includes('reportes.grafico_orden')
                         "
                     >
                         REPORTES
@@ -321,6 +324,42 @@
                         >
                             <i class="fas fa-file-pdf nav-icon"></i>
                             <p>Stock de productos</p>
+                        </router-link>
+                    </li>
+                    <li
+                        class="nav-item"
+                        v-if="permisos.includes('reportes.historial_acciones')"
+                    >
+                        <router-link
+                            :to="{ name: 'reportes.historial_acciones' }"
+                            class="nav-link"
+                        >
+                            <i class="fas fa-file-pdf nav-icon"></i>
+                            <p>Historial de acciones</p>
+                        </router-link>
+                    </li>
+                    <li
+                        class="nav-item"
+                        v-if="permisos.includes('reportes.grafico_ingresos')"
+                    >
+                        <router-link
+                            :to="{ name: 'reportes.grafico_ingresos' }"
+                            class="nav-link"
+                        >
+                            <i class="fas fa-chart-bar nav-icon"></i>
+                            <p>Ingreso por productos</p>
+                        </router-link>
+                    </li>
+                    <li
+                        class="nav-item"
+                        v-if="permisos.includes('reportes.grafico_orden')"
+                    >
+                        <router-link
+                            :to="{ name: 'reportes.grafico_orden' }"
+                            class="nav-link"
+                        >
+                            <i class="fas fa-chart-bar nav-icon"></i>
+                            <p>Cantidad de ordendes de ventas</p>
                         </router-link>
                     </li>
                     <li class="nav-header bg-primary">OTRAS OPCIONES</li>

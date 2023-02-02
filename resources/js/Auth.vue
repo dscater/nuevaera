@@ -68,13 +68,10 @@
                                     Acceder
                                 </button>
                             </div>
-                            <!-- /.col -->
                         </div>
-                    </div=>
+                    </div>
                 </div>
-                <!-- /.card-body -->
             </div>
-            <!-- /.card -->
         </div>
     </div>
 </template>
@@ -137,9 +134,8 @@ export default {
 </script>
 
 <style>
-.login-page{
-    background-color:none;
-    background-image:url("/imgs/login.webp");
+.login-page {
+    background: #00000081;
 }
 
 .login-page .card {

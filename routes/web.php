@@ -6,6 +6,7 @@ use App\Http\Controllers\ConfiguracionController;
 use App\Http\Controllers\CreditoController;
 use App\Http\Controllers\DevolucionController;
 use App\Http\Controllers\GrupoController;
+use App\Http\Controllers\HistorialAccionController;
 use App\Http\Controllers\ImportancionAperturaController;
 use App\Http\Controllers\IngresoProductoController;
 use App\Http\Controllers\LoginController;
@@ -68,6 +69,7 @@ Route::middleware(['auth'])->group(function () {
         ]);
 
         // Productos
+        Route::post("productos/excel", [ProductoController::class, 'excel']);
         Route::get("productos/paginado", [ProductoController::class, 'paginado']);
         Route::get("productos/verifica_ventas", [ProductoController::class, 'verifica_ventas']);
         Route::get("productos/valida_stock", [ProductoController::class, 'valida_stock']);
@@ -126,6 +128,11 @@ Route::middleware(['auth'])->group(function () {
             'index', 'store', 'update', 'destroy', 'show'
         ]);
 
+        // historial acciones
+        Route::resource('historial_accions', HistorialAccionController::class)->only([
+            'index', 'show'
+        ]);
+
         // Importacion apertura
         Route::get("importacion_aperturas/verifica_importacion", [ImportancionAperturaController::class, 'verifica_importacion']);
         Route::post("importacion_aperturas/importar_archivo", [ImportancionAperturaController::class, 'importar_archivo']);
@@ -139,6 +146,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('reportes/kardex', [ReporteController::class, 'kardex']);
         Route::post('reportes/orden_ventas', [ReporteController::class, 'orden_ventas']);
         Route::post('reportes/stock_productos', [ReporteController::class, 'stock_productos']);
+        Route::post('reportes/historial_accion', [ReporteController::class, 'historial_accion']);
+        Route::post('reportes/grafico_ingresos', [ReporteController::class, 'grafico_ingresos']);
+        Route::post('reportes/grafico_orden', [ReporteController::class, 'grafico_orden']);
     });
 });
 

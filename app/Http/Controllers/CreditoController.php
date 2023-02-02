@@ -60,13 +60,15 @@ class CreditoController extends Controller
 
     public function update(Request $request, Credito $credito)
     {
-        $request->validate($this->validacion, $this->mensajes);
-
         DB::beginTransaction();
         try {
             $datos_original = HistorialAccion::getDetalleRegistro($credito, "creditos");
 
+            $request["estado"] = "CANCELADO";
             $credito->update(array_map('mb_strtoupper', $request->all()));
+
+            $credito->orden->estado = "CANCELADO";
+            $credito->orden->save();
 
             $datos_nuevo = HistorialAccion::getDetalleRegistro($credito, "creditos");
             HistorialAccion::create([
@@ -84,7 +86,7 @@ class CreditoController extends Controller
             return response()->JSON([
                 'sw' => true,
                 'credito' => $credito,
-                'msj' => 'El registro se actualizó de forma correcta'
+                'msj' => 'El crédito se confirmó exitosamente'
             ], 200);
         } catch (\Exception $e) {
             DB::rollBack();

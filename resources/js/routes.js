@@ -202,6 +202,24 @@ export default new Router({
             component: require('./components/modulos/reportes/stock_productos.vue').default,
             props: true
         },
+        {
+            path: '/reportes/historial_acciones',
+            name: 'reportes.historial_acciones',
+            component: require('./components/modulos/reportes/historial_acciones.vue').default,
+            props: true
+        },
+        {
+            path: '/reportes/grafico_ingresos',
+            name: 'reportes.grafico_ingresos',
+            component: require('./components/modulos/reportes/grafico_ingresos.vue').default,
+            props: true
+        },
+        {
+            path: '/reportes/grafico_orden',
+            name: 'reportes.grafico_orden',
+            component: require('./components/modulos/reportes/grafico_orden.vue').default,
+            props: true
+        },
 
         // PÁGINA NO ENCONTRADA
         {

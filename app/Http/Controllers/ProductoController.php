@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Almacen;
+use App\Models\Configuracion;
 use App\Models\DetalleOrden;
 use App\Models\HistorialAccion;
 use App\Models\IngresoProducto;
@@ -15,6 +16,8 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
 
 class ProductoController extends Controller
 {
@@ -35,10 +38,10 @@ class ProductoController extends Controller
     {
         $productos = Producto::with("grupo")->select("producto.*")
             ->join("grupos", "grupos.id", "=", "productos.grupo_id")
-            ->get()
-            ->sortBy("grupos.nombre", SORT_NATURAL)
-            ->sortBy("productos.codigo", SORT_NATURAL)
-            ->sortBy("productos.medida", SORT_NATURAL);
+            ->orderBy("grupos.nombre", "ASC")
+            ->orderBy("productos.codigo", "ASC")
+            ->orderBy("productos.medida", "ASC")
+            ->get();
         return response()->JSON(['productos' => $productos, 'total' => count($productos)], 200);
     }
 
@@ -50,13 +53,19 @@ class ProductoController extends Controller
 
         if (isset($request->importacion)) {
             $lugar = $request->lugar;
-            $productos = Producto::select("productos.*")->with("grupo")->join("grupos", "grupos.id", "=", "productos.grupo_id")->paginate();
-            $sortedResult = $productos->getCollection()
-                ->sortBy("grupos.nombre", SORT_NATURAL)
-                ->sortBy("productos.codigo", SORT_NATURAL)
-                ->sortBy("productos.medida", SORT_NATURAL)
-                ->values();
-            $productos->setCollection($sortedResult);
+            $productos = Producto::select("productos.*")
+                ->with("grupo")
+                ->join("grupos", "grupos.id", "=", "productos.grupo_id")
+                ->orderBy("grupos.nombre", "ASC")
+                ->orderBy("productos.codigo", "ASC")
+                ->orderBy("productos.medida", "ASC")
+                ->paginate();
+            // $sortedResult = $productos->getCollection()
+            //     ->sortBy("grupos.nombre", SORT_NATURAL)
+            //     ->sortBy("productos.codigo", SORT_NATURAL)
+            //     ->sortBy("productos.medida", SORT_NATURAL)
+            //     ->values();
+            // $productos->setCollection($sortedResult);
             if ($lugar == 'ALMACEN') {
                 // $productos = Producto::select("productos.*")->with("grupo")->join("grupos", "grupos.id", "=", "productos.grupo_id")
                 //     ->whereNotExists(function ($query) {
@@ -102,17 +111,173 @@ class ProductoController extends Controller
             //         $productos = $productos->orderBy("grupos.nombre", $asc_desc);
             //     }
             // }
-            $productos = $productos->paginate($request->per_page);
+            $productos = $productos
+                ->orderBy("grupos.nombre", "ASC")
+                ->orderBy("productos.codigo", "ASC")
+                ->orderBy("productos.medida", "ASC")
+                ->paginate($request->per_page);
 
-            $sortedResult = $productos->getCollection()
-                ->sortBy("grupos.nombre", SORT_NATURAL)
-                ->sortBy("productos.codigo", SORT_NATURAL)
-                ->sortBy("productos.medida", SORT_NATURAL)
-                ->values();
-            $productos->setCollection($sortedResult);
+            // $sortedResult = $productos->getCollection()
+            //     ->sortBy([["grupos.nombre", SORT_NATURAL]])
+            //     ->values();
+            // $productos->setCollection($sortedResult);
         }
 
         return response()->JSON(['productos' => $productos, 'total' => count($productos)], 200);
+    }
+
+    public function excel(Request $request)
+    {
+        $spreadsheet = new Spreadsheet();
+        $spreadsheet->getProperties()
+            ->setCreator("ADMIN")
+            ->setLastModifiedBy('Administración')
+            ->setTitle('ListaProductos')
+            ->setSubject('ListaProductos')
+            ->setDescription('ListaProductos')
+            ->setKeywords('PHPSpreadsheet')
+            ->setCategory('Listado');
+
+        $sheet = $spreadsheet->getActiveSheet();
+
+        $spreadsheet->getDefaultStyle()->getFont()->setName('Arial');
+
+        $styleTexto = [
+            'font' => [
+                'bold' => true,
+                'size' => 12,
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                ],
+            ],
+        ];
+
+        $styleArray2 = [
+            'font' => [
+                'bold' => true,
+                'size' => 9,
+                'color' => ['argb' => 'ffffff'],
+            ],
+            'alignment' => [
+                'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                ],
+            ],
+            'fill' => [
+                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'color' => ['rgb' => '0062A5']
+            ],
+        ];
+
+        $estilo_conenido = [
+            'font' => [
+                'size' => 8,
+            ],
+            'alignment' => [
+                'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                // 'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                ],
+            ],
+        ];
+
+
+        $fila = 1;
+        $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+        $drawing->setName('logo');
+        $drawing->setDescription('logo');
+        $drawing->setPath(public_path() . '/imgs/' . Configuracion::first()->logo); // put your path and image here
+        $drawing->setCoordinates('A' . $fila);
+        $drawing->setOffsetX(5);
+        $drawing->setOffsetY(0);
+        $drawing->setHeight(60);
+        $drawing->setWorksheet($sheet);
+        $sheet->setCellValue('A' . $fila, "LISTA DE PRODUCTOS");
+        $sheet->mergeCells("A" . $fila . ":H" . $fila);  //COMBINAR CELDAS
+        $sheet->getStyle('A' . $fila . ':H' . $fila)->getAlignment()->setHorizontal('center');
+        $sheet->getStyle('A' . $fila . ':H' . $fila)->applyFromArray($styleTexto);
+        $fila++;
+        $fila++;
+        $fila++;
+        $fila++;
+
+        $sheet->setCellValue('A' . $fila, 'GRUPO');
+        $sheet->setCellValue('B' . $fila, 'CÓDIGO');
+        $sheet->setCellValue('C' . $fila, 'MEDIDA');
+        $sheet->setCellValue('D' . $fila, 'NOMBRE');
+        $sheet->setCellValue('E' . $fila, 'PRECIO DE VENTA');
+        $sheet->setCellValue('F' . $fila, 'STOCK ALMACÉN');
+        $sheet->setCellValue('G' . $fila, 'STOCK SUCURSAL');
+        $sheet->setCellValue('H' . $fila, 'TOTAL STOCK');
+        $sheet->getStyle('A' . $fila . ':H' . $fila)->applyFromArray($styleArray2);
+        $fila++;
+
+        if (isset($request->value) && $request->value != "") {
+            $value = $request->value;
+            $productos = Producto::select("productos.*")->with("grupo")
+                ->with("stock_almacen")
+                ->with("stock_sucursal")
+                ->join("grupos", "grupos.id", "=", "productos.grupo_id")
+                ->orWhere("productos.id", "LIKE", "%$value%")
+                ->orWhere("productos.codigo", "LIKE", "%$value%")
+                ->orWhere("productos.nombre", "LIKE", "%$value%")
+                ->orWhere("productos.medida", "LIKE", "%$value%")
+                ->orWhere("productos.precio", "LIKE", "%$value%")
+                ->orWhere("productos.precio_mayor", "LIKE", "%$value%")
+                ->orWhere("productos.fecha_registro", "LIKE", "%$value%")
+                ->orWhere("grupos.nombre", "LIKE", "%$value%");
+        } else {
+            $productos = Producto::select("productos.*")->with("grupo")->join("grupos", "grupos.id", "=", "productos.grupo_id");
+        }
+
+        $productos = $productos
+            ->orderBy("grupos.nombre", "ASC")
+            ->orderBy("productos.codigo", "ASC")
+            ->orderBy("productos.medida", "ASC")->get();
+        // ->sortBy("grupos.nombre", SORT_NATURAL)
+        // ->sortBy("productos.codigo", SORT_NATURAL)
+        // ->sortBy("productos.medida", SORT_NATURAL);
+        foreach ($productos as $producto) {
+            $sheet->setCellValue('A' . $fila, $producto->grupo->nombre);
+            $sheet->setCellValue('B' . $fila, $producto->codigo);
+            $sheet->setCellValue('C' . $fila, $producto->medida);
+            $sheet->setCellValue('D' . $fila, $producto->nombre);
+            $sheet->setCellValue('E' . $fila, $producto->precio);
+            $sheet->setCellValue('F' . $fila, $producto->stock_almacen ? $producto->stock_almacen->stock_actual : 0);
+            $sheet->setCellValue('G' . $fila, $producto->stock_sucursal ? $producto->stock_sucursal->stock_actual : 0);
+            $sheet->setCellValue('H' . $fila, $producto->total_stock);
+            $sheet->getStyle('A' . $fila . ':H' . $fila)->applyFromArray($estilo_conenido);
+            $fila++;
+        }
+
+        $sheet->getColumnDimension('A')->setWidth(20);
+        $sheet->getColumnDimension('B')->setWidth(15);
+        $sheet->getColumnDimension('C')->setWidth(20);
+        $sheet->getColumnDimension('D')->setWidth(20);
+        $sheet->getColumnDimension('E')->setWidth(15);
+        $sheet->getColumnDimension('F')->setWidth(15);
+        $sheet->getColumnDimension('G')->setWidth(15);
+        $sheet->getColumnDimension('H')->setWidth(15);
+
+        foreach (range('A', 'H') as $columnID) {
+            $sheet->getStyle($columnID)->getAlignment()->setWrapText(true);
+        }
+
+        // DESCARGA DEL ARCHIVO
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="ListaProductos.xlsx"');
+        header('Cache-Control: max-age=0');
+        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $writer->save('php://output');
     }
 
     public function buscar_producto(Request $request)
@@ -132,10 +297,13 @@ class ProductoController extends Controller
             ->orWhere("productos.precio_mayor", "LIKE", "%$value%")
             ->orWhere("productos.fecha_registro", "LIKE", "%$value%")
             ->orWhere("grupos.nombre", "LIKE", "%$value%")
-            ->get()->take(100)
-            ->sortBy("grupos.nombre", SORT_NATURAL)
-            ->sortBy("productos.codigo", SORT_NATURAL)
-            ->sortBy("productos.medida", SORT_NATURAL);;
+            ->orderBy("grupos.nombre", "ASC")
+            ->orderBy("productos.codigo", "ASC")
+            ->orderBy("productos.medida", "ASC")
+            ->get()->take(100);
+        // ->sortBy("grupos.nombre", SORT_NATURAL)
+        // ->sortBy("productos.codigo", SORT_NATURAL)
+        // ->sortBy("productos.medida", SORT_NATURAL);
         return response()->JSON($productos);
     }
 
@@ -343,6 +511,9 @@ class ProductoController extends Controller
                         ->orWhere("productos.fecha_registro", "LIKE", "%$value%")
                         ->orWhere("grupos.nombre", "LIKE", "%$value%");
                 })
+                ->orderBy("grupos.nombre", "ASC")
+                ->orderBy("productos.codigo", "ASC")
+                ->orderBy("productos.medida", "ASC")
                 ->get()->take(100);
         } else {
             $productos = SucursalStock::with("sucursal")->with("producto.grupo")->where("sucursal_id", $request->id)->get();

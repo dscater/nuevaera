@@ -22,38 +22,6 @@
                                                 <label
                                                     :class="{
                                                         'text-danger':
-                                                            errors.lugar_id,
-                                                    }"
-                                                    >Seleccione*</label
-                                                >
-                                                <el-select
-                                                    v-model="oReporte.lugar_id"
-                                                    filterable
-                                                    placeholder="Seleccione"
-                                                    class="d-block"
-                                                    :class="{
-                                                        'is-invalid':
-                                                            errors.lugar_id,
-                                                    }"
-                                                >
-                                                    <el-option
-                                                        v-for="item in listSucursals"
-                                                        :key="item.id"
-                                                        :label="item.nombre"
-                                                        :value="item.id"
-                                                    >
-                                                    </el-option>
-                                                </el-select>
-                                                <span
-                                                    class="error invalid-feedback"
-                                                    v-if="errors.lugar_id"
-                                                    v-text="errors.lugar_id[0]"
-                                                ></span>
-                                            </div>
-                                            <div class="form-group col-md-12">
-                                                <label
-                                                    :class="{
-                                                        'text-danger':
                                                             errors.filtro,
                                                     }"
                                                     >Seleccione*</label
@@ -188,8 +156,8 @@
                                     <div class="row">
                                         <div class="col-md-12">
                                             <el-button
-                                                type="primary"
-                                                class="bg-lightblue w-full"
+                                                type="warning"
+                                                class="bg-warning w-full"
                                                 :loading="enviando"
                                                 @click="generaReporte()"
                                                 >{{ textoBtn }}</el-button
@@ -234,7 +202,6 @@ export default {
             textoBtn: "Generar Reporte",
             listFiltro: ["Todos", "Producto", "Rango de fechas"],
             listProductos: [],
-            listSucursals: [],
             aux_lista_productos: [],
             loading_buscador: false,
             errors: [],
@@ -242,14 +209,8 @@ export default {
     },
     mounted() {
         this.loadingWindow.close();
-        this.getSucursals();
     },
     methods: {
-        getSucursals() {
-            axios.get("/admin/sucursals").then((response) => {
-                this.listSucursals = response.data.sucursals;
-            });
-        },
         buscarProducto(query) {
             this.aux_lista_productos = [];
             this.loading_buscador = true;

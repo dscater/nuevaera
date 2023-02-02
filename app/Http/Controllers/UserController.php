@@ -141,6 +141,9 @@ class UserController extends Controller
             'reportes.kardex',
             'reportes.orden_ventas',
             'reportes.stock_productos',
+            'reportes.historial_acciones',
+            'reportes.grafico_ingresos',
+            'reportes.grafico_orden',
         ],
         'SUPERVISOR' => [
             'proveedors.index',
