@@ -55,7 +55,14 @@
                                             CI/NIT: {{ oOrdenVenta.nit }}
                                             <br />
                                             Tipo:
-                                            {{ oOrdenVenta.tipo_venta }} - <span v-if="oOrdenVenta.tipo_venta=='A CRÉDITO'">{{oOrdenVenta.estado}}</span>
+                                            {{ oOrdenVenta.tipo_venta }} -
+                                            <span
+                                                v-if="
+                                                    oOrdenVenta.tipo_venta ==
+                                                    'A CRÉDITO'
+                                                "
+                                                >{{ oOrdenVenta.estado }}</span
+                                            >
                                             <br />
                                             Caja:
                                             {{ oOrdenVenta.user?.usuario }}
@@ -100,7 +107,10 @@
                                                     <td
                                                         colspan="3"
                                                         class="bold elemento"
-                                                        style="text-align:right;padding-right:4px;"
+                                                        style="
+                                                            text-align: right;
+                                                            padding-right: 4px;
+                                                        "
                                                     >
                                                         TOTAL
                                                     </td>
@@ -112,24 +122,34 @@
                                                     <td
                                                         colspan="3"
                                                         class="bold elemento"
-                                                        style="text-align:right;padding-right:4px;"
+                                                        style="
+                                                            text-align: right;
+                                                            padding-right: 4px;
+                                                        "
                                                     >
                                                         DESCUENTO %
                                                     </td>
                                                     <td class="centreado bold">
-                                                        {{ oOrdenVenta.descuento }}
+                                                        {{
+                                                            oOrdenVenta.descuento
+                                                        }}
                                                     </td>
                                                 </tr>
                                                 <tr>
                                                     <td
                                                         colspan="3"
                                                         class="bold elemento"
-                                                        style="text-align:right;padding-right:4px;"
+                                                        style="
+                                                            text-align: right;
+                                                            padding-right: 4px;
+                                                        "
                                                     >
                                                         TOTAL FINAL
                                                     </td>
                                                     <td class="centreado bold">
-                                                        {{ oOrdenVenta.total_final }}
+                                                        {{
+                                                            oOrdenVenta.total_final
+                                                        }}
                                                     </td>
                                                 </tr>
                                             </table>
@@ -259,12 +279,6 @@ export default {
     watch: {
         oOrdenVenta(newVal) {
             this.oOrdenVenta = newVal;
-            if (this.imprime) {
-                let self = this;
-                setTimeout(function () {
-                    self.imrpimirContenedor();
-                }, 300);
-            }
         },
     },
     mounted() {
@@ -295,6 +309,12 @@ export default {
                 })
                 .then((response) => {
                     this.literal = response.data;
+                    if (this.imprime) {
+                        let self = this;
+                        setTimeout(function () {
+                            self.imrpimirContenedor();
+                        }, 300);
+                    }
                 });
         },
         getDevolucion() {
