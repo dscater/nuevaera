@@ -14,11 +14,16 @@ class SalidaProducto extends Model
         "fecha_registro",
     ];
 
-    protected $appends = ["nombre_producto"];
+    protected $appends = ["nombre_producto", "nombre_producto_full"];
 
     public function getNombreProductoAttribute()
     {
         return $this->producto->nombre;
+    }
+
+    public function getNombreProductoFullAttribute()
+    {
+        return $this->producto->codigo . ' | ' . $this->producto->nombre . ' | ' . $this->producto->medida;
     }
 
     public function producto()

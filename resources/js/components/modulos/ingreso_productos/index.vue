@@ -281,6 +281,9 @@ export default {
             this.oIngresoProducto.nombre_producto = item.nombre_producto
                 ? item.nombre_producto
                 : "";
+            this.oIngresoProducto.nombre_producto_full = item.nombre_producto_full
+                ? item.nombre_producto_full
+                : "";
 
             this.modal_accion = "edit";
             this.muestra_modal = true;

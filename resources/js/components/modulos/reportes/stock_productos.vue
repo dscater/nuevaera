@@ -55,6 +55,40 @@
                                                     v-text="errors.lugar_id[0]"
                                                 ></span>
                                             </div>
+                                            <div class="form-group col-md-12">
+                                                <label
+                                                    :class="{
+                                                        'text-danger':
+                                                            errors.filtro,
+                                                    }"
+                                                    >Seleccione*</label
+                                                >
+                                                <el-select
+                                                    v-model="oReporte.filtro"
+                                                    filterable
+                                                    placeholder="Seleccione"
+                                                    class="d-block"
+                                                    :class="{
+                                                        'is-invalid':
+                                                            errors.filtro,
+                                                    }"
+                                                >
+                                                    <el-option
+                                                        v-for="(
+                                                            item, index
+                                                        ) in listFiltro"
+                                                        :key="index"
+                                                        :label="item"
+                                                        :value="item"
+                                                    >
+                                                    </el-option>
+                                                </el-select>
+                                                <span
+                                                    class="error invalid-feedback"
+                                                    v-if="errors.filtro"
+                                                    v-text="errors.filtro[0]"
+                                                ></span>
+                                            </div>
                                         </div>
                                     </form>
                                     <div class="row">
@@ -96,11 +130,12 @@ export default {
             errors: [],
             oReporte: {
                 lugar_id: "ALMACEN",
+                filtro:"Todos"
             },
             aFechas: [],
             enviando: false,
             textoBtn: "Generar Reporte",
-            listFiltro: ["Todos", "Producto", "Rango de fechas"],
+            listFiltro: ["Todos", "Stock mínimos"],
             listSucursals: [],
             errors: [],
         };

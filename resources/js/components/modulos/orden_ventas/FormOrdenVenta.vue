@@ -185,8 +185,102 @@
                                 <i class="fa fa-plus-circle"></i> AGREGAR
                                 PRODUCTOS
                             </div>
-                            <div class="card-body">
+                            <div class="card-body pt-0">
                                 <div class="row">
+                                    <div class="col-sm-12 text-center">
+                                        <div
+                                            class="form-group clearfix mb-0 mt-0"
+                                        >
+                                            <label
+                                                >Ajustar busqueda <br /><small
+                                                    ><i
+                                                        >Realizará la busqueda
+                                                        exactamente por la
+                                                        columna seleccionada</i
+                                                    ></small
+                                                ></label
+                                            >
+                                        </div>
+                                        <div class="form-group clearfix">
+                                            <div
+                                                class="icheck-primary d-inline"
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    id="radioPrimary1"
+                                                    name="sw_busqueda"
+                                                    value="todos"
+                                                    v-model="sw_busqueda"
+                                                    @change="
+                                                        aux_lista_productos =
+                                                            [];
+                                                        producto_id = '';
+                                                    "
+                                                    checked=""
+                                                />
+                                                <label for="radioPrimary1">
+                                                    Todos
+                                                </label>
+                                            </div>
+                                            <div
+                                                class="icheck-primary d-inline"
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    id="radioPrimary2"
+                                                    name="sw_busqueda"
+                                                    value="codigo"
+                                                    v-model="sw_busqueda"
+                                                    @change="
+                                                        aux_lista_productos =
+                                                            [];
+                                                        producto_id = '';
+                                                    "
+                                                />
+                                                <label for="radioPrimary2">
+                                                    Código
+                                                </label>
+                                            </div>
+                                            <div
+                                                class="icheck-primary d-inline"
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    id="radioPrimary3"
+                                                    name="sw_busqueda"
+                                                    value="medida"
+                                                    v-model="sw_busqueda"
+                                                    @change="
+                                                        aux_lista_productos =
+                                                            [];
+                                                        producto_id = '';
+                                                    "
+                                                />
+                                                <label for="radioPrimary3">
+                                                    Medida
+                                                </label>
+                                            </div>
+                                            <div
+                                                class="icheck-primary d-inline"
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    id="radioPrimary4"
+                                                    name="sw_busqueda"
+                                                    value="nombre"
+                                                    v-model="sw_busqueda"
+                                                    @change="
+                                                        aux_lista_productos =
+                                                            [];
+                                                        producto_id = '';
+                                                    "
+                                                />
+                                                <label for="radioPrimary4">
+                                                    Nombre
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="form-group col-md-12">
                                         <label
                                             :class="{
@@ -216,10 +310,11 @@
                                                 :key="item.id"
                                                 :value="item.producto.id"
                                                 :label="
+                                                    item.producto.codigo +
+                                                    ' | ' +
                                                     item.producto.nombre +
-                                                    ' (' +
-                                                    item.producto.medida +
-                                                    ')'
+                                                    ' | ' +
+                                                    item.producto.medida
                                                 "
                                             >
                                             </el-option>
@@ -632,6 +727,7 @@ export default {
                 dir: "",
             },
             oProducto: null,
+            sw_busqueda: "todos",
             loading_buscador: false,
             timeOutProductos: null,
         };
@@ -821,6 +917,7 @@ export default {
                     .get("/admin/productos/productos_sucursal", {
                         params: {
                             value: query,
+                            sw_busqueda: this.sw_busqueda,
                         },
                     })
                     .then((response) => {
@@ -924,13 +1021,23 @@ export default {
             this.orden_venta.total = suma_total.toFixed(2);
 
             // agrega descuento
-            if(this.orden_venta.descuento != ''){
-                if(parseFloat(this.orden_venta.descuento) >= 0 && parseFloat(this.orden_venta.descuento) <= 100){
-                    let p_descuento = parseFloat(this.orden_venta.descuento !=''?this.orden_venta.descuento:0) / 100;
-                    let descuento = parseFloat(this.orden_venta.total) * p_descuento;
-                    this.orden_venta.total_final = parseFloat(parseFloat(this.orden_venta.total) - descuento).toFixed(2);
-                }
-                else{
+            if (this.orden_venta.descuento != "") {
+                if (
+                    parseFloat(this.orden_venta.descuento) >= 0 &&
+                    parseFloat(this.orden_venta.descuento) <= 100
+                ) {
+                    let p_descuento =
+                        parseFloat(
+                            this.orden_venta.descuento != ""
+                                ? this.orden_venta.descuento
+                                : 0
+                        ) / 100;
+                    let descuento =
+                        parseFloat(this.orden_venta.total) * p_descuento;
+                    this.orden_venta.total_final = parseFloat(
+                        parseFloat(this.orden_venta.total) - descuento
+                    ).toFixed(2);
+                } else {
                     this.orden_venta.descuento = 0;
                     this.orden_venta.total_final = this.orden_venta.total;
                     Swal.fire({

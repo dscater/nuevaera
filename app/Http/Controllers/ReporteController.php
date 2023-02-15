@@ -4,12 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Almacen;
 use App\Models\DetalleOrden;
-use App\Models\DetalleVenta;
 use App\Models\HistorialAccion;
 use App\Models\KardexProducto;
 use App\Models\OrdenVenta;
 use App\Models\Producto;
-use App\Models\Sucursal;
 use App\Models\SucursalStock;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -167,14 +165,34 @@ class ReporteController extends Controller
     {
         $request->validate(['lugar_id' => 'required']);
         $lugar_id =  $request->lugar_id;
+        $filtro =  $request->filtro;
         $lugar = "ALMACEN";
         if ($lugar_id == 'ALMACEN') {
-            $registros = Almacen::select("almacens.*")->join("productos", "productos.id", "=", "almacens.producto_id")->orderBy("productos.nombre")->get();
+            if ($filtro != 'Todos') {
+                $registros = Almacen::select("almacens.*")
+                    ->join("productos", "productos.id", "=", "almacens.producto_id")
+                    ->where("almacens.stock_actual", "<=", "productos.stock_min")
+                    ->orderBy("productos.nombre")
+                    ->get();
+            } else {
+                $registros = Almacen::select("almacens.*")
+                    ->join("productos", "productos.id", "=", "almacens.producto_id")
+                    ->orderBy("productos.nombre")
+                    ->get();
+            }
         } else {
-            $registros = SucursalStock::select("sucursal_stocks.*")
-                ->join("productos", "productos.id", "=", "sucursal_stocks.producto_id")
-                ->orderBy("productos.nombre")->get();
-            $lugar = Sucursal::find($lugar_id)->nombre;
+            if ($filtro != 'Todos') {
+                $registros = SucursalStock::select("sucursal_stocks.*")
+                    ->join("productos", "productos.id", "=", "sucursal_stocks.producto_id")
+                    ->where("sucursal_stocks.stock_actual", "<=", "productos.stock_min")
+                    ->orderBy("productos.nombre")
+                    ->get();
+            } else {
+                $registros = SucursalStock::select("sucursal_stocks.*")
+                    ->join("productos", "productos.id", "=", "sucursal_stocks.producto_id")
+                    ->orderBy("productos.nombre")
+                    ->get();
+            }
         }
 
         $pdf = PDF::loadView('reportes.stock_productos', compact('registros', 'lugar'))->setPaper('legal', 'portrait');

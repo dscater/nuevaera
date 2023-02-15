@@ -45,8 +45,98 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="card-body">
+                            <div class="card-body pt-1">
                                 <div class="row">
+                                    <div class="col-sm-12 text-center">
+                                        <div
+                                            class="form-group clearfix mb-0 mt-0"
+                                        >
+                                            <label
+                                                >Ajustar busqueda <br /><small
+                                                    ><i
+                                                        >Realizará la busqueda
+                                                        exactamente por la
+                                                        columna seleccionada</i
+                                                    ></small
+                                                ></label
+                                            >
+                                        </div>
+                                        <div class="form-group clearfix">
+                                            <div
+                                                class="icheck-primary d-inline"
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    id="radioPrimary1"
+                                                    name="sw_busqueda"
+                                                    value="todos"
+                                                    v-model="sw_busqueda"
+                                                    @change="
+                                                        filter = '';
+                                                        listaProductos();
+                                                    "
+                                                    checked=""
+                                                />
+                                                <label for="radioPrimary1">
+                                                    Todos
+                                                </label>
+                                            </div>
+                                            <div
+                                                class="icheck-primary d-inline"
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    id="radioPrimary2"
+                                                    name="sw_busqueda"
+                                                    value="codigo"
+                                                    v-model="sw_busqueda"
+                                                    @change="
+                                                        filter = '';
+                                                        listaProductos();
+                                                    "
+                                                />
+                                                <label for="radioPrimary2">
+                                                    Código
+                                                </label>
+                                            </div>
+                                            <div
+                                                class="icheck-primary d-inline"
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    id="radioPrimary3"
+                                                    name="sw_busqueda"
+                                                    value="medida"
+                                                    v-model="sw_busqueda"
+                                                    @change="
+                                                        filter = '';
+                                                        listaProductos();
+                                                    "
+                                                />
+                                                <label for="radioPrimary3">
+                                                    Medida
+                                                </label>
+                                            </div>
+                                            <div
+                                                class="icheck-primary d-inline"
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    id="radioPrimary4"
+                                                    name="sw_busqueda"
+                                                    value="nombre"
+                                                    v-model="sw_busqueda"
+                                                    @change="
+                                                        filter = '';
+                                                        listaProductos();
+                                                    "
+                                                />
+                                                <label for="radioPrimary4">
+                                                    Nombre
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <b-col lg="10" class="my-1">
                                         <b-form-group
                                             label="Buscar"
@@ -279,6 +369,7 @@ export default {
             ],
             totalRows: 10,
             filter: null,
+            sw_busqueda: "todos",
             sortBy: null,
             sortDesc: null,
             links: null,
@@ -330,7 +421,6 @@ export default {
             this.sortDesc = ctx.sortDesc;
             this.$refs.table.refresh();
         },
-
         getProductos(ctx) {
             this.isBusy = true;
             let promise = axios.get("/admin/productos/paginado", {
@@ -340,6 +430,7 @@ export default {
                     value: this.filter,
                     sortBy: this.sortBy,
                     sortDesc: this.sortDesc,
+                    sw_busqueda: this.sw_busqueda,
                 },
             });
             return promise
@@ -438,6 +529,7 @@ export default {
                     "/admin/productos/excel",
                     {
                         value: this.filter,
+                        sw_busqueda: this.sw_busqueda,
                     },
                     config
                 )

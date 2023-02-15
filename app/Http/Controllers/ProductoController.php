@@ -48,11 +48,11 @@ class ProductoController extends Controller
     public function paginado(Request $request)
     {
         $productos = [];
-        $sortBy = $request->sortBy;
-        $sortDesc = $request->sortDesc;
+        // $sortBy = $request->sortBy;
+        // $sortDesc = $request->sortDesc;
+        $sw_busqueda = $request->sw_busqueda;
 
         if (isset($request->importacion)) {
-            $lugar = $request->lugar;
             $productos = Producto::select("productos.*")
                 ->with("grupo")
                 ->join("grupos", "grupos.id", "=", "productos.grupo_id")
@@ -60,57 +60,34 @@ class ProductoController extends Controller
                 ->orderBy("productos.codigo", "ASC")
                 ->orderBy("productos.medida", "ASC")
                 ->paginate();
-            // $sortedResult = $productos->getCollection()
-            //     ->sortBy("grupos.nombre", SORT_NATURAL)
-            //     ->sortBy("productos.codigo", SORT_NATURAL)
-            //     ->sortBy("productos.medida", SORT_NATURAL)
-            //     ->values();
-            // $productos->setCollection($sortedResult);
-            if ($lugar == 'ALMACEN') {
-                // $productos = Producto::select("productos.*")->with("grupo")->join("grupos", "grupos.id", "=", "productos.grupo_id")
-                //     ->whereNotExists(function ($query) {
-                //         $query->select(DB::raw(1))
-                //             ->from('almacens')
-                //             ->whereRaw('productos.id = almacens.producto_id');
-                //     })->paginate();
-            } else {
-                // $productos = Producto::select("productos.*")->with("grupo")->join("grupos", "grupos.id", "=", "productos.grupo_id")
-                //     ->whereNotExists(function ($query) use ($lugar) {
-                //         $query->select(DB::raw(1))
-                //             ->from('sucursal_stocks')
-                //             ->whereRaw('productos.id = sucursal_stocks.producto_id')
-                //             ->whereRaw('sucursal_stocks.sucursal_id = ' . $lugar);
-                //     })->paginate();
-            }
         } else {
             if (isset($request->value) && $request->value != "") {
                 $value = $request->value;
-                $productos = Producto::select("productos.*")->with("grupo")
-                    ->with("stock_almacen")
-                    ->with("stock_sucursal")
-                    ->join("grupos", "grupos.id", "=", "productos.grupo_id")
-                    ->orWhere("productos.id", "LIKE", "%$value%")
-                    ->orWhere("productos.codigo", "LIKE", "%$value%")
-                    ->orWhere("productos.nombre", "LIKE", "%$value%")
-                    ->orWhere("productos.medida", "LIKE", "%$value%")
-                    ->orWhere("productos.precio", "LIKE", "%$value%")
-                    ->orWhere("productos.precio_mayor", "LIKE", "%$value%")
-                    ->orWhere("productos.fecha_registro", "LIKE", "%$value%")
-                    ->orWhere("grupos.nombre", "LIKE", "%$value%");
+                $productos = [];
+                if ($sw_busqueda == 'todos') {
+                    $productos = Producto::select("productos.*")->with("grupo")
+                        ->with("stock_almacen")
+                        ->with("stock_sucursal")
+                        ->join("grupos", "grupos.id", "=", "productos.grupo_id")
+                        ->orWhere("productos.id", "LIKE", "%$value%")
+                        ->orWhere("productos.codigo", "LIKE", "%$value%")
+                        ->orWhere("productos.nombre", "LIKE", "%$value%")
+                        ->orWhere("productos.medida", "LIKE", "%$value%")
+                        ->orWhere("productos.precio", "LIKE", "%$value%")
+                        ->orWhere("productos.precio_mayor", "LIKE", "%$value%")
+                        ->orWhere("productos.fecha_registro", "LIKE", "%$value%")
+                        ->orWhere("grupos.nombre", "LIKE", "%$value%");
+                } else {
+                    $productos = Producto::select("productos.*")->with("grupo")
+                        ->with("stock_almacen")
+                        ->with("stock_sucursal")
+                        ->join("grupos", "grupos.id", "=", "productos.grupo_id")
+                        ->where("productos." . $sw_busqueda, $value);
+                }
             } else {
                 $productos = Producto::select("productos.*")->with("grupo")->join("grupos", "grupos.id", "=", "productos.grupo_id");
             }
-            // if (isset($sortBy) && $sortBy != "") {
-            //     $asc_desc = "ASC";
-            //     if ($sortDesc == "true") {
-            //         $asc_desc = "DESC";
-            //     }
-            //     if ($sortBy != "grupo.nombre") {
-            //         $productos = $productos->orderBy("productos." . $sortBy, $asc_desc);
-            //     } else {
-            //         $productos = $productos->orderBy("grupos.nombre", $asc_desc);
-            //     }
-            // }
+
             $productos = $productos
                 ->orderBy("grupos.nombre", "ASC")
                 ->orderBy("productos.codigo", "ASC")
@@ -221,20 +198,29 @@ class ProductoController extends Controller
         $sheet->getStyle('A' . $fila . ':H' . $fila)->applyFromArray($styleArray2);
         $fila++;
 
+        $sw_busqueda = $request->sw_busqueda;
         if (isset($request->value) && $request->value != "") {
             $value = $request->value;
-            $productos = Producto::select("productos.*")->with("grupo")
-                ->with("stock_almacen")
-                ->with("stock_sucursal")
-                ->join("grupos", "grupos.id", "=", "productos.grupo_id")
-                ->orWhere("productos.id", "LIKE", "%$value%")
-                ->orWhere("productos.codigo", "LIKE", "%$value%")
-                ->orWhere("productos.nombre", "LIKE", "%$value%")
-                ->orWhere("productos.medida", "LIKE", "%$value%")
-                ->orWhere("productos.precio", "LIKE", "%$value%")
-                ->orWhere("productos.precio_mayor", "LIKE", "%$value%")
-                ->orWhere("productos.fecha_registro", "LIKE", "%$value%")
-                ->orWhere("grupos.nombre", "LIKE", "%$value%");
+            if ($sw_busqueda == 'todos') {
+                $productos = Producto::select("productos.*")->with("grupo")
+                    ->with("stock_almacen")
+                    ->with("stock_sucursal")
+                    ->join("grupos", "grupos.id", "=", "productos.grupo_id")
+                    ->orWhere("productos.id", "LIKE", "%$value%")
+                    ->orWhere("productos.codigo", "LIKE", "%$value%")
+                    ->orWhere("productos.nombre", "LIKE", "%$value%")
+                    ->orWhere("productos.medida", "LIKE", "%$value%")
+                    ->orWhere("productos.precio", "LIKE", "%$value%")
+                    ->orWhere("productos.precio_mayor", "LIKE", "%$value%")
+                    ->orWhere("productos.fecha_registro", "LIKE", "%$value%")
+                    ->orWhere("grupos.nombre", "LIKE", "%$value%");
+            } else {
+                $productos = Producto::select("productos.*")->with("grupo")
+                    ->with("stock_almacen")
+                    ->with("stock_sucursal")
+                    ->join("grupos", "grupos.id", "=", "productos.grupo_id")
+                    ->where("productos." . $sw_busqueda, $value);
+            }
         } else {
             $productos = Producto::select("productos.*")->with("grupo")->join("grupos", "grupos.id", "=", "productos.grupo_id");
         }
@@ -283,27 +269,31 @@ class ProductoController extends Controller
     public function buscar_producto(Request $request)
     {
         $value = $request->value;
-        // $productos = Producto::select("productos.*")
-        //     ->join("grupos", "grupos.id", "=", "productos.grupo_id")
-        //     ->where(DB::raw('CONCAT(productos.id, productos.codigo, productos.nombre, productos.medida, productos.precio, productos.precio_mayor, productos.fecha_registro, grupos.nombre)'), 'LIKE', "%$value%")
-        //     ->get();
-        $productos = Producto::select("productos.*")
-            ->join("grupos", "grupos.id", "=", "productos.grupo_id")
-            ->orWhere("productos.id", "LIKE", "%$value%")
-            ->orWhere("productos.codigo", "LIKE", "%$value%")
-            ->orWhere("productos.nombre", "LIKE", "%$value%")
-            ->orWhere("productos.medida", "LIKE", "%$value%")
-            ->orWhere("productos.precio", "LIKE", "%$value%")
-            ->orWhere("productos.precio_mayor", "LIKE", "%$value%")
-            ->orWhere("productos.fecha_registro", "LIKE", "%$value%")
-            ->orWhere("grupos.nombre", "LIKE", "%$value%")
-            ->orderBy("grupos.nombre", "ASC")
-            ->orderBy("productos.codigo", "ASC")
-            ->orderBy("productos.medida", "ASC")
-            ->get()->take(100);
-        // ->sortBy("grupos.nombre", SORT_NATURAL)
-        // ->sortBy("productos.codigo", SORT_NATURAL)
-        // ->sortBy("productos.medida", SORT_NATURAL);
+        $sw_busqueda = $request->sw_busqueda;
+
+        $productos = [];
+        if ($sw_busqueda == 'todos') {
+            $productos = Producto::select("productos.*")
+                ->join("grupos", "grupos.id", "=", "productos.grupo_id")
+                ->orWhere("productos.id", "LIKE", "%$value%")
+                ->orWhere("productos.codigo", "LIKE", "%$value%")
+                ->orWhere("productos.nombre", "LIKE", "%$value%")
+                ->orWhere("productos.medida", "LIKE", "%$value%")
+                ->orWhere("productos.precio", "LIKE", "%$value%")
+                ->orWhere("productos.precio_mayor", "LIKE", "%$value%")
+                ->orWhere("productos.fecha_registro", "LIKE", "%$value%")
+                ->orWhere("grupos.nombre", "LIKE", "%$value%")
+                ->orderBy("grupos.nombre", "ASC")
+                ->orderBy("productos.codigo", "ASC")
+                ->orderBy("productos.medida", "ASC")
+                ->get()->take(100);
+        } else {
+            $productos = Producto::select("productos.*")
+                ->join("grupos", "grupos.id", "=", "productos.grupo_id")
+                ->where("productos." . $sw_busqueda, $value)
+                ->get()->take(100);
+        }
+
         return response()->JSON($productos);
     }
 
@@ -493,28 +483,44 @@ class ProductoController extends Controller
 
     public function productos_sucursal(Request $request)
     {
+        $sw_busqueda = $request->sw_busqueda;
         $productos = [];
         if (isset($request->value)) {
             $value = $request->value;
-            $productos = SucursalStock::select("sucursal_stocks.*")
-                ->with("producto.grupo")
-                ->join("productos", "productos.id", "=", "sucursal_stocks.producto_id")
-                ->join("grupos", "grupos.id", "=", "productos.grupo_id")
-                ->where(function ($query) use ($value) {
-                    $query->where('productos.id', "%$value%")
-                        ->orWhere('productos.id', "LIKE", "%$value%")
-                        ->orWhere("productos.codigo", "LIKE", "%$value%")
-                        ->orWhere("productos.nombre", "LIKE", "%$value%")
-                        ->orWhere("productos.medida", "LIKE", "%$value%")
-                        ->orWhere("productos.precio", "LIKE", "%$value%")
-                        ->orWhere("productos.precio_mayor", "LIKE", "%$value%")
-                        ->orWhere("productos.fecha_registro", "LIKE", "%$value%")
-                        ->orWhere("grupos.nombre", "LIKE", "%$value%");
-                })
-                ->orderBy("grupos.nombre", "ASC")
-                ->orderBy("productos.codigo", "ASC")
-                ->orderBy("productos.medida", "ASC")
-                ->get()->take(100);
+            $productos = [];
+            if ($sw_busqueda == 'todos') {
+                $productos = SucursalStock::select("sucursal_stocks.*")
+                    ->with("producto.grupo")
+                    ->join("productos", "productos.id", "=", "sucursal_stocks.producto_id")
+                    ->join("grupos", "grupos.id", "=", "productos.grupo_id")
+                    ->where(function ($query) use ($value) {
+                        $query->where('productos.id', "%$value%")
+                            ->orWhere('productos.id', "LIKE", "%$value%")
+                            ->orWhere("productos.codigo", "LIKE", "%$value%")
+                            ->orWhere("productos.nombre", "LIKE", "%$value%")
+                            ->orWhere("productos.medida", "LIKE", "%$value%")
+                            ->orWhere("productos.precio", "LIKE", "%$value%")
+                            ->orWhere("productos.precio_mayor", "LIKE", "%$value%")
+                            ->orWhere("productos.fecha_registro", "LIKE", "%$value%")
+                            ->orWhere("grupos.nombre", "LIKE", "%$value%");
+                    })
+                    ->orderBy("grupos.nombre", "ASC")
+                    ->orderBy("productos.codigo", "ASC")
+                    ->orderBy("productos.medida", "ASC")
+                    ->get()->take(100);
+            } else {
+                $productos = SucursalStock::select("sucursal_stocks.*")
+                    ->with("producto.grupo")
+                    ->join("productos", "productos.id", "=", "sucursal_stocks.producto_id")
+                    ->join("grupos", "grupos.id", "=", "productos.grupo_id")
+                    ->where(function ($query) use ($value, $sw_busqueda) {
+                        $query->where('productos.' . $sw_busqueda, $value);
+                    })
+                    ->orderBy("grupos.nombre", "ASC")
+                    ->orderBy("productos.codigo", "ASC")
+                    ->orderBy("productos.medida", "ASC")
+                    ->get()->take(100);
+            }
         } else {
             $productos = SucursalStock::with("sucursal")->with("producto.grupo")->where("sucursal_id", $request->id)->get();
         }

@@ -24,7 +24,7 @@
                     <form>
                         <div class="row">
                             <div
-                                class="form-group col-md-6"
+                                class="form-group col-md-12"
                                 v-if="accion != 'edit'"
                             >
                                 <label
@@ -59,7 +59,7 @@
                                     v-text="errors.lugar[0]"
                                 ></span>
                             </div>
-                            <div class="form-group col-md-6" v-else>
+                            <div class="form-group col-md-12" v-else>
                                 <label
                                     :class="{
                                         'text-danger': errors.lugar,
@@ -74,14 +74,101 @@
                                 />
                             </div>
                             <div
-                                class="form-group col-md-6"
+                                class="form-group col-md-12"
                                 v-if="accion != 'edit'"
                             >
+                                <div
+                                    class="text-center form-group clearfix mb-0 mt-0"
+                                >
+                                    <label
+                                        >Ajustar busqueda <br /><small
+                                            ><i
+                                                >Realizará la busqueda
+                                                exactamente por la columna
+                                                seleccionada</i
+                                            ></small
+                                        ></label
+                                    >
+                                </div>
+                                <div
+                                    class="text-center form-group clearfix mb-1"
+                                >
+                                    <div class="icheck-primary d-inline">
+                                        <input
+                                            type="radio"
+                                            id="radioPrimary5"
+                                            name="sw_busqueda"
+                                            value="todos"
+                                            v-model="sw_busqueda"
+                                            @change="
+                                                aux_lista_productos = [];
+                                                ingreso_producto.producto_id =
+                                                    '';
+                                            "
+                                            checked=""
+                                        />
+                                        <label for="radioPrimary5">
+                                            Todos
+                                        </label>
+                                    </div>
+                                    <div class="icheck-primary d-inline">
+                                        <input
+                                            type="radio"
+                                            id="radioPrimary6"
+                                            name="sw_busqueda"
+                                            value="codigo"
+                                            v-model="sw_busqueda"
+                                            @change="
+                                                aux_lista_productos = [];
+                                                ingreso_producto.producto_id =
+                                                    '';
+                                            "
+                                        />
+                                        <label for="radioPrimary6">
+                                            Código
+                                        </label>
+                                    </div>
+                                    <div class="icheck-primary d-inline">
+                                        <input
+                                            type="radio"
+                                            id="radioPrimary7"
+                                            name="sw_busqueda"
+                                            value="medida"
+                                            v-model="sw_busqueda"
+                                            @change="
+                                                aux_lista_productos = [];
+                                                ingreso_producto.producto_id =
+                                                    '';
+                                            "
+                                        />
+                                        <label for="radioPrimary7">
+                                            Medida
+                                        </label>
+                                    </div>
+                                    <div class="icheck-primary d-inline">
+                                        <input
+                                            type="radio"
+                                            id="radioPrimary8"
+                                            name="sw_busqueda"
+                                            value="nombre"
+                                            v-model="sw_busqueda"
+                                            @change="
+                                                aux_lista_productos = [];
+                                                ingreso_producto.producto_id =
+                                                    '';
+                                            "
+                                        />
+                                        <label for="radioPrimary8">
+                                            Nombre
+                                        </label>
+                                    </div>
+                                </div>
+
                                 <label
                                     :class="{
                                         'text-danger': errors.producto_id,
                                     }"
-                                    >Seleleccionar Producto*</label
+                                    >Seleccionar Producto*</label
                                 >
 
                                 <el-select
@@ -101,10 +188,11 @@
                                         v-for="item in aux_lista_productos"
                                         :key="item.id"
                                         :label="
+                                            item.codigo +
+                                            ' | ' +
                                             item.nombre +
-                                            ' (' +
-                                            item.medida +
-                                            ')'
+                                            ' | ' +
+                                            item.medida
                                         "
                                         :value="item.id"
                                     >
@@ -116,7 +204,7 @@
                                     v-text="errors.producto_id[0]"
                                 ></span>
                             </div>
-                            <div class="form-group col-md-6" v-else>
+                            <div class="form-group col-md-12" v-else>
                                 <label
                                     :class="{
                                         'text-danger': errors.producto_id,
@@ -127,7 +215,9 @@
                                     type="readonly"
                                     class="form-control"
                                     readonly
-                                    v-model="ingreso_producto.nombre_producto"
+                                    v-model="
+                                        ingreso_producto.nombre_producto_full
+                                    "
                                 />
                             </div>
                             <div class="form-group col-md-6">
@@ -307,6 +397,7 @@ export default {
                 cantidad: "",
                 tipo_ingreso_id: "",
                 descripcion: "",
+                nombre_producto_full: "",
             },
         },
     },
@@ -348,6 +439,7 @@ export default {
             listTipoIngresos: [],
             loading_buscador: false,
             timeOutProductos: null,
+            sw_busqueda: "todos",
         };
     },
     mounted() {
@@ -515,7 +607,10 @@ export default {
             if (query !== "") {
                 axios
                     .get("/admin/productos/buscar_producto", {
-                        params: { value: query },
+                        params: {
+                            value: query,
+                            sw_busqueda: this.sw_busqueda,
+                        },
                     })
                     .then((response) => {
                         this.loading_buscador = false;
