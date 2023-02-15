@@ -24,8 +24,8 @@
                 type="number"
                 class="form-control input_stock_importacion"
                 v-model="cantidad"
-                @change="enviaCantidad"
-                @keyup="enviaCantidad"
+                @change="enviaCantidad('cantidad')"
+                @keyup="enviaCantidad('cantidad')"
             />
             <input
                 v-else
@@ -33,6 +33,24 @@
                 class="form-control"
                 v-model="cantidad"
                 readonly
+            />
+        </td>
+        <td>
+            <input
+                type="number"
+                class="form-control input_stock_importacion"
+                v-model="precio"
+                @change="enviaCantidad('precio')"
+                @keyup="enviaCantidad('precio')"
+            />
+        </td>
+        <td>
+            <input
+                type="number"
+                class="form-control input_stock_importacion"
+                v-model="stock_min"
+                @change="enviaCantidad('stock_min')"
+                @keyup="enviaCantidad('stock_min')"
             />
         </td>
     </tr>
@@ -43,6 +61,8 @@ export default {
     data() {
         return {
             cantidad: 0,
+            precio: 0,
+            stock_min: 0,
             importacion_apertura: this.o_importacion_apertura,
             existe_ventas: false,
             setTimeEnvio: null,
@@ -68,17 +88,20 @@ export default {
                 })
                 .then((response) => {
                     this.cantidad = response.data.stock_actual;
+                    this.precio = response.data.producto.precio;
+                    this.stock_min = response.data.producto.stock_min;
+                    console.log("EEE");
                 });
         },
-        enviaCantidad() {
+        enviaCantidad(col) {
             clearTimeout(this.setTimeEnvio);
             let self = this;
             this.setTimeEnvio = setTimeout(function () {
-                self.actualizaStock();
+                self.actualizaStock(col);
             }, 700);
         },
         // ENVIAR REGISTRO
-        actualizaStock() {
+        actualizaStock(col) {
             // this.enviando = true;
             if (this.cantidad != "") {
                 try {
@@ -88,6 +111,9 @@ export default {
                             id: this.producto.id,
                             lugar: this.importacion_apertura.lugar,
                             cantidad: this.cantidad,
+                            precio: this.precio,
+                            stock_min: this.stock_min,
+                            col: col,
                         })
                         .then((res) => {
                             // this.enviando = false;

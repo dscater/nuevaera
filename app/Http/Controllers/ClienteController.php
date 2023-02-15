@@ -14,7 +14,6 @@ class ClienteController extends Controller
         'nombre' => 'required',
         'ci' => 'required',
         'ci_exp' => 'required',
-        'fono' => 'required',
     ];
 
     public $mensajes = [];

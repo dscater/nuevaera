@@ -47,7 +47,7 @@
                             class="bg-warning btn-block btn-flat"
                             :loading="enviando"
                             @click="finalizarImportacion()"
-                            >FINALIZAR IMPORTACIÓN</el-button
+                            ><i class="fa fa-check"></i> FINALIZAR IMPORTACIÓN</el-button
                         >
                     </div>
                 </div>
@@ -73,6 +73,8 @@
                                     <th>MEDIDA</th>
                                     <th>PRODUCTO</th>
                                     <th>STOCK</th>
+                                    <th>PRECIO</th>
+                                    <th>STOCK MIN.</th>
                                 </tr>
                             </thead>
                             <tbody id="contenedor_productos">

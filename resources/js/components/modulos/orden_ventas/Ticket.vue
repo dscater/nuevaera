@@ -55,7 +55,7 @@
                                             CI/NIT: {{ oOrdenVenta.nit }}
                                             <br />
                                             Tipo:
-                                            {{ oOrdenVenta.tipo_venta }}
+                                            {{ oOrdenVenta.tipo_venta }} - <span v-if="oOrdenVenta.tipo_venta=='A CRÉDITO'">{{oOrdenVenta.estado}}</span>
                                             <br />
                                             Caja:
                                             {{ oOrdenVenta.user?.usuario }}
@@ -100,11 +100,36 @@
                                                     <td
                                                         colspan="3"
                                                         class="bold elemento"
+                                                        style="text-align:right;padding-right:4px;"
                                                     >
                                                         TOTAL
                                                     </td>
                                                     <td class="centreado bold">
                                                         {{ oOrdenVenta.total }}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td
+                                                        colspan="3"
+                                                        class="bold elemento"
+                                                        style="text-align:right;padding-right:4px;"
+                                                    >
+                                                        DESCUENTO %
+                                                    </td>
+                                                    <td class="centreado bold">
+                                                        {{ oOrdenVenta.descuento }}
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td
+                                                        colspan="3"
+                                                        class="bold elemento"
+                                                        style="text-align:right;padding-right:4px;"
+                                                    >
+                                                        TOTAL FINAL
+                                                    </td>
+                                                    <td class="centreado bold">
+                                                        {{ oOrdenVenta.total_final }}
                                                     </td>
                                                 </tr>
                                             </table>
@@ -286,7 +311,7 @@ export default {
                     if (this.devolucion && this.total_cantidad_devolucion > 0) {
                         this.total_final = response.data.total_final;
                     } else {
-                        this.total_final = this.oOrdenVenta.total;
+                        this.total_final = this.oOrdenVenta.total_final;
                     }
                     this.getLiteral();
                 });

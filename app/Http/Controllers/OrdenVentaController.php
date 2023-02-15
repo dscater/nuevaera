@@ -24,6 +24,8 @@ class OrdenVentaController extends Controller
         "caja_id" => "required",
         "cliente_id" => "required",
         "tipo_venta" => "required",
+        "descuento" => "required|numeric|min:0|max:100",
+        "total_final" => "required",
     ];
 
     public function index()
@@ -327,9 +329,12 @@ class OrdenVentaController extends Controller
 
     public function getDevolucions(Request $request)
     {
+        $orden_venta = OrdenVenta::findOrFail($request->id);
         $devolucion = Devolucion::with("devolucion_detalles.producto")->with("devolucion_detalles.detalle_orden")->where("orden_id", $request->id)->get()->first();
         $total_cantidad_devolucion = 0;
         $total_final = 0;
+        $p_descuento = $orden_venta->descuento / 100;
+        $descuento = 0;
         if ($devolucion) {
             $orden_venta = $devolucion->orden;
             $total_final = $devolucion->orden->total;
@@ -345,10 +350,16 @@ class OrdenVentaController extends Controller
                 }
                 $total_final = (float)$total_final - $total_devolucion;
             }
+            $descuento = $total_final * $p_descuento;
+            $total_final = $total_final - $descuento;
+        } else {
+            $total_final = $orden_venta->total_final;
         }
+
         return response()->JSON([
             "devolucion" => $devolucion,
             "total_cantidad_devolucion" => $total_cantidad_devolucion,
+            "p_descuento" => $p_descuento,
             "total_final" => number_format($total_final, 2, '.', '')
         ]);
     }

@@ -117,7 +117,7 @@
                                     :class="{
                                         'text-danger': errors.fono,
                                     }"
-                                    >Teléfono/Celular*</label
+                                    >Teléfono/Celular</label
                                 >
                                 <b-form-tags
                                     input-id="tags-basic"

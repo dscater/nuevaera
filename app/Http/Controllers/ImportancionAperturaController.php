@@ -116,57 +116,22 @@ class ImportancionAperturaController extends Controller
         DB::beginTransaction();
         try {
             // crear ImportancionApertura
+            $col = $request->col;
             $cantidad = $request->cantidad;
+            $precio = $request->precio;
+            $stock_min = $request->stock_min;
+
             $producto = Producto::findOrFail($request->id);
-            if ($request->lugar == 'ALMACEN') {
-                $existe = Almacen::where("producto_id", $producto->id)->get()->first();
-                if (!$existe) {
-                    $existe = Almacen::create([
-                        "producto_id" => $producto->id,
-                        "stock_actual" => $cantidad,
-                    ]);
-                    $monto = (float)$cantidad * (float)$producto->precio;
-                    KardexProducto::create([
-                        'lugar' => "ALMACEN",
-                        'tipo_registro' => "APERTURA ALMACEN", //INGRESO, EGRESO, VENTA, COMPRA,etc...
-                        'registro_id' => $existe->id,
-                        'producto_id' => $producto->id,
-                        'detalle' => "VALOR INICIAL POR APERTURA",
-                        'precio' => $producto->precio,
-                        'tipo_is' => 'INGRESO',
-                        'cantidad_ingreso' => $cantidad,
-                        'cantidad_saldo' => (float)$cantidad,
-                        'cu' => $producto->precio,
-                        'monto_ingreso' => $monto,
-                        'monto_saldo' => $monto,
-                        'fecha' => date('Y-m-d'),
-                    ]);
-                } else {
-                    $existe->update([
-                        "stock_actual" => $cantidad,
-                    ]);
-                    $monto = (float)$cantidad * (float)$producto->precio;
-                    $kardex = KardexProducto::where("lugar", "ALMACEN")
-                        ->where("producto_id", $producto->id)
-                        ->where("tipo_registro", "APERTURA ALMACEN")
-                        ->get()->first();
-                    if ($kardex) {
-                        $kardex->update([
-                            'lugar' => "ALMACEN",
-                            'tipo_registro' => "APERTURA ALMACEN", //INGRESO, EGRESO, VENTA, COMPRA,etc...
-                            'registro_id' => $existe->id,
-                            'producto_id' => $producto->id,
-                            'detalle' => "VALOR INICIAL POR APERTURA",
-                            'precio' => $producto->precio,
-                            'tipo_is' => 'INGRESO',
-                            'cantidad_ingreso' => $cantidad,
-                            'cantidad_saldo' => (float)$cantidad,
-                            'cu' => $producto->precio,
-                            'monto_ingreso' => $monto,
-                            'monto_saldo' => $monto,
-                            'fecha' => date('Y-m-d'),
+
+            if ($col == 'cantidad') {
+                if ($request->lugar == 'ALMACEN') {
+                    $existe = Almacen::where("producto_id", $producto->id)->get()->first();
+                    if (!$existe) {
+                        $existe = Almacen::create([
+                            "producto_id" => $producto->id,
+                            "stock_actual" => $cantidad,
                         ]);
-                    } else {
+                        $monto = (float)$cantidad * (float)$producto->precio;
                         KardexProducto::create([
                             'lugar' => "ALMACEN",
                             'tipo_registro' => "APERTURA ALMACEN", //INGRESO, EGRESO, VENTA, COMPRA,etc...
@@ -182,74 +147,120 @@ class ImportancionAperturaController extends Controller
                             'monto_saldo' => $monto,
                             'fecha' => date('Y-m-d'),
                         ]);
+                    } else {
+                        $existe->update([
+                            "stock_actual" => $cantidad,
+                        ]);
+                        $monto = (float)$cantidad * (float)$producto->precio;
+                        $kardex = KardexProducto::where("lugar", "ALMACEN")
+                            ->where("producto_id", $producto->id)
+                            ->where("tipo_registro", "APERTURA ALMACEN")
+                            ->get()->first();
+                        if ($kardex) {
+                            $kardex->update([
+                                'lugar' => "ALMACEN",
+                                'tipo_registro' => "APERTURA ALMACEN", //INGRESO, EGRESO, VENTA, COMPRA,etc...
+                                'registro_id' => $existe->id,
+                                'producto_id' => $producto->id,
+                                'detalle' => "VALOR INICIAL POR APERTURA",
+                                'precio' => $producto->precio,
+                                'tipo_is' => 'INGRESO',
+                                'cantidad_ingreso' => $cantidad,
+                                'cantidad_saldo' => (float)$cantidad,
+                                'cu' => $producto->precio,
+                                'monto_ingreso' => $monto,
+                                'monto_saldo' => $monto,
+                                'fecha' => date('Y-m-d'),
+                            ]);
+                        } else {
+                            KardexProducto::create([
+                                'lugar' => "ALMACEN",
+                                'tipo_registro' => "APERTURA ALMACEN", //INGRESO, EGRESO, VENTA, COMPRA,etc...
+                                'registro_id' => $existe->id,
+                                'producto_id' => $producto->id,
+                                'detalle' => "VALOR INICIAL POR APERTURA",
+                                'precio' => $producto->precio,
+                                'tipo_is' => 'INGRESO',
+                                'cantidad_ingreso' => $cantidad,
+                                'cantidad_saldo' => (float)$cantidad,
+                                'cu' => $producto->precio,
+                                'monto_ingreso' => $monto,
+                                'monto_saldo' => $monto,
+                                'fecha' => date('Y-m-d'),
+                            ]);
+                        }
+                    }
+                } else {
+                    $existe = SucursalStock::where("producto_id", $producto->id)->get()->first();
+                    if (!$existe) {
+                        $existe = SucursalStock::create([
+                            "producto_id" => $producto->id,
+                            "stock_actual" => $cantidad,
+                        ]);
+                        $monto = (float)$cantidad * (float)$producto->precio;
+                        KardexProducto::create([
+                            'lugar' => "SUCURSAL",
+                            'tipo_registro' => "APERTURA SUCURSAL", //INGRESO, EGRESO, VENTA, COMPRA,etc...
+                            'registro_id' => $existe->id,
+                            'producto_id' => $producto->id,
+                            'detalle' => "VALOR INICIAL POR APERTURA",
+                            'precio' => $producto->precio,
+                            'tipo_is' => 'INGRESO',
+                            'cantidad_ingreso' => $cantidad,
+                            'cantidad_saldo' => (float)$cantidad,
+                            'cu' => $producto->precio,
+                            'monto_ingreso' => $monto,
+                            'monto_saldo' => $monto,
+                            'fecha' => date('Y-m-d'),
+                        ]);
+                    } else {
+                        $existe->update([
+                            "stock_actual" => $cantidad,
+                        ]);
+                        $monto = (float)$cantidad * (float)$producto->precio;
+                        $kardex = KardexProducto::where("lugar", "SUCURSAL")
+                            ->where("producto_id", $producto->id)
+                            ->where("tipo_registro", "APERTURA SUCURSAL")
+                            ->get()->first();
+                        if ($kardex) {
+                            $kardex->update([
+                                'lugar' => "SUCURSAL",
+                                'tipo_registro' => "APERTURA SUCURSAL", //INGRESO, EGRESO, VENTA, COMPRA,etc...
+                                'registro_id' => $existe->id,
+                                'producto_id' => $producto->id,
+                                'detalle' => "VALOR INICIAL POR APERTURA",
+                                'precio' => $producto->precio,
+                                'tipo_is' => 'INGRESO',
+                                'cantidad_ingreso' => $cantidad,
+                                'cantidad_saldo' => (float)$cantidad,
+                                'cu' => $producto->precio,
+                                'monto_ingreso' => $monto,
+                                'monto_saldo' => $monto,
+                                'fecha' => date('Y-m-d'),
+                            ]);
+                        } else {
+                            KardexProducto::create([
+                                'lugar' => "SUCURSAL",
+                                'tipo_registro' => "APERTURA SUCURSAL", //INGRESO, EGRESO, VENTA, COMPRA,etc...
+                                'registro_id' => $existe->id,
+                                'producto_id' => $producto->id,
+                                'detalle' => "VALOR INICIAL POR APERTURA",
+                                'precio' => $producto->precio,
+                                'tipo_is' => 'INGRESO',
+                                'cantidad_ingreso' => $cantidad,
+                                'cantidad_saldo' => (float)$cantidad,
+                                'cu' => $producto->precio,
+                                'monto_ingreso' => $monto,
+                                'monto_saldo' => $monto,
+                                'fecha' => date('Y-m-d'),
+                            ]);
+                        }
                     }
                 }
             } else {
-                $existe = SucursalStock::where("producto_id", $producto->id)->get()->first();
-                if (!$existe) {
-                    $existe = SucursalStock::create([
-                        "producto_id" => $producto->id,
-                        "stock_actual" => $cantidad,
-                    ]);
-                    $monto = (float)$cantidad * (float)$producto->precio;
-                    KardexProducto::create([
-                        'lugar' => "SUCURSAL",
-                        'tipo_registro' => "APERTURA SUCURSAL", //INGRESO, EGRESO, VENTA, COMPRA,etc...
-                        'registro_id' => $existe->id,
-                        'producto_id' => $producto->id,
-                        'detalle' => "VALOR INICIAL POR APERTURA",
-                        'precio' => $producto->precio,
-                        'tipo_is' => 'INGRESO',
-                        'cantidad_ingreso' => $cantidad,
-                        'cantidad_saldo' => (float)$cantidad,
-                        'cu' => $producto->precio,
-                        'monto_ingreso' => $monto,
-                        'monto_saldo' => $monto,
-                        'fecha' => date('Y-m-d'),
-                    ]);
-                } else {
-                    $existe->update([
-                        "stock_actual" => $cantidad,
-                    ]);
-                    $monto = (float)$cantidad * (float)$producto->precio;
-                    $kardex = KardexProducto::where("lugar", "SUCURSAL")
-                        ->where("producto_id", $producto->id)
-                        ->where("tipo_registro", "APERTURA SUCURSAL")
-                        ->get()->first();
-                    if ($kardex) {
-                        $kardex->update([
-                            'lugar' => "SUCURSAL",
-                            'tipo_registro' => "APERTURA SUCURSAL", //INGRESO, EGRESO, VENTA, COMPRA,etc...
-                            'registro_id' => $existe->id,
-                            'producto_id' => $producto->id,
-                            'detalle' => "VALOR INICIAL POR APERTURA",
-                            'precio' => $producto->precio,
-                            'tipo_is' => 'INGRESO',
-                            'cantidad_ingreso' => $cantidad,
-                            'cantidad_saldo' => (float)$cantidad,
-                            'cu' => $producto->precio,
-                            'monto_ingreso' => $monto,
-                            'monto_saldo' => $monto,
-                            'fecha' => date('Y-m-d'),
-                        ]);
-                    } else {
-                        KardexProducto::create([
-                            'lugar' => "SUCURSAL",
-                            'tipo_registro' => "APERTURA SUCURSAL", //INGRESO, EGRESO, VENTA, COMPRA,etc...
-                            'registro_id' => $existe->id,
-                            'producto_id' => $producto->id,
-                            'detalle' => "VALOR INICIAL POR APERTURA",
-                            'precio' => $producto->precio,
-                            'tipo_is' => 'INGRESO',
-                            'cantidad_ingreso' => $cantidad,
-                            'cantidad_saldo' => (float)$cantidad,
-                            'cu' => $producto->precio,
-                            'monto_ingreso' => $monto,
-                            'monto_saldo' => $monto,
-                            'fecha' => date('Y-m-d'),
-                        ]);
-                    }
-                }
+                $producto->precio = isset($precio) && $precio != '' ? $precio : 0;
+                $producto->stock_min = isset($stock_min) && $stock_min != '' ? $stock_min : 0;
+                $producto->save();
             }
 
             DB::commit();

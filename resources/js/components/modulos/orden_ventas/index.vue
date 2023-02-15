@@ -214,6 +214,11 @@ export default {
             showOverlay: false,
             fields: [
                 {
+                    key: "id",
+                    label: "Nro. Orden",
+                    sortable: true,
+                },
+                {
                     key: "caja.nombre",
                     label: "Caja",
                     sortable: true,

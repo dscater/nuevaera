@@ -95,6 +95,22 @@
                                                                 class="fa fa-print"
                                                             ></i>
                                                         </router-link> -->
+                                                        <router-link
+                                                            pill
+                                                            class="btn btn-outline-primary rounded-pill mb-1"
+                                                            title="Ticket"
+                                                            :to="{
+                                                                name: 'orden_ventas.ticket',
+                                                                params: {
+                                                                    id: row.item.orden_id,
+                                                                    imprime: true,
+                                                                },
+                                                            }"
+                                                        >
+                                                            <i
+                                                                class="fa fa-print"
+                                                            ></i>
+                                                        </router-link>
                                                         <b-button
                                                             v-if="
                                                                 row.item

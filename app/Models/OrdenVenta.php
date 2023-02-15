@@ -10,7 +10,7 @@ class OrdenVenta extends Model
     use HasFactory;
 
     protected $fillable = [
-        "user_id", "caja_id", "cliente_id", "nit", "total", "tipo_venta", "estado", "fecha_registro",
+        "user_id", "caja_id", "cliente_id", "nit", "total", "descuento", "total_final", "tipo_venta", "estado", "fecha_registro",
     ];
 
     protected $appends = ["editable", "fecha_formateado", "hora", "nro_orden"];

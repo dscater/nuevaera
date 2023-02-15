@@ -447,6 +447,56 @@
                 </div>
             </div>
             <div class="row">
+                <div class="form-group col-md-12">
+                    <label
+                        :class="{
+                            'text-danger': errors.descuento,
+                        }"
+                        >Descuento %</label
+                    >
+                    <input
+                        type="number"
+                        class="form-control"
+                        :class="{
+                            'is-invalid': errors.descuento,
+                        }"
+                        max="100"
+                        min="0"
+                        step="0.01"
+                        v-model="orden_venta.descuento"
+                        @keyup="sumaTotalOrdenVenta"
+                        @change="sumaTotalOrdenVenta"
+                    />
+                    <span
+                        class="error invalid-feedback"
+                        v-if="errors.descuento"
+                        v-text="errors.descuento[0]"
+                    ></span>
+                </div>
+                <div class="form-group col-md-12">
+                    <label
+                        :class="{
+                            'text-danger': errors.total_final,
+                        }"
+                        >Total final</label
+                    >
+                    <input
+                        type="number"
+                        class="form-control"
+                        :class="{
+                            'is-invalid': errors.total_final,
+                        }"
+                        v-model="orden_venta.total_final"
+                        readonly
+                    />
+                    <span
+                        class="error invalid-feedback"
+                        v-if="errors.total_final"
+                        v-text="errors.total_final[0]"
+                    ></span>
+                </div>
+            </div>
+            <div class="row">
                 <div class="col-md-12">
                     <el-button
                         type="warning"
@@ -516,6 +566,8 @@ export default {
                     cliente_id: "",
                     nit: "",
                     total: "0.00",
+                    descuento: "0",
+                    total_final: "0.00",
                     tipo_venta: "AL CONTADO",
                     detalle_ordens: [],
                     editable: true,
@@ -870,6 +922,26 @@ export default {
                 suma_total += parseFloat(elem.subtotal);
             });
             this.orden_venta.total = suma_total.toFixed(2);
+
+            // agrega descuento
+            if(this.orden_venta.descuento != ''){
+                if(parseFloat(this.orden_venta.descuento) >= 0 && parseFloat(this.orden_venta.descuento) <= 100){
+                    let p_descuento = parseFloat(this.orden_venta.descuento !=''?this.orden_venta.descuento:0) / 100;
+                    let descuento = parseFloat(this.orden_venta.total) * p_descuento;
+                    this.orden_venta.total_final = parseFloat(parseFloat(this.orden_venta.total) - descuento).toFixed(2);
+                }
+                else{
+                    this.orden_venta.descuento = 0;
+                    this.orden_venta.total_final = this.orden_venta.total;
+                    Swal.fire({
+                        icon: "info",
+                        title: "ATENCIÓN",
+                        html: "Debes ingresar un descuento entre 0 y 100%",
+                        showConfirmButton: false,
+                        timer: 2500,
+                    });
+                }
+            }
         },
         quitarDetalleOrdenVenta(id, index) {
             if (id) {
