@@ -17,7 +17,6 @@ class IngresoProductoController extends Controller
         'lugar' => 'required',
         'producto_id' => 'required',
         'proveedor_id' => 'required',
-        'precio_compra' => 'required|numeric',
         'cantidad' => 'required|numeric',
         'tipo_ingreso_id' => 'required',
     ];

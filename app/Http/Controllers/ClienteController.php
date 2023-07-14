@@ -12,8 +12,8 @@ class ClienteController extends Controller
 {
     public $validacion = [
         'nombre' => 'required',
-        'ci' => 'required',
-        'ci_exp' => 'required',
+        // 'ci' => 'required',
+        // 'ci_exp' => 'required',
     ];
 
     public $mensajes = [];

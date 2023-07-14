@@ -48,7 +48,7 @@
                                     :class="{
                                         'text-danger': errors.ci,
                                     }"
-                                    >Número de C.I.*</label
+                                    >Número de C.I.</label
                                 >
                                 <el-input
                                     placeholder="Número de C.I."
@@ -68,7 +68,7 @@
                                     :class="{
                                         'text-danger': errors.ci_exp,
                                     }"
-                                    >Expedición C.I.*</label
+                                    >Expedición C.I.</label
                                 >
                                 <el-select
                                     class="w-100 d-block"
@@ -207,7 +207,7 @@ export default {
         muestra_modal: function (newVal, oldVal) {
             this.errors = [];
             if (newVal) {
-                this.getSucursalCajas();
+                // this.getSucursalCajas();
                 this.bModal = true;
             } else {
                 this.bModal = false;
@@ -255,15 +255,15 @@ export default {
         this.bModal = this.muestra_modal;
     },
     methods: {
-        getSucursalCajas() {
-            axios
-                .get("/admin/sucursals/getCajas", {
-                    params: { id: this.cliente.sucursal_id },
-                })
-                .then((response) => {
-                    this.listCajas = response.data;
-                });
-        },
+        // getSucursalCajas() {
+        //     axios
+        //         .get("/admin/sucursals/getCajas", {
+        //             params: { id: this.cliente.sucursal_id },
+        //         })
+        //         .then((response) => {
+        //             this.listCajas = response.data;
+        //         });
+        // },
         setRegistroModal() {
             this.enviando = true;
             try {

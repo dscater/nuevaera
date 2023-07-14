@@ -1,1 +1,0 @@
-ALTER TABLE `orden_ventas` ADD `descuento` DOUBLE(8,2) NOT NULL AFTER `total`, ADD `total_final` DECIMAL(24,2) NOT NULL AFTER `descuento`;

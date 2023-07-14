@@ -48,7 +48,7 @@
                                     :class="{
                                         'text-danger': errors.ci,
                                     }"
-                                    >Número de C.I.*</label
+                                    >Número de C.I.</label
                                 >
                                 <el-input
                                     placeholder="Número de C.I."
@@ -68,7 +68,7 @@
                                     :class="{
                                         'text-danger': errors.ci_exp,
                                     }"
-                                    >Expedición C.I.*</label
+                                    >Expedición C.I.</label
                                 >
                                 <el-select
                                     class="w-100 d-block"

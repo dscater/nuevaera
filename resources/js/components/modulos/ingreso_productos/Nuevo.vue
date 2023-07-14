@@ -255,7 +255,7 @@
                                     :class="{
                                         'text-danger': errors.precio_compra,
                                     }"
-                                    >Precio de compra*</label
+                                    >Precio de compra</label
                                 >
                                 <el-input
                                     type="number"
@@ -487,12 +487,12 @@ export default {
                         ? this.ingreso_producto.proveedor_id
                         : ""
                 );
-                formdata.append(
-                    "precio_compra",
-                    this.ingreso_producto.precio_compra
-                        ? this.ingreso_producto.precio_compra
-                        : ""
-                );
+                if (this.ingreso_producto.precio_compra) {
+                    formdata.append(
+                        "precio_compra",
+                        this.ingreso_producto.precio_compra
+                    );
+                }
                 formdata.append(
                     "cantidad",
                     this.ingreso_producto.cantidad
