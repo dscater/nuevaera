@@ -317,12 +317,12 @@ class ImportancionAperturaController extends Controller
                 $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xls();
             }
             $spreadsheet = $reader->load($archivo);
-            $fila = 2;
+            $fila = 6;
             // recorrer las filas del archivo
             $fecha_actual = date("Y-m-d");
             while (trim($spreadsheet->getSheet(0)->getCell('A' . $fila)->getValue()) != "") {
                 // realizar el registro
-                $nom_grupo = trim($spreadsheet->getSheet(0)->getCell('B' . $fila)->getValue());
+                $nom_grupo = trim($spreadsheet->getSheet(0)->getCell('A' . $fila)->getValue());
                 $existe_grupo = Grupo::where("nombre", $nom_grupo)->get()->first();
                 if (!$existe_grupo) {
                     $existe_grupo = Grupo::create([
@@ -331,12 +331,12 @@ class ImportancionAperturaController extends Controller
                     ]);
                 }
                 Producto::create([
-                    "codigo" => $spreadsheet->getSheet(0)->getCell('C' . $fila)->getValue() != "" ? $spreadsheet->getSheet(0)->getCell('C' . $fila)->getValue() : "0",
-                    "nombre" => $spreadsheet->getSheet(0)->getCell('E' . $fila)->getValue() != "" ? $spreadsheet->getSheet(0)->getCell('E' . $fila)->getValue() : "",
-                    "medida" => $spreadsheet->getSheet(0)->getCell('F' . $fila)->getValue() != "" ? $spreadsheet->getSheet(0)->getCell('F' . $fila)->getValue() : "",
+                    "codigo" => $spreadsheet->getSheet(0)->getCell('B' . $fila)->getValue() != "" ? $spreadsheet->getSheet(0)->getCell('B' . $fila)->getValue() : "0",
+                    "nombre" => $spreadsheet->getSheet(0)->getCell('D' . $fila)->getValue() != "" ? $spreadsheet->getSheet(0)->getCell('D' . $fila)->getValue() : "",
+                    "medida" => $spreadsheet->getSheet(0)->getCell('C' . $fila)->getValue() != "" ? $spreadsheet->getSheet(0)->getCell('C' . $fila)->getValue() : "",
                     "grupo_id" => $existe_grupo->id,
-                    "precio" => $spreadsheet->getSheet(0)->getCell('L' . $fila)->getCalculatedValue(),
-                    "precio_mayor" => $spreadsheet->getSheet(0)->getCell('M' . $fila)->getCalculatedValue(),
+                    "precio" => $spreadsheet->getSheet(0)->getCell('E' . $fila)->getValue() != "" ? $spreadsheet->getSheet(0)->getCell('E' . $fila)->getValue() : "0",
+                    "precio_mayor" => $spreadsheet->getSheet(0)->getCell('E' . $fila)->getValue() != "" ? $spreadsheet->getSheet(0)->getCell('E' . $fila)->getValue() : "0",
                     "stock_min" => 0,
                     "descontar_stock" => "SI",
                     "fecha_registro" => $fecha_actual
