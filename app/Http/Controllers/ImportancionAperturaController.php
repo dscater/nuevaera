@@ -330,7 +330,7 @@ class ImportancionAperturaController extends Controller
                         "fecha_registro" => $fecha_actual
                     ]);
                 }
-                Producto::create([
+                $producto = Producto::create([
                     "codigo" => $spreadsheet->getSheet(0)->getCell('B' . $fila)->getValue() != "" ? $spreadsheet->getSheet(0)->getCell('B' . $fila)->getValue() : "0",
                     "nombre" => $spreadsheet->getSheet(0)->getCell('D' . $fila)->getValue() != "" ? $spreadsheet->getSheet(0)->getCell('D' . $fila)->getValue() : "",
                     "medida" => $spreadsheet->getSheet(0)->getCell('C' . $fila)->getValue() != "" ? $spreadsheet->getSheet(0)->getCell('C' . $fila)->getValue() : "",
@@ -341,6 +341,18 @@ class ImportancionAperturaController extends Controller
                     "descontar_stock" => "SI",
                     "fecha_registro" => $fecha_actual
                 ]);
+
+                $stock_almacen = $spreadsheet->getSheet(0)->getCell('F' . $fila)->getValue() != "" ? $spreadsheet->getSheet(0)->getCell('F' . $fila)->getValue() : "0";
+                $stock_sucursal = $spreadsheet->getSheet(0)->getCell('G' . $fila)->getValue() != "" ? $spreadsheet->getSheet(0)->getCell('G' . $fila)->getValue() : "0";
+                $stock_almacen = (float)$stock_almacen;
+                $stock_sucursal = (float)$stock_sucursal;
+
+                if ($stock_almacen > 0) {
+                    KardexProducto::registroIngreso("ALMACEN", "INGRESO", 0, $producto, $stock_almacen, $producto->precio);
+                }
+                if ($stock_sucursal > 0) {
+                    KardexProducto::registroIngreso("SUCURSAL", "INGRESO", 0, $producto, $stock_sucursal, $producto->precio);
+                }
 
                 $fila++;
             }
