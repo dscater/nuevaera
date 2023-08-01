@@ -93,7 +93,7 @@
                                                     </td>
                                                     <td class="izquierda">
                                                         {{
-                                                            item.producto.nombre
+                                                            item.producto.codigo
                                                         }}
                                                     </td>
                                                     <td class="centreado">
@@ -185,7 +185,7 @@
                                                     </td>
                                                     <td class="izquierda">
                                                         {{
-                                                            item.producto.nombre
+                                                            item.producto.codigo
                                                         }}
                                                     </td>
                                                 </tr>
