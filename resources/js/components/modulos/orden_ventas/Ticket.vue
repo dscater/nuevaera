@@ -73,13 +73,20 @@
                                             <table>
                                                 <tr class="punteado">
                                                     <td class="centreado">
-                                                        CANTIDAD
+                                                        CÓD.<br />
+                                                        PROD.
                                                     </td>
-                                                    <td class="centreado">
-                                                        PRODUCTO
+                                                    <td
+                                                        class="centreado"
+                                                        width="0.5cm"
+                                                    >
+                                                        MED.
                                                     </td>
                                                     <td class="centreado">
                                                         P/U
+                                                    </td>
+                                                    <td class="centreado">
+                                                        CANT.
                                                     </td>
                                                     <td class="centreado">
                                                         SUBTOTAL
@@ -89,15 +96,20 @@
                                                     v-for="item in oOrdenVenta.detalle_ordens"
                                                 >
                                                     <td class="centreado">
-                                                        {{ item.cantidad }}
-                                                    </td>
-                                                    <td class="izquierda">
                                                         {{
                                                             item.producto.codigo
                                                         }}
                                                     </td>
                                                     <td class="centreado">
+                                                        {{
+                                                            item.producto.medida
+                                                        }}
+                                                    </td>
+                                                    <td class="centreado">
                                                         {{ item.precio }}
+                                                    </td>
+                                                    <td class="centreado">
+                                                        {{ item.cantidad }}
                                                     </td>
                                                     <td class="centreado">
                                                         {{ item.subtotal }}
@@ -105,7 +117,7 @@
                                                 </tr>
                                                 <tr>
                                                     <td
-                                                        colspan="3"
+                                                        colspan="4"
                                                         class="bold elemento"
                                                         style="
                                                             text-align: right;
@@ -120,7 +132,7 @@
                                                 </tr>
                                                 <tr>
                                                     <td
-                                                        colspan="3"
+                                                        colspan="4"
                                                         class="bold elemento"
                                                         style="
                                                             text-align: right;
@@ -137,7 +149,7 @@
                                                 </tr>
                                                 <tr>
                                                     <td
-                                                        colspan="3"
+                                                        colspan="4"
                                                         class="bold elemento"
                                                         style="
                                                             text-align: right;
@@ -436,7 +448,7 @@ export default {
                     }
 
                     .cobro table tr td {
-                        font-size: 0.9em;
+                        font-size: 0.77em;
                     }
 
                     .literal {
@@ -565,7 +577,7 @@ export default {
 }
 
 .cobro table tr td {
-    font-size: 0.9em;
+    font-size: 0.77em;
 }
 
 .literal {

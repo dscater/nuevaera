@@ -102,7 +102,6 @@
                                                 <tr>
                                                     <td
                                                         data-col="Nombre Completo: "
-                                                        v-text
                                                     >
                                                         {{ oCliente.nombre }}
                                                     </td>
@@ -464,7 +463,8 @@
                             >
                                 <thead>
                                     <tr>
-                                        <th>Producto</th>
+                                        <th>Código Producto</th>
+                                        <th>Medida</th>
                                         <th>Precio Unitario</th>
                                         <th>Cantidad</th>
                                         <th>Subtotal</th>
@@ -481,8 +481,11 @@
                                             item, index
                                         ) in orden_venta.detalle_ordens"
                                     >
-                                        <td data-col="Nombre: ">
-                                            {{ item.producto.nombre }}
+                                        <td data-col="Código: ">
+                                            {{ item.producto.codigo }}
+                                        </td>
+                                        <td data-col="Medida: ">
+                                            {{ item.producto.medida }}
                                         </td>
                                         <td data-col="Precio Unitario: ">
                                             {{ item.precio }}
@@ -524,7 +527,7 @@
                                 </tbody>
                                 <tfoot class="bg-blue">
                                     <tr>
-                                        <td colspan="3" class="ocultar">
+                                        <td colspan="4" class="ocultar">
                                             TOTAL
                                         </td>
                                         <td

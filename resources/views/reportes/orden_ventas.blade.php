@@ -98,7 +98,9 @@
             color: white;
         }
 
-        tr { page-break-inside: avoid !important; }
+        tr {
+            page-break-inside: avoid !important;
+        }
 
         .centreado {
             padding-left: 0px;
@@ -189,7 +191,7 @@
                 </tr>
                 <tr>
                     <th class="izquierda">Cliente:</th>
-                    <th class="izquierda" colspan="3">{{ $orden->cliente->nombre }}</th>
+                    <th class="izquierda" colspan="3">{{ $orden->cliente ? $orden->cliente->nombre : '' }}</th>
                 </tr>
                 <tr>
                     <th class="izquierda">Nit:</th>
@@ -213,12 +215,14 @@
                     <td class="bold centreado">Subtotal</td>
                 </tr>
                 @foreach ($orden->detalle_ordens as $detalle)
-                    <tr>
-                        <td>{{ $detalle->producto->nombre }}</td>
-                        <td class="centreado">{{ $detalle->cantidad }}</td>
-                        <td class="centreado">{{ $detalle->precio }}</td>
-                        <td class="centreado">{{ $detalle->subtotal }}</td>
-                    </tr>
+                    @if ($detalle->producto)
+                        <tr>
+                            <td>{{ $detalle->producto->nombre }}</td>
+                            <td class="centreado">{{ $detalle->cantidad }}</td>
+                            <td class="centreado">{{ $detalle->precio }}</td>
+                            <td class="centreado">{{ $detalle->subtotal }}</td>
+                        </tr>
+                    @endif
                 @endforeach
                 <tr>
                     <td class="derecha bold" colspan="3">TOTAL</td>
