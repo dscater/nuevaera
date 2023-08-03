@@ -3,16 +3,19 @@
 namespace App\Http\Controllers;
 
 use App\Models\Almacen;
+use App\Models\Configuracion;
 use App\Models\DetalleOrden;
 use App\Models\HistorialAccion;
 use App\Models\KardexProducto;
 use App\Models\OrdenVenta;
 use App\Models\Producto;
+use App\Models\Reporte;
 use App\Models\SucursalStock;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use PDF;
+use TCPDF;
 
 class ReporteController extends Controller
 {
@@ -30,8 +33,13 @@ class ReporteController extends Controller
 
         $pdf = PDF::loadView('reportes.usuarios', compact('usuarios'))->setPaper('legal', 'landscape');
 
-        // ENUMERAR LAS PÁGINAS
-        $pdf->setOption('footer-right', '[page]');
+        // ENUMERAR LAS PÁGINAS USANDO CANVAS
+        $pdf->output();
+        $dom_pdf = $pdf->getDomPDF();
+        $canvas = $dom_pdf->get_canvas();
+        $alto = $canvas->get_height();
+        $ancho = $canvas->get_width();
+        $canvas->page_text($ancho - 90, $alto - 25, "Página {PAGE_NUM} de {PAGE_COUNT}", null, 9, array(0, 0, 0));
 
         return $pdf->download('Usuarios.pdf');
     }
@@ -114,12 +122,88 @@ class ReporteController extends Controller
 
         $lugar = $lugar_id;
 
-        $pdf = PDF::loadView('reportes.kardex', compact('productos', 'array_kardex', 'array_saldo_anterior', 'lugar'))->setPaper('letter', 'portrait');
+        $array_dias = ['0' => 'Domingo', '1' => 'Lunes', '2' => 'Martes', '3' => 'Miércoles', '4' => 'Jueves', '5' => 'Viernes', '6' => 'Sábado'];
+        $array_meses = ['01' => 'enero', '02' => 'febrero', '03' => 'marzo', '04' => 'abril', '05' => 'mayo', '06' => 'junio', '07' => 'julio', '08' => 'agosto', '09' => 'septiembre', '10' => 'octubre', '11' => 'noviembre', '12' => 'diciembre'];
 
-        // ENUMERAR LAS PÁGINAS
-        $pdf->setOption('footer-right', '[page]');
 
-        return $pdf->stream('kardex.pdf');
+        // pdf
+        $pdf = new Reporte();
+        $pdf->SetTitle('Kardex');
+        $pdf->AddPage();
+        $pdf->setPrintHeader(false);
+        $pdf->setY(18);
+        $pdf->Cell(0, 15, "KARDEX DE PRODUCTOS", 0, 1, 'C', 0, '', 0, false, 'M', 'M');
+        $pdf->Cell(0, 15, $array_dias[date('w')] . ', ' .  date('d') . ' de ' .
+            $array_meses[date('m')] . ' de ' .  date('Y'), 0, 1, 'C', 0, '', 0, false, 'M', 'M');
+        $pdf->SetFont('helvetica', 'B', 8);
+        $pdf->Cell(0, 15, '(Expresado en bolivianos)', 0, 1, 'C', 0, '', 0, false, 'M', 'M');
+        $pdf->Ln(1);
+        $pdf->SetFont('helvetica', 'B', 10);
+        foreach ($productos as $registro) {
+            $pdf->SetFont('helvetica', 'B', 10);
+            $pdf->Cell(190, 10, $registro->producto->nombre, 1, 1, 'C');
+            $pdf->MultiCell(15, 20, 'FECHA', 1, 'C', false, 0, $x = '',  $y = '',  $reseth = true,  $stretch = 0,  $ishtml = false,  $autopadding = true,  $maxh = 0,  $valign = 'M',  $fitcell = false);
+            $pdf->MultiCell(35, 20, 'DETALLE', 1, 'C', false, 0);
+            $pdf->MultiCell(60, 10, 'CANTIDADES', 1, 'C', false, 0);
+            $pdf->MultiCell(20, 20, 'P/U', 1, 'C', false, 0);
+            $pdf->MultiCell(60, 10, 'BOLIVIANOS', 1, 'C', false, 0);
+            $pdf->Ln();
+            $pdf->SetX(60);
+            $pdf->MultiCell(20, 10, 'ENTRADA', 1, 'C', false, 0);
+            $pdf->MultiCell(20, 10, 'SALIDA', 1, 'C', false, 0);
+            $pdf->MultiCell(20, 10, 'SALDO', 1, 'C', false, 0);
+            $pdf->SetX(140);
+            $pdf->MultiCell(20, 10, 'ENTRADA', 1, 'C', false, 0);
+            $pdf->MultiCell(20, 10, 'SALIDA', 1, 'C', false, 0);
+            $pdf->MultiCell(20, 10, 'SALDO', 1, 'C', false, 0);
+            $pdf->Ln();
+            $pdf->SetFont('helvetica', '', 8);
+            if (count($array_kardex[$registro->producto_id]) > 0 || $array_saldo_anterior[$registro->producto_id]["sw"]) {
+                if ($array_saldo_anterior[$registro->producto_id]["sw"]) {
+                    $y = $pdf->GetY();
+                    if ($y >= 240) {
+                        $pdf->AddPage();
+                    }
+                    $pdf->MultiCell(15, 15, $y, 1, 'C', false, 0);
+                    $pdf->MultiCell(35, 15, "SALDO ANTERIOR", 1, 'C', false, 0);
+                    $pdf->MultiCell(20, 15, "", 1, 'C', false, 0);
+                    $pdf->MultiCell(20, 15, "", 1, 'C', false, 0);
+                    $pdf->MultiCell(20, 15, $array_saldo_anterior[$registro->producto_id]["saldo_anterior"]["cantidad_saldo"], 1, 'C', false, 0);
+                    $pdf->MultiCell(20, 15, $registro->producto->precio, 1, 'C', false, 0);
+                    $pdf->MultiCell(20, 15, "", 1, 'C', false, 0);
+                    $pdf->MultiCell(20, 15, "", 1, 'C', false, 0);
+                    $pdf->MultiCell(20, 15, number_format($array_saldo_anterior[$registro->producto_id]["saldo_anterior"]["monto_saldo"], 2, '.', ','), 1, 'C', false, 0);
+                    $pdf->Ln();
+                }
+                foreach ($array_kardex[$registro->producto_id] as $value) {
+                    $y = $pdf->GetY();
+                    if ($y >= 240) {
+                        $pdf->AddPage();
+                    }
+                    $pdf->MultiCell(15, 15, date("d/m/Y", strtotime($value["fecha"])) . ' ' . $y, 1, 'C', false, 0);
+                    $pdf->MultiCell(35, 15, $value["detalle"], 1, 'C', false, 0);
+                    $pdf->MultiCell(20, 15, $value["cantidad_ingreso"], 1, 'C', false, 0);
+                    $pdf->MultiCell(20, 15, $value["cantidad_salida"], 1, 'C', false, 0);
+                    $pdf->MultiCell(20, 15, $value["cantidad_saldo"], 1, 'C', false, 0);
+                    $pdf->MultiCell(20, 15, number_format($value["cu"], 2, '.', ','), 1, 'C', false, 0);
+                    $pdf->MultiCell(20, 15, $value["monto_ingreso"], 1, 'C', false, 0);
+                    $pdf->MultiCell(20, 15, $value["monto_salida"], 1, 'C', false, 0);
+                    $pdf->MultiCell(20, 15, number_format($value["monto_saldo"], 2, '.', ','), 1, 'C', false, 0);
+                    $pdf->Ln();
+                }
+                $pdf->Ln();
+            } else {
+                $y = $pdf->GetY();
+                if ($y >= 240) {
+                    $pdf->AddPage();
+                }
+                $pdf->Cell(190, 10, "NO SE ENCONTRARON REGISTROS" . ' ' . $y, 1, 1, 'C');
+                $pdf->Ln();
+            }
+        }
+        // Output the PDF to the browser or save it to a file
+        $pdf->Output('Kardex.pdf');
+        exit;
     }
 
     public function orden_ventas(Request $request)
@@ -155,8 +239,14 @@ class ReporteController extends Controller
         }
         $pdf = PDF::loadView('reportes.orden_ventas', compact('orden_ventas'))->setPaper('legal', 'portrait');
 
-        // ENUMERAR LAS PÁGINAS
-        $pdf->setOption('footer-right', '[page]');
+
+        // ENUMERAR LAS PÁGINAS USANDO CANVAS
+        $pdf->output();
+        $dom_pdf = $pdf->getDomPDF();
+        $canvas = $dom_pdf->get_canvas();
+        $alto = $canvas->get_height();
+        $ancho = $canvas->get_width();
+        $canvas->page_text($ancho - 90, $alto - 25, "Página {PAGE_NUM} de {PAGE_COUNT}", null, 9, array(0, 0, 0));
 
         return $pdf->download('orden_ventas.pdf');
     }
@@ -195,11 +285,38 @@ class ReporteController extends Controller
             }
         }
 
-        $pdf = PDF::loadView('reportes.stock_productos', compact('registros', 'lugar'))->setPaper('legal', 'portrait');
-
-        // ENUMERAR LAS PÁGINAS
-        $pdf->setOption('footer-right', '[page]');
-        return $pdf->download('stock_productos.pdf');
+        // pdf
+        $pdf = new Reporte();
+        $pdf->SetTitle('Kardex');
+        $pdf->AddPage();
+        $pdf->setPrintHeader(false);
+        $pdf->setY(18);
+        $pdf->Cell(0, 15, "STOCK DE PRODUCTOS", 0, 1, 'C', 0, '', 0, false, 'M', 'M');
+        $pdf->Cell(0, 15, $lugar, 0, 1, 'C', 0, '', 0, false, 'M', 'M');
+        $pdf->Cell(0, 15, "Expedido: " . date("d-m-Y"), 0, 1, 'C', 0, '', 0, false, 'M', 'M');
+        $pdf->Ln(1);
+        $pdf->setX(30);
+        $pdf->SetFont('helvetica', 'B', 10);
+        $pdf->Cell(15, 10, 'N°', 1, 0, 'C', false);
+        $pdf->Cell(100, 10, 'PRODUCTO',  1, 0, 'C', false);
+        $pdf->Cell(40, 10, 'STOCK ACTUAL',  1, 0, 'C', false);
+        $pdf->Ln();
+        $cont = 1;
+        foreach ($registros as $registro) {
+            $pdf->SetFont('helvetica', '', 8);
+            $y = $pdf->GetY();
+            if ($y >= 260) {
+                $pdf->AddPage();
+            }
+            $pdf->setX(30);
+            $pdf->Cell(15, 10, $cont++, 1, 0, 'C', false);
+            $pdf->Cell(100, 10, $registro->producto->nombre,  1, 0, 'C', false);
+            $pdf->Cell(40, 10, $registro->stock_actual,  1, 0, 'C', false);
+            $pdf->Ln();
+        }
+        // Output the PDF to the browser or save it to a file
+        $pdf->Output('StockProductos.pdf');
+        exit;
     }
 
     public function historial_accion(Request $request)
@@ -212,8 +329,14 @@ class ReporteController extends Controller
 
         $pdf = PDF::loadView('reportes.historial_accion', compact('historial_accions'))->setPaper('legal', 'portrait');
 
-        // ENUMERAR LAS PÁGINAS
-        $pdf->setOption('footer-right', '[page]');
+
+        // ENUMERAR LAS PÁGINAS USANDO CANVAS
+        $pdf->output();
+        $dom_pdf = $pdf->getDomPDF();
+        $canvas = $dom_pdf->get_canvas();
+        $alto = $canvas->get_height();
+        $ancho = $canvas->get_width();
+        $canvas->page_text($ancho - 90, $alto - 25, "Página {PAGE_NUM} de {PAGE_COUNT}", null, 9, array(0, 0, 0));
         return $pdf->download('historial_accions.pdf');
     }
 

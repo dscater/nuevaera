@@ -22,7 +22,6 @@
             border-collapse: collapse;
             table-layout: fixed;
             margin-top: 20px;
-            page-break-inside: avoid;
         }
 
         table thead tr th,
