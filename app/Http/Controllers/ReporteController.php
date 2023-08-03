@@ -140,6 +140,10 @@ class ReporteController extends Controller
         $pdf->Ln(1);
         $pdf->SetFont('helvetica', 'B', 10);
         foreach ($productos as $registro) {
+            $y = $pdf->GetY();
+            if ($y >= 240) {
+                $pdf->AddPage();
+            }
             $pdf->SetFont('helvetica', 'B', 10);
             $pdf->Cell(190, 10, $registro->producto->nombre, 1, 1, 'C');
             $pdf->MultiCell(15, 20, 'FECHA', 1, 'C', false, 0, $x = '',  $y = '',  $reseth = true,  $stretch = 0,  $ishtml = false,  $autopadding = true,  $maxh = 0,  $valign = 'M',  $fitcell = false);
@@ -160,8 +164,7 @@ class ReporteController extends Controller
             $pdf->SetFont('helvetica', '', 8);
             if (count($array_kardex[$registro->producto_id]) > 0 || $array_saldo_anterior[$registro->producto_id]["sw"]) {
                 if ($array_saldo_anterior[$registro->producto_id]["sw"]) {
-                    $y = $pdf->GetY();
-                    if ($y >= 240) {
+                    if ($y >= 260) {
                         $pdf->AddPage();
                     }
                     $pdf->MultiCell(15, 15, $y, 1, 'C', false, 0);
@@ -177,7 +180,7 @@ class ReporteController extends Controller
                 }
                 foreach ($array_kardex[$registro->producto_id] as $value) {
                     $y = $pdf->GetY();
-                    if ($y >= 240) {
+                    if ($y >= 260) {
                         $pdf->AddPage();
                     }
                     $pdf->MultiCell(15, 15, date("d/m/Y", strtotime($value["fecha"])) . ' ' . $y, 1, 'C', false, 0);
@@ -194,7 +197,7 @@ class ReporteController extends Controller
                 $pdf->Ln();
             } else {
                 $y = $pdf->GetY();
-                if ($y >= 240) {
+                if ($y >= 260) {
                     $pdf->AddPage();
                 }
                 $pdf->Cell(190, 10, "NO SE ENCONTRARON REGISTROS" . ' ' . $y, 1, 1, 'C');
